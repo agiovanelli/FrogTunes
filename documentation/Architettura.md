@@ -1,4 +1,4 @@
-#Architettura con Stile di Programma Principale e Subroutine per FrogTunes.
+# Architettura con Stile di Programma Principale e Subroutine per FrogTunes.
 * **Programma Principale**
            -Descrizione: Il programma principale gestisce il flusso generale dell'applicazione FrogTunes e coordina l'esecuzione delle subroutine specializzate per fornire le varie funzionalità della piattaforma.
 	   -Implementazione: Il programma principale avvia l'applicazione, gestisce l'autenticazione degli utenti, e dirige le richieste agli specifici moduli di subroutine.
