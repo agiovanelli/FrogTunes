@@ -1,2 +1,4 @@
 # FrogTunes
-Tesi
+FrogTunes è un robusto e completo catalogo musicale digitale, destinato a soddisfare le esigenze e le aspettative di una vasta gamma di utenti, artisti, manager ed etichette discografiche.
+
+Sarà una piattaforma digitale avanzata dove potremo trovare tutti i contenuti di un artista musicale (es: recensioni dei brani/album, podcast e live studio session da parte degli artisti etc …). Sarà inoltre dotato di diverse funzionalità rivolte a tutti gli utenti della piattaforma: gli utenti finali infatti potranno cercare, ascoltare, gestire e condividere la loro musica preferita. Gli artisti avranno la possibilità di gestire il loro catalogo musicale, inclusi i dettagli delle canzoni e i video musicali associati. I manager degli artisti avranno strumenti per la gestione dei loro talenti e delle informazioni associate. Le etichette discografiche avranno il controllo e la visibilità su tutte le attività all'interno della piattaforma.
