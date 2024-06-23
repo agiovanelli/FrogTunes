@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 class SearchView extends StatefulWidget {
+  const SearchView({super.key});
+
   @override
   _SearchViewState createState() => _SearchViewState();
 }
 
 class _SearchViewState extends State<SearchView> {
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   List<String> _searchResults = [];
 
   void _performSearch(String query) {
@@ -22,16 +24,15 @@ class _SearchViewState extends State<SearchView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 80,
         backgroundColor: Colors.teal,
         title: TextField(
           controller: _searchController,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             hintText: 'Cerca',
             hintStyle: TextStyle(color: Colors.white70, fontSize: 25),
             border: InputBorder.none,
           ),
-          style: TextStyle(color: Colors.white, fontSize: 25),
+          style: const TextStyle(color: Colors.white, fontSize: 25),
           onChanged: _performSearch,
         ),
       ),
@@ -39,8 +40,8 @@ class _SearchViewState extends State<SearchView> {
         itemCount: _searchResults.length,
         itemBuilder: (context, index) {
           return ListTile(
-            leading: Icon(Icons.music_note, color: Colors.white),
-            title: Text(_searchResults[index], style: TextStyle(color: Colors.white)),
+            leading: const Icon(Icons.music_note, color: Colors.white),
+            title: Text(_searchResults[index], style: const TextStyle(color: Colors.white)),
           );
         },
       ),

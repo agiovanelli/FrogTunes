@@ -4,6 +4,8 @@ import 'search.dart';
 import 'catalogo.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -11,10 +13,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  static List<Widget> _widgetOptions = <Widget>[
-    HomeView(),
-    SearchView(),
-    LibraryView(),
+  static final List<Widget> _widgetOptions = <Widget>[
+    const HomeView(),
+    const SearchView(),
+    const LibraryView(),
   ];
 
   void _onItemTapped(int index) {
@@ -28,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.teal,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -43,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.teal,
+        selectedItemColor: Colors.black,
         onTap: _onItemTapped,
       ),
     );

@@ -3,13 +3,15 @@ import 'package:flutter/material.dart';
 class PlaylistView extends StatelessWidget {
   final List<String> playlists = List.generate(5, (index) => 'Playlist $index');
 
+  PlaylistView({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 50,
         backgroundColor: Colors.teal[700],
-        title: Center(child:Text('Le tue playlist', style: TextStyle(fontSize: 26, color: Colors.white))),
+        title: const Center(child:Text('Le tue playlist', style: TextStyle(fontSize: 26, color: Colors.white))),
       ),
       body: GridView.builder(
         padding: const EdgeInsets.all(8.0),
@@ -51,7 +53,7 @@ class PlaylistView extends StatelessWidget {
                     padding: const EdgeInsets.all(8.0),
                     child: Text(
                       playlists[index],
-                      style: TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ),
                 ],
@@ -67,7 +69,7 @@ class PlaylistView extends StatelessWidget {
 class PlaylistDetailsView extends StatelessWidget {
   final String playlistName;
 
-  PlaylistDetailsView({required this.playlistName});
+  const PlaylistDetailsView({super.key, required this.playlistName});
 
   @override
   Widget build(BuildContext context) {
@@ -82,8 +84,8 @@ class PlaylistDetailsView extends StatelessWidget {
         itemCount: songs.length,
         itemBuilder: (context, index) {
           return ListTile(
-            leading: Icon(Icons.music_note, color: Colors.white),
-            title: Text(songs[index], style: TextStyle(color: Colors.white)),
+            leading: const Icon(Icons.music_note, color: Colors.white),
+            title: Text(songs[index], style: const TextStyle(color: Colors.white)),
           );
         },
       ),

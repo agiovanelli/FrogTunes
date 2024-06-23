@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'playlist.dart';
 
 class HomeView extends StatelessWidget {
+  const HomeView({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.teal,
-        title: Text('FrogTunes', style: TextStyle(color: Colors.white)),
+        title: const Text('FrogTunes', style: TextStyle(color: Colors.white)),
       ),
       body: ListView(
         padding: const EdgeInsets.all(8.0),
@@ -32,8 +34,8 @@ class HomeView extends StatelessWidget {
             title: Text('micixsempre', style: TextStyle(color: Colors.white)),
             subtitle: Text('Narcolessia', style: TextStyle(color: Colors.grey)),
           ),
-          Container(
-            height: 300,
+          SizedBox(
+            height: 360,
             child: PlaylistView(),
           ),
         ],
