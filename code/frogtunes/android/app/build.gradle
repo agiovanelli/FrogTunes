@@ -51,8 +51,17 @@ android {
             signingConfig = signingConfigs.debug
         }
     }
+
+    buildscript {
+        dependencies {
+            // Aggiungi questa linea
+            classpath 'com.google.gms:google-services:4.3.3'
+        }
+    }
 }
 
 flutter {
     source = "../.."
 }
+
+apply plugin: 'com.google.gms.google-services'
