@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screen.dart';
+import 'package:frogtunes/login.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.green,
         brightness: Brightness.dark,
       ),
-      home: const HomeScreen(),
+      home: LoginView(),
     );
   }
 }
