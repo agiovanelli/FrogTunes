@@ -19,7 +19,7 @@ class LoginView extends StatelessWidget {
           children: [
             TextField(
               controller: emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
+              decoration: const InputDecoration(labelText: 'Username / Email'),
             ),
             TextField(
               controller: passwordController,
