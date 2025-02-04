@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frogtunes/home.dart';
+import 'package:frogtunes/loginAME.dart';
+import 'package:frogtunes/reg.dart';
 
 class LoginView extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
@@ -21,24 +23,48 @@ class LoginView extends StatelessWidget {
             const SizedBox(height: 100),
             TextField(
               controller: emailController,
+              cursorColor: Colors.green,
               decoration: const InputDecoration(
-                  labelText: 'Username / Email',
-                  border: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.green)),
-                  enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.green)),
-                  labelStyle: TextStyle(color: Colors.green)),
+                labelText: 'Username / Email',
+                labelStyle: TextStyle(color: Colors.green), // Colore del label
+                border: OutlineInputBorder(
+                  // Bordo di default
+                  borderSide: BorderSide(color: Colors.green),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  // Bordo quando non è in focus
+                  borderSide: BorderSide(color: Colors.green),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  // Bordo quando è in focus
+                  borderSide: BorderSide(
+                      color: Colors.green,
+                      width: 2), // Puoi cambiare lo spessore
+                ),
+              ),
             ),
             const SizedBox(height: 20),
             TextField(
               controller: passwordController,
+              cursorColor: Colors.green,
               decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.green)),
-                  enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.green)),
-                  labelStyle: TextStyle(color: Colors.green)),
+                labelText: 'Password',
+                labelStyle: TextStyle(color: Colors.green), // Colore del label
+                border: OutlineInputBorder(
+                  // Bordo di default
+                  borderSide: BorderSide(color: Colors.green),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  // Bordo quando non è in focus
+                  borderSide: BorderSide(color: Colors.green),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  // Bordo quando è in focus
+                  borderSide: BorderSide(
+                      color: Colors.green,
+                      width: 2), // Puoi cambiare lo spessore
+                ),
+              ),
               obscureText: true,
             ),
             const SizedBox(height: 40),
@@ -63,7 +89,8 @@ class LoginView extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const HomeView()),
+                      MaterialPageRoute(
+                          builder: (context) => RegistrazioneView()),
                     );
                   },
                   child: const Text('Registrazione',
@@ -79,32 +106,18 @@ class LoginView extends StatelessWidget {
             Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginAMEView()),
+                    );
+                  },
                   child: const Text(
-                    'Artista',
+                    'Clicca qui per cambiare account',
                     style: TextStyle(color: Colors.green),
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {},
-                  child: const Text('Manager',
-                      style: TextStyle(color: Colors.green)),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {},
-                  child: const Text(
-                    'Etichetta',
-                    style: TextStyle(color: Colors.green),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
             ]),
           ],
         ),

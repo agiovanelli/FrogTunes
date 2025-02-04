@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'playlist.dart';
+import 'package:frogtunes/login.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
@@ -17,11 +18,14 @@ class HomeView extends StatelessWidget {
           Container(
             height: 50,
             color: Colors.teal[700],
-            child: const Center(child: Text('Le tue canzoni preferite', style: TextStyle(fontSize: 26, color: Colors.white))),
+            child: const Center(
+                child: Text('Le tue canzoni preferite',
+                    style: TextStyle(fontSize: 26, color: Colors.white))),
           ),
           const ListTile(
             leading: Icon(Icons.music_note, color: Colors.white),
-            title: Text('bambino indaco', style: TextStyle(color: Colors.white)),
+            title:
+                Text('bambino indaco', style: TextStyle(color: Colors.white)),
             subtitle: Text('Narcolessia', style: TextStyle(color: Colors.grey)),
           ),
           const ListTile(
@@ -34,6 +38,22 @@ class HomeView extends StatelessWidget {
             title: Text('micixsempre', style: TextStyle(color: Colors.white)),
             subtitle: Text('Narcolessia', style: TextStyle(color: Colors.grey)),
           ),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginView()),
+                  );
+                },
+                child: const Text(
+                  'Clicca qui per cambiare account',
+                  style: TextStyle(color: Colors.green),
+                ),
+              ),
+            ),
+          ]),
           SizedBox(
             height: 360,
             child: PlaylistView(),
