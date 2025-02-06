@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:frogtunes/home.dart';
-import 'package:frogtunes/loginAME.dart';
-import 'package:frogtunes/reg.dart';
+import 'package:frogtunes/Utente/login.dart';
 
-class LoginView extends StatelessWidget {
+class RegistrazioneView extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  RegistrazioneView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +17,7 @@ class LoginView extends StatelessWidget {
           children: [
             const SizedBox(height: 130),
             const Text(
-              'FrogTunes',
+              'Registrazione',
               style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 100),
@@ -25,18 +25,18 @@ class LoginView extends StatelessWidget {
               controller: emailController,
               cursorColor: Colors.green,
               decoration: const InputDecoration(
-                labelText: 'Username / Email',
+                labelText: 'Inserisci la tua email',
                 labelStyle: TextStyle(color: Colors.green), // Colore del label
                 border: OutlineInputBorder(
-                  // Bordo di default
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(color: Colors.green),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  // Bordo quando non è in focus
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(color: Colors.green),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  // Bordo quando è in focus
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(
                       color: Colors.green,
                       width: 2), // Puoi cambiare lo spessore
@@ -48,18 +48,18 @@ class LoginView extends StatelessWidget {
               controller: passwordController,
               cursorColor: Colors.green,
               decoration: const InputDecoration(
-                labelText: 'Password',
+                labelText: 'Crea una password',
                 labelStyle: TextStyle(color: Colors.green), // Colore del label
                 border: OutlineInputBorder(
-                  // Bordo di default
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(color: Colors.green),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  // Bordo quando non è in focus
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(color: Colors.green),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  // Bordo quando è in focus
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(
                       color: Colors.green,
                       width: 2), // Puoi cambiare lo spessore
@@ -74,34 +74,17 @@ class LoginView extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const HomeView()),
+                      MaterialPageRoute(builder: (context) => LoginView()),
                     );
                   },
                   child: const Text(
-                    'Login',
+                    'Registrati',
                     style: TextStyle(color: Colors.green),
                   ),
                 ),
               ),
-              const SizedBox(width: 60),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => RegistrazioneView()),
-                    );
-                  },
-                  child: const Text('Registrazione',
-                      style: TextStyle(color: Colors.green)),
-                ),
-              ),
               const SizedBox(height: 20),
             ]),
-            const SizedBox(height: 200),
-            const Text('Sei un artista, un manager o un\'etichetta?',
-                style: TextStyle(fontSize: 15)),
             const SizedBox(height: 20),
             Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
               Expanded(
@@ -109,11 +92,11 @@ class LoginView extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => LoginAMEView()),
+                      MaterialPageRoute(builder: (context) => LoginView()),
                     );
                   },
                   child: const Text(
-                    'Clicca qui per cambiare account',
+                    'Hai già un account?',
                     style: TextStyle(color: Colors.green),
                   ),
                 ),

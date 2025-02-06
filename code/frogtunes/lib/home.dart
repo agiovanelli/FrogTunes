@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'playlist.dart';
-import 'package:frogtunes/login.dart';
+import 'package:frogtunes/Utente/login.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
@@ -9,15 +9,29 @@ class HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.teal,
-        title: const Text('FrogTunes', style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color.fromARGB(255, 4, 35, 5),
+        title: const Text('Ciao Utente', style: TextStyle(color: Colors.white)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginView()),
+              );
+            },
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(8.0),
         children: <Widget>[
           Container(
-            height: 50,
-            color: Colors.teal[700],
+            height: 70,
+            decoration: BoxDecoration(
+              color: Colors.green[700],
+              borderRadius: BorderRadius.circular(15.0),
+            ),
             child: const Center(
                 child: Text('Le tue canzoni preferite',
                     style: TextStyle(fontSize: 26, color: Colors.white))),
@@ -38,28 +52,44 @@ class HomeView extends StatelessWidget {
             title: Text('micixsempre', style: TextStyle(color: Colors.white)),
             subtitle: Text('Narcolessia', style: TextStyle(color: Colors.grey)),
           ),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => LoginView()),
-                  );
-                },
-                child: const Text(
-                  'Clicca qui per cambiare account',
-                  style: TextStyle(color: Colors.green),
-                ),
-              ),
+          Container(
+            height: 70,
+            decoration: BoxDecoration(
+              color: Colors.green[700],
+              borderRadius: BorderRadius.circular(15.0),
             ),
-          ]),
+            child: const Center(
+                child: Text('Le tue playlist',
+                    style: TextStyle(fontSize: 26, color: Colors.white))),
+          ),
+          const SizedBox(height: 5),
           SizedBox(
-            height: 360,
+            height: 350,
             child: PlaylistView(),
           ),
+          BottomNavigationBar(
+            selectedItemColor: Colors.white, // Colore dell'elemento selezionato
+            unselectedItemColor:
+                Colors.white70, // Colore degli elementi non selezionati
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.search),
+                label: 'Cerca',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_2),
+                label: 'Profilo',
+              ),
+            ],
+            backgroundColor: Colors.green[700],
+          )
         ],
       ),
+      backgroundColor: const Color.fromARGB(255, 4, 35, 5),
     );
   }
 }

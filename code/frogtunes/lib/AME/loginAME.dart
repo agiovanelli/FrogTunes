@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:frogtunes/login.dart';
+import 'package:frogtunes/home.dart';
+import 'package:frogtunes/Utente/login.dart';
+import 'package:frogtunes/AME/regAME.dart';
 
-class RegistrazioneView extends StatelessWidget {
+class LoginAMEView extends StatelessWidget {
+  LoginAMEView({super.key});
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
@@ -15,26 +18,30 @@ class RegistrazioneView extends StatelessWidget {
           children: [
             const SizedBox(height: 130),
             const Text(
-              'Registrazione',
+              'FrogTunes',
               style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold),
+            ),
+            const Text(
+              'Business',
+              style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 100),
             TextField(
               controller: emailController,
               cursorColor: Colors.green,
               decoration: const InputDecoration(
-                labelText: 'Inserisci la tua email',
+                labelText: 'Username / Email',
                 labelStyle: TextStyle(color: Colors.green), // Colore del label
                 border: OutlineInputBorder(
-                  // Bordo di default
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(color: Colors.green),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  // Bordo quando non è in focus
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(color: Colors.green),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  // Bordo quando è in focus
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(
                       color: Colors.green,
                       width: 2), // Puoi cambiare lo spessore
@@ -44,20 +51,20 @@ class RegistrazioneView extends StatelessWidget {
             const SizedBox(height: 20),
             TextField(
               controller: passwordController,
-              cursorColor: Colors.green,
+              cursorColor: Colors.green, // Colore del cursore lampeggiante
               decoration: const InputDecoration(
-                labelText: 'Crea una password',
+                labelText: 'Password',
                 labelStyle: TextStyle(color: Colors.green), // Colore del label
                 border: OutlineInputBorder(
-                  // Bordo di default
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(color: Colors.green),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  // Bordo quando non è in focus
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(color: Colors.green),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  // Bordo quando è in focus
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(
                       color: Colors.green,
                       width: 2), // Puoi cambiare lo spessore
@@ -72,18 +79,32 @@ class RegistrazioneView extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => LoginView()),
+                      MaterialPageRoute(builder: (context) => const HomeView()),
                     );
                   },
                   child: const Text(
-                    'Registrati',
+                    'Login',
                     style: TextStyle(color: Colors.green),
                   ),
                 ),
               ),
+              const SizedBox(width: 60),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => RegistrazioneAMEView()),
+                    );
+                  },
+                  child: const Text('Registrazione',
+                      style: TextStyle(color: Colors.green)),
+                ),
+              ),
               const SizedBox(height: 20),
             ]),
-            const SizedBox(height: 20),
+            const SizedBox(height: 200),
             Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
               Expanded(
                 child: ElevatedButton(
@@ -94,7 +115,7 @@ class RegistrazioneView extends StatelessWidget {
                     );
                   },
                   child: const Text(
-                    'Hai già un account?',
+                    'Torna indietro',
                     style: TextStyle(color: Colors.green),
                   ),
                 ),

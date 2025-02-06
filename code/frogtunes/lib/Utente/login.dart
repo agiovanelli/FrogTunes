@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:frogtunes/home.dart';
-import 'package:frogtunes/login.dart';
-import 'package:frogtunes/regAME.dart';
+import 'package:frogtunes/AME/loginAME.dart';
+import 'package:frogtunes/Utente/reg.dart';
 
-class LoginAMEView extends StatelessWidget {
-  LoginAMEView({super.key});
+class LoginView extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  LoginView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,10 +22,6 @@ class LoginAMEView extends StatelessWidget {
               'FrogTunes',
               style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold),
             ),
-            const Text(
-              'Business',
-              style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-            ),
             const SizedBox(height: 100),
             TextField(
               controller: emailController,
@@ -33,38 +30,38 @@ class LoginAMEView extends StatelessWidget {
                 labelText: 'Username / Email',
                 labelStyle: TextStyle(color: Colors.green), // Colore del label
                 border: OutlineInputBorder(
-                  // Bordo di default
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(color: Colors.green),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  // Bordo quando non è in focus
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(color: Colors.green),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  // Bordo quando è in focus
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(
                       color: Colors.green,
-                      width: 2), // Puoi cambiare lo spessore
+                      width: 3), // Puoi cambiare lo spessore
                 ),
               ),
             ),
             const SizedBox(height: 20),
             TextField(
               controller: passwordController,
-              cursorColor: Colors.green, // Colore del cursore lampeggiante
+              cursorColor: Colors.green,
               decoration: const InputDecoration(
                 labelText: 'Password',
                 labelStyle: TextStyle(color: Colors.green), // Colore del label
                 border: OutlineInputBorder(
-                  // Bordo di default
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(color: Colors.green),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  // Bordo quando non è in focus
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(color: Colors.green),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  // Bordo quando è in focus
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(
                       color: Colors.green,
                       width: 2), // Puoi cambiare lo spessore
@@ -95,7 +92,7 @@ class LoginAMEView extends StatelessWidget {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => RegistrazioneAMEView()),
+                          builder: (context) => RegistrazioneView()),
                     );
                   },
                   child: const Text('Registrazione',
@@ -105,17 +102,20 @@ class LoginAMEView extends StatelessWidget {
               const SizedBox(height: 20),
             ]),
             const SizedBox(height: 200),
+            const Text('Sei un artista, un manager o un\'etichetta?',
+                style: TextStyle(fontSize: 15)),
+            const SizedBox(height: 20),
             Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => LoginView()),
+                      MaterialPageRoute(builder: (context) => LoginAMEView()),
                     );
                   },
                   child: const Text(
-                    'Torna indietro',
+                    'Clicca qui per cambiare account',
                     style: TextStyle(color: Colors.green),
                   ),
                 ),

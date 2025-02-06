@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:frogtunes/loginAME.dart';
+import 'package:frogtunes/AME/loginAME.dart';
 
 class RegistrazioneAMEView extends StatefulWidget {
+  const RegistrazioneAMEView({super.key});
+
   @override
   _RegistrazioneAMEViewState createState() => _RegistrazioneAMEViewState();
 }
@@ -37,12 +39,15 @@ class _RegistrazioneAMEViewState extends State<RegistrazioneAMEView> {
                 labelText: 'Inserisci la tua email',
                 labelStyle: TextStyle(color: Colors.green),
                 border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(color: Colors.green),
                 ),
                 enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(color: Colors.green),
                 ),
                 focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(color: Colors.green, width: 2),
                 ),
               ),
@@ -55,12 +60,15 @@ class _RegistrazioneAMEViewState extends State<RegistrazioneAMEView> {
                 labelText: 'Crea una password',
                 labelStyle: TextStyle(color: Colors.green),
                 border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(color: Colors.green),
                 ),
                 enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(color: Colors.green),
                 ),
                 focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(20.0)),
                   borderSide: BorderSide(color: Colors.green, width: 2),
                 ),
               ),
@@ -68,7 +76,7 @@ class _RegistrazioneAMEViewState extends State<RegistrazioneAMEView> {
             ),
             const SizedBox(height: 20),
             const Text(
-              'Tipologia account:',
+              'Seleziona tipologia account:',
               style: TextStyle(color: Colors.white, fontSize: 18),
             ),
             RadioListTile<String>(

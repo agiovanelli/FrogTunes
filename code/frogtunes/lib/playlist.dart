@@ -1,60 +1,52 @@
 import 'package:flutter/material.dart';
 
 class PlaylistView extends StatelessWidget {
-  final List<String> playlists = List.generate(5, (index) => 'Playlist $index');
+  final List<String> playlists = List.generate(6, (index) => 'Playlist $index');
 
   PlaylistView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 50,
-        backgroundColor: Colors.teal[700],
-        title: const Center(child:Text('Le tue playlist', style: TextStyle(fontSize: 26, color: Colors.white))),
-      ),
       body: GridView.builder(
         padding: const EdgeInsets.all(8.0),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2, // Numero di colonne
-          crossAxisSpacing: 10.0,
-          mainAxisSpacing: 10.0,
-          childAspectRatio: 1.0, // Rapporto di aspetto 1:1 per creare cubi
+          crossAxisSpacing: 40.0, // Spazio tra colonne
+          mainAxisSpacing: 40.0, // Spazio tra righe
+          childAspectRatio: 1.0, // Mantiene i quadrati proporzionati
         ),
         itemCount: playlists.length,
         itemBuilder: (context, index) {
           return GestureDetector(
             onTap: () {
-               Navigator.push(
+              Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => PlaylistDetailsView(playlistName: playlists[index]),
+                  builder: (context) =>
+                      PlaylistDetailsView(playlistName: playlists[index]),
                 ),
               );
             },
             child: Card(
-              color: Colors.teal,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0),
+              ),
+              color: Colors.green,
+              elevation: 3,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  Expanded(
-                    child: Container(
-                      color: Colors.green,
-                      child: const Center(
-                        child: Icon(
-                          Icons.music_note,
-                          color: Colors.white,
-                          size: 50.0,
-                        ),
-                      ),
-                    ),
+                  const Icon(
+                    Icons.music_note,
+                    color: Colors.white,
+                    size: 50.0,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      playlists[index],
-                      style: const TextStyle(color: Colors.white),
-                    ),
+                  const SizedBox(height: 10),
+                  Text(
+                    playlists[index],
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -62,6 +54,7 @@ class PlaylistView extends StatelessWidget {
           );
         },
       ),
+      backgroundColor: const Color.fromARGB(255, 4, 35, 5),
     );
   }
 }
@@ -73,11 +66,12 @@ class PlaylistDetailsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<String> songs = List.generate(5, (index) => 'Song $index'); // Lista di brani
+    final List<String> songs =
+        List.generate(5, (index) => 'Song $index'); // Lista di brani
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.teal,
+        backgroundColor: Colors.green,
         title: Text(playlistName),
       ),
       body: ListView.builder(
@@ -85,10 +79,12 @@ class PlaylistDetailsView extends StatelessWidget {
         itemBuilder: (context, index) {
           return ListTile(
             leading: const Icon(Icons.music_note, color: Colors.white),
-            title: Text(songs[index], style: const TextStyle(color: Colors.white)),
+            title:
+                Text(songs[index], style: const TextStyle(color: Colors.white)),
           );
         },
       ),
+      backgroundColor: const Color.fromARGB(255, 4, 35, 5),
     );
   }
 }
