@@ -12,8 +12,8 @@ class PlaylistView extends StatelessWidget {
         padding: const EdgeInsets.all(8.0),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2, // Numero di colonne
-          crossAxisSpacing: 40.0, // Spazio tra colonne
-          mainAxisSpacing: 40.0, // Spazio tra righe
+          crossAxisSpacing: 30.0, // Spazio tra colonne
+          mainAxisSpacing: 20.0, // Spazio tra righe
           childAspectRatio: 1.0, // Mantiene i quadrati proporzionati
         ),
         itemCount: playlists.length,

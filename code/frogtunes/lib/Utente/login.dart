@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frogtunes/home.dart';
+import 'package:frogtunes/Utente/home.dart';
 import 'package:frogtunes/AME/loginAME.dart';
 import 'package:frogtunes/Utente/reg.dart';
 

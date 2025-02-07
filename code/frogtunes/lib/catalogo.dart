@@ -6,21 +6,23 @@ class LibraryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.teal,
-        title: const Text('Il tuo catalogo', style: TextStyle(color: Colors.white)),
-      ),
-       body: ListView(
+      body: ListView(
         padding: const EdgeInsets.all(8.0),
         children: <Widget>[
           Container(
             height: 50,
-            color: Colors.teal[700],
-            child: const Center(child: Text('Le tue canzoni preferite', style: TextStyle(fontSize: 26, color: Colors.white))),
+            decoration: BoxDecoration(
+              color: Colors.green[700],
+              borderRadius: BorderRadius.circular(15.0),
+            ),
+            child: const Center(
+                child: Text('Le tue canzoni preferite',
+                    style: TextStyle(fontSize: 26, color: Colors.white))),
           ),
           const ListTile(
             leading: Icon(Icons.music_note, color: Colors.white),
-            title: Text('bambino indaco', style: TextStyle(color: Colors.white)),
+            title:
+                Text('bambino indaco', style: TextStyle(color: Colors.white)),
             subtitle: Text('Narcolessia', style: TextStyle(color: Colors.grey)),
           ),
           const ListTile(
@@ -33,10 +35,18 @@ class LibraryView extends StatelessWidget {
             title: Text('micixsempre', style: TextStyle(color: Colors.white)),
             subtitle: Text('Narcolessia', style: TextStyle(color: Colors.grey)),
           ),
+          const SizedBox(
+            height: 10,
+          ),
           Container(
             height: 50,
-            color: Colors.teal[700],
-            child: const Center(child: Text('I tuoi artisti preferiti', style: TextStyle(fontSize: 26, color: Colors.white))),
+            decoration: BoxDecoration(
+              color: Colors.green[700],
+              borderRadius: BorderRadius.circular(15.0),
+            ),
+            child: const Center(
+                child: Text('I tuoi artisti preferiti',
+                    style: TextStyle(fontSize: 26, color: Colors.white))),
           ),
           const ListTile(
             leading: Icon(Icons.assignment_ind, color: Colors.white),
@@ -50,10 +60,18 @@ class LibraryView extends StatelessWidget {
             leading: Icon(Icons.assignment_ind, color: Colors.white),
             title: Text('Milky Chance', style: TextStyle(color: Colors.white)),
           ),
+          const SizedBox(
+            height: 10,
+          ),
           Container(
             height: 50,
-            color: Colors.teal[700],
-            child: const Center(child: Text('I tuoi podcast preferiti', style: TextStyle(fontSize: 26, color: Colors.white))),
+            decoration: BoxDecoration(
+              color: Colors.green[700],
+              borderRadius: BorderRadius.circular(15.0),
+            ),
+            child: const Center(
+                child: Text('I tuoi podcast preferiti',
+                    style: TextStyle(fontSize: 26, color: Colors.white))),
           ),
           const ListTile(
             leading: Icon(Icons.contactless, color: Colors.white),
@@ -65,6 +83,7 @@ class LibraryView extends StatelessWidget {
           ),
         ],
       ),
+      backgroundColor: const Color.fromARGB(255, 4, 35, 5),
     );
   }
 }
