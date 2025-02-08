@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frogtunes/Utente/login.dart';
 import 'package:frogtunes/Utente/content.dart';
 import 'package:frogtunes/Utente/search.dart';
+import 'package:frogtunes/Utente/settings.dart';
 import 'package:frogtunes/catalogo.dart';
 
 class HomeView extends StatefulWidget {
@@ -34,6 +35,15 @@ class _HomeViewState extends State<HomeView> {
         backgroundColor: const Color.fromARGB(255, 4, 35, 5),
         title: const Text('Ciao Utente', style: TextStyle(color: Colors.white)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () {
