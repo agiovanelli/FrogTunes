@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frogtunes/Utente/home.dart';
+import 'package:frogtunes/AME/homeAME.dart';
 import 'package:frogtunes/Utente/login.dart';
 import 'package:frogtunes/AME/regAME.dart';
 
@@ -79,7 +79,8 @@ class LoginAMEView extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const HomeView()),
+                      MaterialPageRoute(
+                          builder: (context) => const HomeAMEView()),
                     );
                   },
                   child: const Text(
