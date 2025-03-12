@@ -11,6 +11,50 @@ class HomeAContent extends StatelessWidget {
           padding: const EdgeInsets.all(8.0),
           child: Column(
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment
+                    .spaceBetween, // Allinea il container a sinistra
+                children: [
+                  Container(
+                    height: 50,
+                    width: 150,
+                    decoration: BoxDecoration(
+                      color: Colors.green[700],
+                      borderRadius: BorderRadius.circular(15.0),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Center(
+                        child: Text('Singoli',
+                            style:
+                                TextStyle(fontSize: 16, color: Colors.white)),
+                      ),
+                    ),
+                  ),
+                  Container(
+                      height: 50,
+                      width: 150,
+                      decoration: BoxDecoration(
+                        color: Colors.green[700],
+                        borderRadius: BorderRadius.circular(15.0),
+                      ),
+                      child: const Center(
+                          child: Text('Album',
+                              style: TextStyle(
+                                  fontSize: 16, color: Colors.white)))),
+                ],
+              ),
+              const SizedBox(height: 20),
+              const Row(
+                  mainAxisAlignment: MainAxisAlignment
+                      .spaceBetween, // Allinea il container a sinistra
+                  children: [
+                    Text('16',
+                        style: TextStyle(fontSize: 15, color: Colors.white)),
+                    Text('2',
+                        style: TextStyle(fontSize: 15, color: Colors.white))
+                  ]),
+              const SizedBox(height: 50),
               Container(
                   height: 50,
                   decoration: BoxDecoration(
@@ -18,7 +62,7 @@ class HomeAContent extends StatelessWidget {
                     borderRadius: BorderRadius.circular(15.0),
                   ),
                   child: const Center(
-                      child: Text('Ultime canzoni ascoltate',
+                      child: Text('Le tue ultime release',
                           style:
                               TextStyle(fontSize: 26, color: Colors.white)))),
               const ListTile(
@@ -44,17 +88,6 @@ class HomeAContent extends StatelessWidget {
               const SizedBox(
                 height: 10,
               ),
-              Container(
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: Colors.green[700],
-                    borderRadius: BorderRadius.circular(15.0),
-                  ),
-                  child: const Center(
-                      child: Text('Le tue playlist',
-                          style:
-                              TextStyle(fontSize: 26, color: Colors.white)))),
-              const SizedBox(height: 5),
             ],
           ),
         ),
