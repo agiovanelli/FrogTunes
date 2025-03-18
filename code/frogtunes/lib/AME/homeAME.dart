@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:frogtunes/AME/settingsAME.dart';
 import 'package:frogtunes/AME/loginAME.dart';
-import 'package:frogtunes/AME/analytic.dart';
-import 'package:frogtunes/AME/contentA.dart';
+import 'package:frogtunes/AME/Artista/analytic.dart';
+import 'package:frogtunes/AME/Artista/contentA.dart';
+import 'package:frogtunes/AME/Manager/contentM.dart';
+import 'package:frogtunes/AME/Etichetta/contentE.dart';
 import 'package:frogtunes/catalogo.dart';
 
 class HomeAMEView extends StatefulWidget {
-  const HomeAMEView({super.key});
+  const HomeAMEView({Key? key, required this.selectedRole}) : super(key: key);
+  final String selectedRole; // Accetta il valore passato
 
   @override
   _HomeAMEViewState createState() => _HomeAMEViewState();
@@ -16,11 +19,6 @@ class _HomeAMEViewState extends State<HomeAMEView> {
   int _selectedIndex = 1; // Home di default
 
   // Pagine associate ai BottomNavigationBarItem
-  final List<Widget> _pages = [
-    const AnalyticView(),
-    const HomeAContent(), // Estratto il contenuto della home in un widget separato
-    const LibraryView(),
-  ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -30,11 +28,19 @@ class _HomeAMEViewState extends State<HomeAMEView> {
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> pages = [
+      const AnalyticView(),
+      if (widget.selectedRole == 'Artista') const HomeAContent(),
+      if (widget.selectedRole == 'Manager') const HomeMContent(),
+      if (widget.selectedRole == 'Etichetta') const HomeEContent(),
+      // Estratto il contenuto della home in un widget separato
+      const LibraryView(),
+    ];
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 4, 35, 5),
-        title:
-            const Text('Ciao Artista', style: TextStyle(color: Colors.white)),
+        title: Text('Ciao ${widget.selectedRole}',
+            style: const TextStyle(color: Colors.white)),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
@@ -42,7 +48,8 @@ class _HomeAMEViewState extends State<HomeAMEView> {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const SettingsAMEPage()),
+                    builder: (context) => SettingsAMEPage(
+                        selectedRole: widget.selectedRole ?? 'Artista')),
               );
             },
           ),
@@ -57,7 +64,7 @@ class _HomeAMEViewState extends State<HomeAMEView> {
           ),
         ],
       ),
-      body: _pages[_selectedIndex], // Mostra la pagina selezionata
+      body: pages[_selectedIndex], // Mostra la pagina selezionata
       backgroundColor: const Color.fromARGB(255, 4, 35, 5),
       bottomNavigationBar: BottomNavigationBar(
         selectedItemColor: Colors.white,

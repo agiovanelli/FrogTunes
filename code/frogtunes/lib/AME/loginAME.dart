@@ -3,10 +3,17 @@ import 'package:frogtunes/AME/homeAME.dart';
 import 'package:frogtunes/Utente/login.dart';
 import 'package:frogtunes/AME/regAME.dart';
 
-class LoginAMEView extends StatelessWidget {
-  LoginAMEView({super.key});
+class LoginAMEView extends StatefulWidget {
+  const LoginAMEView({super.key});
+  @override
+  _LoginAMEViewState createState() => _LoginAMEViewState();
+}
+
+class _LoginAMEViewState extends State<LoginAMEView> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  String? selectedGender; // Variabile per gestire il valore selezionato
 
   @override
   Widget build(BuildContext context) {
@@ -72,16 +79,78 @@ class LoginAMEView extends StatelessWidget {
               ),
               obscureText: true,
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 5),
+            Row(
+              mainAxisAlignment:
+                  MainAxisAlignment.center, // Per centrare gli elementi
+              children: [
+                Expanded(
+                  child: RadioListTile<String>(
+                    title:
+                        const Text('A', style: TextStyle(color: Colors.white)),
+                    value: 'Artista',
+                    groupValue: selectedGender,
+                    activeColor: Colors.green,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedGender = value;
+                      });
+                    },
+                  ),
+                ),
+                Expanded(
+                  child: RadioListTile<String>(
+                    title:
+                        const Text('M', style: TextStyle(color: Colors.white)),
+                    value: 'Manager',
+                    groupValue: selectedGender,
+                    activeColor: Colors.green,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedGender = value;
+                      });
+                    },
+                  ),
+                ),
+                Expanded(
+                  child: RadioListTile<String>(
+                    title:
+                        const Text('E', style: TextStyle(color: Colors.white)),
+                    value: 'Etichetta',
+                    groupValue: selectedGender,
+                    activeColor: Colors.green,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedGender = value;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 5),
             Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const HomeAMEView()),
-                    );
+                    if (selectedGender != null) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              HomeAMEView(selectedRole: selectedGender!),
+                        ),
+                      );
+                    } else {
+                      // Mostra un messaggio se non è stata selezionata alcuna opzione
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content:
+                              Text("Seleziona un'opzione prima di procedere"),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   },
                   child: const Text(
                     'Login',
@@ -103,9 +172,9 @@ class LoginAMEView extends StatelessWidget {
                       style: TextStyle(color: Colors.green)),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 5),
             ]),
-            const SizedBox(height: 200),
+            const SizedBox(height: 50),
             Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
               Expanded(
                 child: ElevatedButton(

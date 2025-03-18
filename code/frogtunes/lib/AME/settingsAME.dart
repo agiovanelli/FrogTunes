@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:frogtunes/AME/homeAME.dart';
 
 class SettingsAMEPage extends StatefulWidget {
-  const SettingsAMEPage({super.key});
+  const SettingsAMEPage({Key? key, required this.selectedRole})
+      : super(key: key);
+  final String selectedRole; // Accetta il valore passato
 
   @override
   _SettingsAMEPageState createState() => _SettingsAMEPageState();
@@ -48,7 +50,9 @@ class _SettingsAMEPageState extends State<SettingsAMEPage> {
             onPressed: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => const HomeAMEView()),
+                MaterialPageRoute(
+                    builder: (context) =>
+                        HomeAMEView(selectedRole: widget.selectedRole)),
               );
             },
           ),
