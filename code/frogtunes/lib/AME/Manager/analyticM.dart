@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class AnalyticView extends StatefulWidget {
-  const AnalyticView({super.key});
+class AnalyticMView extends StatefulWidget {
+  const AnalyticMView({super.key});
 
   @override
-  _AnalyticViewState createState() => _AnalyticViewState();
+  _AnalyticMViewState createState() => _AnalyticMViewState();
 }
 
-class _AnalyticViewState extends State<AnalyticView> {
+class _AnalyticMViewState extends State<AnalyticMView> {
   final TextEditingController _analyticController = TextEditingController();
   List<String> _analyticResults = [];
 

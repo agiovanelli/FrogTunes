@@ -3,7 +3,7 @@ import 'package:frogtunes/Utente/login.dart';
 import 'package:frogtunes/Utente/content.dart';
 import 'package:frogtunes/Utente/search.dart';
 import 'package:frogtunes/Utente/settings.dart';
-import 'package:frogtunes/catalogo.dart';
+import 'package:frogtunes/Utente/catalogo.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});

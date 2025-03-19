@@ -3,9 +3,13 @@ import 'package:frogtunes/AME/settingsAME.dart';
 import 'package:frogtunes/AME/loginAME.dart';
 import 'package:frogtunes/AME/Artista/analytic.dart';
 import 'package:frogtunes/AME/Artista/contentA.dart';
+import 'package:frogtunes/AME/Artista/profile.dart';
 import 'package:frogtunes/AME/Manager/contentM.dart';
+import 'package:frogtunes/AME/Manager/analyticM.dart';
+import 'package:frogtunes/AME/Manager/profileM.dart';
 import 'package:frogtunes/AME/Etichetta/contentE.dart';
-import 'package:frogtunes/catalogo.dart';
+import 'package:frogtunes/AME/Etichetta/analyticE.dart';
+import 'package:frogtunes/AME/Etichetta/profileE.dart';
 
 class HomeAMEView extends StatefulWidget {
   const HomeAMEView({Key? key, required this.selectedRole}) : super(key: key);
@@ -29,12 +33,21 @@ class _HomeAMEViewState extends State<HomeAMEView> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      const AnalyticView(),
-      if (widget.selectedRole == 'Artista') const HomeAContent(),
-      if (widget.selectedRole == 'Manager') const HomeMContent(),
-      if (widget.selectedRole == 'Etichetta') const HomeEContent(),
-      // Estratto il contenuto della home in un widget separato
-      const LibraryView(),
+      if (widget.selectedRole == 'Artista') ...[
+        const AnalyticView(),
+        const HomeAContent(),
+        const ProfileView(),
+      ],
+      if (widget.selectedRole == 'Manager') ...[
+        const AnalyticMView(),
+        const HomeMContent(),
+        const ProfileMView(),
+      ],
+      if (widget.selectedRole == 'Etichetta') ...[
+        const AnalyticEView(),
+        const HomeEContent(),
+        const ProfileEView(),
+      ],
     ];
     return Scaffold(
       appBar: AppBar(
@@ -49,7 +62,7 @@ class _HomeAMEViewState extends State<HomeAMEView> {
                 context,
                 MaterialPageRoute(
                     builder: (context) => SettingsAMEPage(
-                        selectedRole: widget.selectedRole ?? 'Artista')),
+                        selectedRole: widget.selectedRole /*?? 'Artista'*/)),
               );
             },
           ),
@@ -58,7 +71,7 @@ class _HomeAMEViewState extends State<HomeAMEView> {
             onPressed: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => LoginAMEView()),
+                MaterialPageRoute(builder: (context) => const LoginAMEView()),
               );
             },
           ),
