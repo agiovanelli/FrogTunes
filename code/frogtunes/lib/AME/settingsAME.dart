@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frogtunes/AME/homeAME.dart';
 
 class SettingsAMEPage extends StatefulWidget {
-  const SettingsAMEPage({Key? key, required this.selectedRole})
-      : super(key: key);
+  const SettingsAMEPage({super.key, required this.selectedRole});
   final String selectedRole; // Accetta il valore passato
 
   @override

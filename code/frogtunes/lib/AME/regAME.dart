@@ -124,7 +124,7 @@ class _RegistrazioneAMEViewState extends State<RegistrazioneAMEView> {
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => LoginAMEView()),
+                  MaterialPageRoute(builder: (context) => const LoginAMEView()),
                 );
               },
               child: const Text(
@@ -141,7 +141,7 @@ class _RegistrazioneAMEViewState extends State<RegistrazioneAMEView> {
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => LoginAMEView()),
+                  MaterialPageRoute(builder: (context) => const LoginAMEView()),
                 );
               },
               child: const Text(

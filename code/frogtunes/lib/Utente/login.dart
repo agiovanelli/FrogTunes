@@ -111,7 +111,8 @@ class LoginView extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => LoginAMEView()),
+                      MaterialPageRoute(
+                          builder: (context) => const LoginAMEView()),
                     );
                   },
                   child: const Text(

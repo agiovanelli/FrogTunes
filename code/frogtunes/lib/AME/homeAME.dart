@@ -12,7 +12,7 @@ import 'package:frogtunes/AME/Etichetta/analyticE.dart';
 import 'package:frogtunes/AME/Etichetta/profileE.dart';
 
 class HomeAMEView extends StatefulWidget {
-  const HomeAMEView({Key? key, required this.selectedRole}) : super(key: key);
+  const HomeAMEView({super.key, required this.selectedRole});
   final String selectedRole; // Accetta il valore passato
 
   @override
