@@ -74,6 +74,7 @@ class _RegistrazioneViewState extends State<RegistrazioneView> {
             TextField(
               controller: emailController,
               cursorColor: Colors.green,
+              keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
                 labelText: 'Inserisci la tua email',
                 labelStyle: TextStyle(color: Colors.green),
@@ -87,6 +88,7 @@ class _RegistrazioneViewState extends State<RegistrazioneView> {
               controller: passwordController,
               cursorColor: Colors.green,
               obscureText: true,
+              keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
                 labelText: 'Crea una password',
                 labelStyle: TextStyle(color: Colors.green),
