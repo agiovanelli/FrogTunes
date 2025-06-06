@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
+
 import 'package:frogtunes/Utente/login.dart';
 import 'package:frogtunes/Utente/content.dart';
 import 'package:frogtunes/Utente/search.dart';
@@ -13,14 +19,127 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  int _selectedIndex = 1; // Home di default
+  int _selectedIndex = 1;
+  Map<String, dynamic>? userData;
 
-  // Pagine associate ai BottomNavigationBarItem
   final List<Widget> _pages = [
     const SearchView(),
-    const HomeContent(), // Estratto il contenuto della home in un widget separato
+    const HomeContent(),
     const LibraryView(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAndShowProfileDialog();
+  }
+
+  Future<void> _checkAndShowProfileDialog() async {
+  final user = FirebaseAuth.instance.currentUser;
+
+  if (user != null) {
+    final doc = await FirebaseFirestore.instance.collection('utenti').doc(user.uid).get();
+    final data = doc.data();
+
+    final hasName = data?['displayName'] != null && data?['displayName'] != '';
+    final hasPhoto = data?['photoURL'] != null && data?['photoURL'] != '';
+
+    if (!hasName || !hasPhoto) {
+      // Attendi un frame per mostrare il dialog (evita errori di context)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showProfileDialog(context, user.uid);
+      });
+    }
+  }
+}
+
+void _showProfileDialog(BuildContext context, String uid) {
+  final TextEditingController nameController = TextEditingController();
+  File? selectedImage;
+  String? uploadedPhotoUrl;
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Completa il tuo profilo'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () async {
+                      final picker = ImagePicker();
+                      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+                      if (pickedFile != null) {
+                        setState(() {
+                          selectedImage = File(pickedFile.path);
+                        });
+
+                        // Upload su Firebase Storage
+                        final storageRef = FirebaseStorage.instance
+                            .ref()
+                            .child('profile_pictures/$uid.jpg');
+                        await storageRef.putFile(selectedImage!);
+                        uploadedPhotoUrl = await storageRef.getDownloadURL();
+
+                        // Aggiorna preview se serve
+                        setState(() {});
+                      }
+                    },
+                    child: CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.grey[300],
+                      backgroundImage: selectedImage != null
+                          ? FileImage(selectedImage!)
+                          : null,
+                      child: selectedImage == null
+                          ? const Icon(Icons.add_a_photo, size: 30)
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(labelText: 'Username'),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  final String name = nameController.text.trim();
+                  if (name.isEmpty || uploadedPhotoUrl == null) return;
+
+                  // Aggiorna Firestore
+                  await FirebaseFirestore.instance.collection('utenti').doc(uid).update({
+                    'displayName': name,
+                    'photoURL': uploadedPhotoUrl,
+                  });
+
+                  // Aggiorna FirebaseAuth
+                  final user = FirebaseAuth.instance.currentUser;
+                  await user?.updateDisplayName(name);
+                  await user?.updatePhotoURL(uploadedPhotoUrl);
+
+                  Navigator.of(context).pop(true); // Chiudi dialog 
+                  setState(() {}); // Ricarica
+                },
+                child: const Text('Salva'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+
 
   void _onItemTapped(int index) {
     setState(() {
@@ -30,10 +149,15 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 4, 35, 5),
-        title: const Text('Ciao Utente', style: TextStyle(color: Colors.white)),
+        title: Text(
+          'Ciao ${userData?['displayName'] ?? user?.displayName ?? 'Utente'}',
+          style: const TextStyle(color: Colors.white),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
@@ -46,7 +170,8 @@ class _HomeViewState extends State<HomeView> {
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () {
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => LoginView()),
@@ -55,14 +180,14 @@ class _HomeViewState extends State<HomeView> {
           ),
         ],
       ),
-      body: _pages[_selectedIndex], // Mostra la pagina selezionata
+      body: _pages[_selectedIndex],
       backgroundColor: const Color.fromARGB(255, 4, 35, 5),
       bottomNavigationBar: BottomNavigationBar(
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white70,
         backgroundColor: Colors.green[700],
-        currentIndex: _selectedIndex, // Evidenzia l'elemento selezionato
-        onTap: _onItemTapped, // Cambia pagina quando un elemento viene toccato
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.search),
