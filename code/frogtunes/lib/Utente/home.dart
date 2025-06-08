@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
+import 'package:flutter/services.dart';
 
 import 'package:frogtunes/Utente/login.dart';
 import 'package:frogtunes/Utente/content.dart';
@@ -50,6 +51,13 @@ class _HomeViewState extends State<HomeView> {
         _showProfileDialog(context, user.uid);
       });
     }
+
+    if (data != null) {
+      setState(() {
+        userData = data;
+      });
+    }
+
   }
 }
 
@@ -72,25 +80,56 @@ void _showProfileDialog(BuildContext context, String uid) {
                 children: [
                   GestureDetector(
                     onTap: () async {
-                      final picker = ImagePicker();
-                      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+                      try {
+                        final ImagePicker picker = ImagePicker();
+                        final XFile? pickedFile = await picker.pickImage(
+                          source: ImageSource.gallery,
+                        );
 
-                      if (pickedFile != null) {
+                        if (pickedFile == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Nessuna immagine selezionata')),
+                          );
+                          return;
+                        }
+
+                        final File file = File(pickedFile.path);
+
+                        if (!await file.exists()) {
+                          throw PlatformException(
+                            code: 'no_valid_image_uri',
+                            message: 'Il file selezionato non esiste più o non è accessibile.',
+                          );
+                        }
+
                         setState(() {
-                          selectedImage = File(pickedFile.path);
+                          selectedImage = file;
                         });
 
-                        // Upload su Firebase Storage
+                        // Upload to Firebase
                         final storageRef = FirebaseStorage.instance
                             .ref()
                             .child('profile_pictures/$uid.jpg');
-                        await storageRef.putFile(selectedImage!);
-                        uploadedPhotoUrl = await storageRef.getDownloadURL();
+                        await storageRef.putFile(file);
+                        final imageUrl = await storageRef.getDownloadURL();
 
-                        // Aggiorna preview se serve
-                        setState(() {});
+                        setState(() {
+                          uploadedPhotoUrl = imageUrl;
+                        });
+
+                      } on PlatformException catch (e) {
+                        debugPrint('Errore Piattaforma: ${e.message}');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Errore: ${e.message}')),
+                        );
+                      } catch (e) {
+                        debugPrint('Errore Generico: $e');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Errore sconosciuto nel caricamento.')),
+                        );
                       }
                     },
+
                     child: CircleAvatar(
                       radius: 40,
                       backgroundColor: Colors.grey[300],
@@ -114,22 +153,45 @@ void _showProfileDialog(BuildContext context, String uid) {
               TextButton(
                 onPressed: () async {
                   final String name = nameController.text.trim();
-                  if (name.isEmpty || uploadedPhotoUrl == null) return;
 
-                  // Aggiorna Firestore
-                  await FirebaseFirestore.instance.collection('utenti').doc(uid).update({
-                    'displayName': name,
-                    'photoURL': uploadedPhotoUrl,
-                  });
+                  final docRef = FirebaseFirestore.instance.collection('utenti').doc(uid);
+                  final doc = await docRef.get();
+                  final currentData = doc.data();
+                  final currentPhoto = currentData?['photoURL'];
 
-                  // Aggiorna FirebaseAuth
-                  final user = FirebaseAuth.instance.currentUser;
-                  await user?.updateDisplayName(name);
-                  await user?.updatePhotoURL(uploadedPhotoUrl);
+                  // Usa la foto già esistente se non ne è stata caricata una nuova
+                  final String finalPhotoURL = uploadedPhotoUrl ?? currentPhoto;
 
-                  Navigator.of(context).pop(true); // Chiudi dialog 
-                  setState(() {}); // Ricarica
+                  // Se entrambi sono nulli o vuoti, non fare nulla
+                  if (name.isEmpty && (finalPhotoURL == null || finalPhotoURL.isEmpty)) return;
+
+                  // Costruisci mappa degli aggiornamenti
+                  final Map<String, dynamic> updates = {};
+                  if (name.isNotEmpty) {
+                    updates['displayName'] = name;
+                    await FirebaseAuth.instance.currentUser?.updateDisplayName(name);
+                  }
+                  if (finalPhotoURL != null && finalPhotoURL.isNotEmpty) {
+                    updates['photoURL'] = finalPhotoURL;
+                    await FirebaseAuth.instance.currentUser?.updatePhotoURL(finalPhotoURL);
+                  }
+
+                  // Salva su Firestore
+                  if (updates.isNotEmpty) {
+                    await docRef.update(updates);
+
+                    setState(() {
+                      userData = {
+                        'displayName': updates['displayName'] ?? currentData?['displayName'],
+                        'photoURL': updates['photoURL'] ?? currentData?['photoURL'],
+                      };
+                    });
+                  }
+
+                  Navigator.of(context).pop(); // Chiudi il dialog
                 },
+
+
                 child: const Text('Salva'),
               ),
             ],
