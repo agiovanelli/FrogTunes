@@ -81,21 +81,27 @@ void _showProfileDialog(BuildContext context, String uid) {
                   GestureDetector(
                     onTap: () async {
                       try {
+                        debugPrint('📸 Avvio selezione immagine...');
                         final ImagePicker picker = ImagePicker();
                         final XFile? pickedFile = await picker.pickImage(
                           source: ImageSource.gallery,
                         );
 
                         if (pickedFile == null) {
+                          debugPrint('❌ Nessuna immagine selezionata.');
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Nessuna immagine selezionata')),
                           );
                           return;
                         }
 
+                        debugPrint('✅ Immagine selezionata: ${pickedFile.path}');
                         final File file = File(pickedFile.path);
 
-                        if (!await file.exists()) {
+                        final exists = await file.exists();
+                        debugPrint('📁 File esiste? $exists');
+
+                        if (!exists) {
                           throw PlatformException(
                             code: 'no_valid_image_uri',
                             message: 'Il file selezionato non esiste più o non è accessibile.',
@@ -106,29 +112,51 @@ void _showProfileDialog(BuildContext context, String uid) {
                           selectedImage = file;
                         });
 
-                        // Upload to Firebase
+                        debugPrint('⏫ Inizio upload su Firebase Storage...');
                         final storageRef = FirebaseStorage.instance
                             .ref()
                             .child('profile_pictures/$uid.jpg');
-                        await storageRef.putFile(file);
-                        final imageUrl = await storageRef.getDownloadURL();
 
-                        setState(() {
-                          uploadedPhotoUrl = imageUrl;
-                        });
+                        try {
+                          final UploadTask uploadTask = storageRef.putFile(file);
+
+                          final TaskSnapshot snapshot = await uploadTask.whenComplete(() => null);
+
+                          if (snapshot.state == TaskState.success) {
+                            final imageUrl = await snapshot.ref.getDownloadURL();
+                            debugPrint('✅ Upload completato. URL: $imageUrl');
+
+                            setState(() {
+                              uploadedPhotoUrl = imageUrl;
+                            });
+                          } else {
+                            debugPrint('❌ Upload fallito. Stato: ${snapshot.state}');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Errore nel caricamento dell\'immagine.')),
+                            );
+                          }
+                        } catch (e) {
+                          debugPrint('❌ Errore durante l\'upload o il recupero dell\'URL: $e');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Errore nel caricamento dell\'immagine.')),
+                          );
+                        }
 
                       } on PlatformException catch (e) {
-                        debugPrint('Errore Piattaforma: ${e.message}');
+                        debugPrint('❌ Errore PlatformException: ${e.code} - ${e.message}');
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Errore: ${e.message}')),
                         );
-                      } catch (e) {
-                        debugPrint('Errore Generico: $e');
+                      } catch (e, stack) {
+                        debugPrint('❌ Errore generico: $e');
+                        debugPrint('📜 Stack trace: $stack');
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Errore sconosciuto nel caricamento.')),
                         );
                       }
                     },
+
+
 
                     child: CircleAvatar(
                       radius: 40,
