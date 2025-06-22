@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frogtunes/Utente/login.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'firebase_options.dart';
 
 void main() async{
@@ -8,6 +9,12 @@ void main() async{
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  await FirebaseAppCheck.instance.activate(
+    androidProvider: AndroidProvider.debug, // per sviluppo
+    appleProvider: AppleProvider.debug,
+  );
+
   runApp(const MyApp());
 }
 
