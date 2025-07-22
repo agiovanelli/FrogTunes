@@ -42,8 +42,8 @@ class _HomeViewState extends State<HomeView> {
     final doc = await FirebaseFirestore.instance.collection('utenti').doc(user.uid).get();
     final data = doc.data();
 
-    final hasName = data?['displayName'] != null && data?['displayName'] != '';
-    final hasPhoto = data?['photoURL'] != null && data?['photoURL'] != '';
+    final hasName = data?['username'] != null && data?['username'] != '';
+    final hasPhoto = data?['profileImageUrl'] != null && data?['profileImageUrl'] != '';
 
     if (!hasName || !hasPhoto) {
       // Attendi un frame per mostrare il dialog (evita errori di context)
@@ -156,8 +156,6 @@ void _showProfileDialog(BuildContext context, String uid) {
                       }
                     },
 
-
-
                     child: CircleAvatar(
                       radius: 40,
                       backgroundColor: Colors.grey[300],
@@ -185,22 +183,27 @@ void _showProfileDialog(BuildContext context, String uid) {
                   final docRef = FirebaseFirestore.instance.collection('utenti').doc(uid);
                   final doc = await docRef.get();
                   final currentData = doc.data();
-                  final currentPhoto = currentData?['photoURL'];
+                  final currentPhoto = currentData?['profileImageUrl'];
 
-                  // Usa la foto già esistente se non ne è stata caricata una nuova
-                  final String finalPhotoURL = uploadedPhotoUrl ?? currentPhoto;
+                  const String defaultPhotoURL = 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f';
+                  final String finalPhotoURL = uploadedPhotoUrl ??
+                                              (currentPhoto != null && currentPhoto.isNotEmpty ? currentPhoto : defaultPhotoURL);
 
-                  // Se entrambi sono nulli o vuoti, non fare nulla
-                  if (name.isEmpty && (finalPhotoURL == null || finalPhotoURL.isEmpty)) return;
+                  // Se nessun aggiornamento ma l'utente ha già dati validi, chiudi comunque il dialog
+                  if (name.isEmpty && (finalPhotoURL == null || finalPhotoURL.isEmpty)) {
+                    Navigator.of(context).pop(); // chiudi senza fare update
+                    return;
+                  }
+
 
                   // Costruisci mappa degli aggiornamenti
                   final Map<String, dynamic> updates = {};
                   if (name.isNotEmpty) {
-                    updates['displayName'] = name;
+                    updates['username'] = name;
                     await FirebaseAuth.instance.currentUser?.updateDisplayName(name);
                   }
                   if (finalPhotoURL != null && finalPhotoURL.isNotEmpty) {
-                    updates['photoURL'] = finalPhotoURL;
+                    updates['profileImageUrl'] = finalPhotoURL;
                     await FirebaseAuth.instance.currentUser?.updatePhotoURL(finalPhotoURL);
                   }
 
@@ -210,8 +213,8 @@ void _showProfileDialog(BuildContext context, String uid) {
 
                     setState(() {
                       userData = {
-                        'displayName': updates['displayName'] ?? currentData?['displayName'],
-                        'photoURL': updates['photoURL'] ?? currentData?['photoURL'],
+                        'username': updates['username'] ?? currentData?['username'],
+                        'profileImageUrl': updates['profileImageUrl'] ?? currentData?['profileImageUrl'],
                       };
                     });
                   }
@@ -240,13 +243,31 @@ void _showProfileDialog(BuildContext context, String uid) {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    final storageRefDef = FirebaseStorage.instance
+                            .ref()
+                            .child('default_images/deafult.jpg');
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 4, 35, 5),
-        title: Text(
-          'Ciao ${userData?['displayName'] ?? user?.displayName ?? 'Utente'}',
-          style: const TextStyle(color: Colors.white),
+        title: Row(
+          children:[
+            CircleAvatar(
+              backgroundColor: Colors.white,
+              backgroundImage: userData?['profileImageUrl'] != null && userData!['profileImageUrl'] != ''
+                  ? NetworkImage(userData!['profileImageUrl'])
+                  : user?.photoURL != null && user?.photoURL != ''
+                      ? NetworkImage(user!.photoURL!)
+                      : const NetworkImage('default_images/default.jpg'),
+            ),
+            const SizedBox(width: 10),
+            Expanded(child:
+              Text(
+                'Ciao ${userData?['username'] ?? user?.displayName ?? 'Utente'}',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
         ),
         actions: [
           IconButton(

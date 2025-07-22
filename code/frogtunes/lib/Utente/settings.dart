@@ -73,7 +73,7 @@ class _SettingsPageState extends State<SettingsPage> {
       if (_selectedImage != null) {
         final ref = FirebaseStorage.instance
             .ref()
-            .child('profile_images')
+            .child('profile_pictures')
             .child('$uid.jpg');
         await ref.putFile(_selectedImage!);
         final imageUrl = await ref.getDownloadURL();
