@@ -233,7 +233,6 @@ void _showProfileDialog(BuildContext context, String uid) {
   );
 }
 
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -243,9 +242,6 @@ void _showProfileDialog(BuildContext context, String uid) {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final storageRefDef = FirebaseStorage.instance
-                            .ref()
-                            .child('default_images/deafult.jpg');
 
     return Scaffold(
       appBar: AppBar(

@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class ProfileMView extends StatefulWidget {
   const ProfileMView({super.key});
@@ -8,11 +12,44 @@ class ProfileMView extends StatefulWidget {
 }
 
 class _ProfileMViewState extends State<ProfileMView> {
-  String userName = 'Nome Manager';
-  String bio =
-      'Questa è una breve biografia del manager. Qui puoi scrivere qualcosa su di te!';
-  String profileImage =
-      'https://www.shutterstock.com/image-vector/cute-frog-cartoon-vector-illustration-600nw-2426110363.jpg';
+  Map<String, dynamic>? userData;
+
+  String userName = '';
+  String bio = '';
+  String profileImage = '';
+
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+  final user = FirebaseAuth.instance.currentUser;
+
+  if (user != null) {
+    final doc = await FirebaseFirestore.instance.collection('utenti_ame').doc(user.uid).get();
+    final data = doc.data();
+
+    if (data != null && mounted) {
+      setState(() {
+        userName = data['username']?.toString().trim().isNotEmpty == true
+            ? data['username']
+            : 'Artista';
+
+        bio = data['bio']?.toString().trim().isNotEmpty == true
+            ? data['bio']
+            : 'Questa è una breve biografia dell\'artista. Qui puoi scrivere qualcosa su di te!';
+
+        profileImage = data['profileImageUrl']?.toString().trim().isNotEmpty == true
+            ? data['profileImageUrl']
+            : 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f';
+      });
+    }
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,7 +67,9 @@ class _ProfileMViewState extends State<ProfileMView> {
                   children: [
                     CircleAvatar(
                       radius: 60,
-                      backgroundImage: AssetImage(profileImage),
+                      backgroundImage: profileImage.startsWith('http')
+                          ? NetworkImage(profileImage)
+                          : AssetImage(profileImage) as ImageProvider,
                     ),
                     Positioned(
                       bottom: 0,
@@ -117,121 +156,128 @@ class _ProfileMViewState extends State<ProfileMView> {
   }
 
   // Funzione per cambiare la foto profilo
-  void _changeProfileImage() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.green[900],
-          title: const Text('Cambia immagine',
-              style: TextStyle(color: Colors.white)),
-          content: const Text('Seleziona una nuova immagine profilo.',
-              style: TextStyle(color: Colors.white)),
-          actions: [
-            TextButton(
-              onPressed: () {
-                // Logica per selezionare un'immagine (es. ImagePicker)
-                Navigator.pop(context);
-              },
-              child: const Text('Scegli immagine',
-                  style: TextStyle(color: Colors.white)),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child:
-                  const Text('Annulla', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  Future<void> _changeProfileImage() async {
+  final user = FirebaseAuth.instance.currentUser;
+  final picker = ImagePicker();
+  final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+  if (pickedFile == null || user == null) return;
+
+  final file = pickedFile.readAsBytes();
+  final ref = FirebaseStorage.instance
+      .ref()
+      .child('profile_images')
+      .child('${user.uid}.jpg');
+
+  final uploadTask = await ref.putData(await file);
+  final url = await uploadTask.ref.getDownloadURL();
+
+  await FirebaseFirestore.instance
+      .collection('utenti_ame')
+      .doc(user.uid)
+      .update({'profileImageUrl': url});
+
+  setState(() {
+    profileImage = url;
+  });
+}
+
 
   // Funzione per cambiare il nome utente
   void _changeUserName() {
-    TextEditingController nameController =
-        TextEditingController(text: userName);
+  final user = FirebaseAuth.instance.currentUser;
+  TextEditingController nameController = TextEditingController(text: userName);
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.green[900],
-          title: const Text('Modifica Nome',
-              style: TextStyle(color: Colors.white)),
-          content: TextField(
-            controller: nameController,
-            decoration: const InputDecoration(
-              labelText: 'Nome Utente',
-              labelStyle: TextStyle(color: Colors.white),
-              filled: true,
-              fillColor: Colors.green,
-              border: OutlineInputBorder(),
-            ),
-            style: const TextStyle(color: Colors.white),
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        backgroundColor: Colors.green[900],
+        title: const Text('Modifica Nome', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: 'Nome Utente',
+            labelStyle: TextStyle(color: Colors.white),
+            filled: true,
+            fillColor: Colors.green,
+            border: OutlineInputBorder(),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
+          style: const TextStyle(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              final newName = nameController.text.trim();
+              if (user != null && newName.isNotEmpty) {
+                await FirebaseFirestore.instance
+                    .collection('utenti_ame')
+                    .doc(user.uid)
+                    .update({'username': newName});
                 setState(() {
-                  userName = nameController.text;
+                  userName = newName;
                 });
-                Navigator.pop(context);
-              },
-              child: const Text('Salva', style: TextStyle(color: Colors.white)),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child:
-                  const Text('Annulla', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
+              }
+              Navigator.pop(context);
+            },
+            child: const Text('Salva', style: TextStyle(color: Colors.white)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annulla', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      );
+    },
+  );
+}
   // Funzione per cambiare la biografia
   void _changeBio() {
-    TextEditingController bioController = TextEditingController(text: bio);
+  final user = FirebaseAuth.instance.currentUser;
+  TextEditingController bioController = TextEditingController(text: bio);
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.green[900],
-          title: const Text('Modifica Biografia',
-              style: TextStyle(color: Colors.white)),
-          content: TextField(
-            controller: bioController,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: 'Biografia',
-              labelStyle: TextStyle(color: Colors.white),
-              filled: true,
-              fillColor: Colors.green,
-              border: OutlineInputBorder(),
-            ),
-            style: const TextStyle(color: Colors.white),
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        backgroundColor: Colors.green[900],
+        title: const Text('Modifica Biografia', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: bioController,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            labelText: 'Biografia',
+            labelStyle: TextStyle(color: Colors.white),
+            filled: true,
+            fillColor: Colors.green,
+            border: OutlineInputBorder(),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
+          style: const TextStyle(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              final newBio = bioController.text.trim();
+              if (user != null) {
+                await FirebaseFirestore.instance
+                    .collection('utenti_ame')
+                    .doc(user.uid)
+                    .update({'bio': newBio});
                 setState(() {
-                  bio = bioController.text;
+                  bio = newBio;
                 });
-                Navigator.pop(context);
-              },
-              child: const Text('Salva', style: TextStyle(color: Colors.white)),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child:
-                  const Text('Annulla', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
-    );
-  }
+              }
+              Navigator.pop(context);
+            },
+            child: const Text('Salva', style: TextStyle(color: Colors.white)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annulla', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      );
+    },
+  );
+}
 }
