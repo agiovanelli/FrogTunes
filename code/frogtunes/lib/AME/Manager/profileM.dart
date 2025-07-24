@@ -36,7 +36,7 @@ class _ProfileMViewState extends State<ProfileMView> {
       setState(() {
         userName = data['username']?.toString().trim().isNotEmpty == true
             ? data['username']
-            : 'Artista';
+            : 'Manager';
 
         bio = data['bio']?.toString().trim().isNotEmpty == true
             ? data['bio']
@@ -166,7 +166,7 @@ class _ProfileMViewState extends State<ProfileMView> {
   final file = pickedFile.readAsBytes();
   final ref = FirebaseStorage.instance
       .ref()
-      .child('profile_images')
+      .child('profile_pictures')
       .child('${user.uid}.jpg');
 
   final uploadTask = await ref.putData(await file);

@@ -35,7 +35,7 @@ class _ProfileEViewState extends State<ProfileEView> {
       setState(() {
         userName = data['username']?.toString().trim().isNotEmpty == true
             ? data['username']
-            : 'Artista';
+            : 'Etichetta';
 
         bio = data['bio']?.toString().trim().isNotEmpty == true
             ? data['bio']
@@ -163,7 +163,7 @@ class _ProfileEViewState extends State<ProfileEView> {
   final file = pickedFile.readAsBytes();
   final ref = FirebaseStorage.instance
       .ref()
-      .child('profile_images')
+      .child('profile_pictures')
       .child('${user.uid}.jpg');
 
   final uploadTask = await ref.putData(await file);

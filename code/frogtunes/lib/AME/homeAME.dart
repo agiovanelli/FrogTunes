@@ -54,7 +54,7 @@ class _HomeAMEViewState extends State<HomeAMEView> {
       });
     }
 
-    if (data != null) {
+    if (data != null && mounted) {
       setState(() {
         userData = data;
       });
@@ -193,7 +193,7 @@ void _showProfileDialog(BuildContext context, String uid) {
 
                   // Se nessun aggiornamento ma l'utente ha già dati validi, chiudi comunque il dialog
                   if (name.isEmpty && (finalPhotoURL == null || finalPhotoURL.isEmpty)) {
-                    Navigator.of(context).pop(); // chiudi senza fare update
+                    if(mounted) Navigator.of(context).pop(); // chiudi senza fare update
                     return;
                   }
 
@@ -221,7 +221,7 @@ void _showProfileDialog(BuildContext context, String uid) {
                     });
                   }
 
-                  Navigator.of(context).pop(); // Chiudi il dialog
+                  if(mounted) Navigator.of(context).pop(); // Chiudi il dialog
                 },
 
 
@@ -273,7 +273,7 @@ void _showProfileDialog(BuildContext context, String uid) {
                   ? NetworkImage(userData!['profileImageUrl'])
                   : user?.photoURL != null && user?.photoURL != ''
                       ? NetworkImage(user!.photoURL!)
-                      : const NetworkImage('default_images/default.jpg'),
+                      : const NetworkImage('https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f'),
             ),
             const SizedBox(width: 10),
             Expanded(child:

@@ -53,9 +53,11 @@ class _HomeViewState extends State<HomeView> {
     }
 
     if (data != null) {
-      setState(() {
+      if(context.mounted){
+        setState(() {
         userData = data;
       });
+      }
     }
 
   }
@@ -63,13 +65,14 @@ class _HomeViewState extends State<HomeView> {
 
 void _showProfileDialog(BuildContext context, String uid) {
   final TextEditingController nameController = TextEditingController();
-  File? selectedImage;
-  String? uploadedPhotoUrl;
+  File? _selectedImage;
 
   showDialog(
     context: context,
     barrierDismissible: false,
     builder: (context) {
+      File? selectedImage;
+      String? uploadedPhotoUrl;
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
@@ -82,21 +85,31 @@ void _showProfileDialog(BuildContext context, String uid) {
                     onTap: () async {
                       try {
                         debugPrint('📸 Avvio selezione immagine...');
-                        final ImagePicker picker = ImagePicker();
-                        final XFile? pickedFile = await picker.pickImage(
-                          source: ImageSource.gallery,
-                        );
+                        final picker = ImagePicker();
+                        final pickedImage =
+                            await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
 
-                        if (pickedFile == null) {
+                        if (pickedImage != null) {
+                          setState(() {
+                            _selectedImage = File(pickedImage.path);
+                          });
+                        }
+                        // final XFile? pickedFile = await picker.pickImage(
+                        //   source: ImageSource.gallery,
+                        // );
+
+                        if (pickedImage == null) {
                           debugPrint('❌ Nessuna immagine selezionata.');
+                          if(context.mounted){
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Nessuna immagine selezionata')),
                           );
+                          }
                           return;
                         }
 
-                        debugPrint('✅ Immagine selezionata: ${pickedFile.path}');
-                        final File file = File(pickedFile.path);
+                        debugPrint('✅ Immagine selezionata: ${pickedImage.path}');
+                        final file = File(pickedImage.path);
 
                         final exists = await file.exists();
                         debugPrint('📁 File esiste? $exists');
@@ -108,51 +121,73 @@ void _showProfileDialog(BuildContext context, String uid) {
                           );
                         }
 
-                        setState(() {
-                          selectedImage = file;
-                        });
-
-                        debugPrint('⏫ Inizio upload su Firebase Storage...');
-                        final storageRef = FirebaseStorage.instance
-                            .ref()
-                            .child('profile_pictures/$uid.jpg');
+                        if(context.mounted){
+                          setState(() {
+                            selectedImage = file;
+                          });
+                        }
 
                         try {
-                          final UploadTask uploadTask = storageRef.putFile(file);
+                          debugPrint('⏫ Inizio upload su Firebase Storage...');
+                            final ref = FirebaseStorage.instance
+                                .ref()
+                                .child('profile_pictures')
+                                .child('$uid.jpg');
+                            await ref.putFile(_selectedImage!);
+                            final imageUrl = await ref.getDownloadURL();
 
+                            await FirebaseFirestore.instance.collection('utenti').doc(uid).update({
+                              'profileImageUrl': imageUrl,
+                            });
+
+                          // final storageRef = FirebaseStorage.instance
+                          //   .ref()
+                          //   .child('profile_pictures/$uid.jpg');
+                          
+                          final UploadTask uploadTask = ref.putFile(file);
                           final TaskSnapshot snapshot = await uploadTask.whenComplete(() => null);
 
                           if (snapshot.state == TaskState.success) {
                             final imageUrl = await snapshot.ref.getDownloadURL();
                             debugPrint('✅ Upload completato. URL: $imageUrl');
 
+                            if(context.mounted){
                             setState(() {
                               uploadedPhotoUrl = imageUrl;
                             });
+                            }
                           } else {
                             debugPrint('❌ Upload fallito. Stato: ${snapshot.state}');
+                            if(context.mounted){
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Errore nel caricamento dell\'immagine.')),
                             );
+                            }
                           }
                         } catch (e) {
                           debugPrint('❌ Errore durante l\'upload o il recupero dell\'URL: $e');
+                          if(context.mounted){ 
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Errore nel caricamento dell\'immagine.')),
                           );
+                          }
                         }
 
                       } on PlatformException catch (e) {
                         debugPrint('❌ Errore PlatformException: ${e.code} - ${e.message}');
+                        if(context.mounted){
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Errore: ${e.message}')),
                         );
+                        }
                       } catch (e, stack) {
                         debugPrint('❌ Errore generico: $e');
                         debugPrint('📜 Stack trace: $stack');
+                        if(context.mounted){ 
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Errore sconosciuto nel caricamento.')),
                         );
+                        }
                       }
                     },
 
@@ -182,6 +217,9 @@ void _showProfileDialog(BuildContext context, String uid) {
 
                   final docRef = FirebaseFirestore.instance.collection('utenti').doc(uid);
                   final doc = await docRef.get();
+
+                  if (!context.mounted) return;
+
                   final currentData = doc.data();
                   final currentPhoto = currentData?['profileImageUrl'];
 
@@ -191,7 +229,7 @@ void _showProfileDialog(BuildContext context, String uid) {
 
                   // Se nessun aggiornamento ma l'utente ha già dati validi, chiudi comunque il dialog
                   if (name.isEmpty && (finalPhotoURL == null || finalPhotoURL.isEmpty)) {
-                    Navigator.of(context).pop(); // chiudi senza fare update
+                    if(mounted) Navigator.of(context).pop(); // chiudi senza fare update
                     return;
                   }
 
@@ -201,25 +239,31 @@ void _showProfileDialog(BuildContext context, String uid) {
                   if (name.isNotEmpty) {
                     updates['username'] = name;
                     await FirebaseAuth.instance.currentUser?.updateDisplayName(name);
+                    if (!context.mounted) return;
                   }
+
                   if (finalPhotoURL != null && finalPhotoURL.isNotEmpty) {
                     updates['profileImageUrl'] = finalPhotoURL;
                     await FirebaseAuth.instance.currentUser?.updatePhotoURL(finalPhotoURL);
+                    if (!context.mounted) return;
                   }
 
                   // Salva su Firestore
                   if (updates.isNotEmpty) {
                     await docRef.update(updates);
 
+                    if(context.mounted){
                     setState(() {
                       userData = {
                         'username': updates['username'] ?? currentData?['username'],
                         'profileImageUrl': updates['profileImageUrl'] ?? currentData?['profileImageUrl'],
                       };
                     });
+                    }
+                    if (!context.mounted) return;
                   }
 
-                  Navigator.of(context).pop(); // Chiudi il dialog
+                  if(context.mounted) Navigator.of(context).pop(); // Chiudi il dialog
                 },
 
 
@@ -254,7 +298,7 @@ void _showProfileDialog(BuildContext context, String uid) {
                   ? NetworkImage(userData!['profileImageUrl'])
                   : user?.photoURL != null && user?.photoURL != ''
                       ? NetworkImage(user!.photoURL!)
-                      : const NetworkImage('default_images/default.jpg'),
+                      : const NetworkImage('https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f'),
             ),
             const SizedBox(width: 10),
             Expanded(child:

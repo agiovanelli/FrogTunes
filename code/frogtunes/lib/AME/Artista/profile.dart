@@ -165,7 +165,7 @@ class _ProfileViewState extends State<ProfileView> {
   final file = pickedFile.readAsBytes();
   final ref = FirebaseStorage.instance
       .ref()
-      .child('profile_images')
+      .child('profile_pictures')
       .child('${user.uid}.jpg');
 
   final uploadTask = await ref.putData(await file);
