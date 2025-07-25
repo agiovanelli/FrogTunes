@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -11,13 +13,36 @@ class _SearchViewState extends State<SearchView> {
   final TextEditingController _searchController = TextEditingController();
   List<String> _searchResults = [];
 
-  void _performSearch(String query) {
-    // Questo è solo un esempio. Qui dovresti implementare la tua logica di ricerca.
-    setState(() {
-      _searchResults = query.isEmpty
-          ? []
-          : List.generate(10, (index) => 'Result $index for "$query"');
-    });
+  void _performSearch(String query) async{
+    if (query.isEmpty) {
+      setState(() {
+        _searchResults = [];
+      });
+      return;
+    }
+
+    final results = <String>[];
+
+  try {
+      // RICERCA su collezione "canzoni"
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('canzoni')
+          .where('keywords', arrayContains: query.toLowerCase()) // ricerca parziale
+          .get();
+
+      for (var doc in querySnapshot.docs) {
+        final data = doc.data();
+        results.add('${data['titolo']} - ${data['artista']}'); // personalizzabile
+      }
+      
+      setState(() {
+        _searchResults = results;
+      });
+    } catch (e) {
+      print('Errore nella ricerca: $e');
+    }
+
+    
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:frogtunes/Utente/login.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
@@ -14,6 +15,12 @@ void main() async{
     androidProvider: AndroidProvider.debug, // per sviluppo
     appleProvider: AppleProvider.debug,
   );
+
+  // Blocca l'orientamento in verticale (portrait)
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
   runApp(const MyApp());
 }
