@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:algolia/algolia.dart';
+import 'package:frogtunes/algolia_service.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -13,7 +13,7 @@ class _SearchViewState extends State<SearchView> {
   final TextEditingController _searchController = TextEditingController();
   List<String> _searchResults = [];
 
-  void _performSearch(String query) async{
+  void _performSearch(String query) async {
     if (query.isEmpty) {
       setState(() {
         _searchResults = [];
@@ -21,28 +21,25 @@ class _SearchViewState extends State<SearchView> {
       return;
     }
 
-    final results = <String>[];
+    try {
+      final AlgoliaQuery algoliaQuery = AlgoliaService.instance
+          .index('canzoni') // Nome dell’indice su Algolia
+          .query(query)
+          .setHitsPerPage(20);
 
-  try {
-      // RICERCA su collezione "canzoni"
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('canzoni')
-          .where('keywords', arrayContains: query.toLowerCase()) // ricerca parziale
-          .get();
+      final AlgoliaQuerySnapshot snapshot = await algoliaQuery.getObjects();
 
-      for (var doc in querySnapshot.docs) {
-        final data = doc.data();
-        results.add('${data['titolo']} - ${data['artista']}'); // personalizzabile
-      }
-      
+      final results = snapshot.hits.map((hit) {
+        final data = hit.data;
+        return '${data['titolo']} - ${data['artista']}';
+      }).toList();
+
       setState(() {
         _searchResults = results;
       });
     } catch (e) {
-      print('Errore nella ricerca: $e');
+      print('Errore nella ricerca Algolia: $e');
     }
-
-    
   }
 
   @override
