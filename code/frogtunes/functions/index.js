@@ -1,8 +1,10 @@
-const functions = require("firebase-functions");
+const { onDocumentCreated, onDocumentUpdated, onDocumentDeleted } = require("firebase-functions/v2/firestore");
+const { onCall, onRequest } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 const { algoliasearch } = require("algoliasearch");
 
 admin.initializeApp();
+const db = admin.firestore();
 
 // Dati da Algolia
 const ALGOLIA_APP_ID = "SJDXTBVPB7";
@@ -11,8 +13,8 @@ const ALGOLIA_INDEX_NAME = "canzoni";
 
 const client = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_ADMIN_KEY);
 
-exports.searchCanzoni = functions.https.onCall(async (data, context) => {
-  const query = data.query || "";
+exports.searchCanzoni = onCall(async (request) => {
+  const query = request.data.query || "";
 
   try {
     const results = await client.searchSingleIndex({
@@ -32,11 +34,66 @@ exports.searchCanzoni = functions.https.onCall(async (data, context) => {
       artista: hit.artista,
       album: hit.album,
       objectID: hit.objectID,
-      highlight: hit._highlightResult, // opzionale per mostrare evidenziazioni
+      highlight: hit._highlightResult,
     }));
   } catch (error) {
     console.error("Errore durante la ricerca Algolia:", error);
-    throw new functions.https.HttpsError("internal", "Errore nella ricerca.");
+    throw new Error("Errore nella ricerca.");
   }
 });
 
+// const index = client.getIndex(ALGOLIA_INDEX_NAME);
+
+/**
+ * Trigger quando viene creato un documento Firestore
+ * (es: /songs/{songId})
+ */
+exports.onSongCreated = onDocumentCreated("canzoni/{cid}", async (event) => {
+  const data = event.data.data();
+  const objectID = event.params.cid;
+
+  await results.saveObject({
+    objectID,
+    ...data,
+  });
+});
+
+/**
+ * Trigger quando viene modificato
+ */
+exports.onSongUpdated = onDocumentUpdated("canzoni/{cid}", async (event) => {
+  const newData = event.data.after.data();
+  const objectID = event.params.cid;
+
+  await index.saveObject({
+    objectID,
+    ...newData,
+  });
+});
+
+/**
+ * Trigger quando viene eliminato
+ */
+exports.onSongDeleted = onDocumentDeleted("canzoni/{cid}", async (event) => {
+  const objectID = event.params.cid;
+
+  await results.deleteObject(objectID);
+});
+
+exports.syncAllSongsToAlgolia = onRequest(async (req, res) => {
+  try {
+    const snapshot = await db.collection("canzoni").get();
+
+    const objects = snapshot.docs.map((doc) => ({
+      objectID: doc.id,
+      ...doc.data(),
+    }));
+
+    await results.saveObjects(objects);
+
+    res.status(200).send("Sincronizzazione iniziale completata.");
+  } catch (error) {
+    console.error("Errore nella sincronizzazione:", error);
+    res.status(500).send("Errore nella sincronizzazione.");
+  }
+});

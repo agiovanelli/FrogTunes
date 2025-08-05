@@ -16,7 +16,7 @@ void main() async{
     appleProvider: AppleProvider.debug,
   );
 
-  // Blocca l'orientamento in verticale (portrait)
+  // Blocca l'orientamento in verticale
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
