@@ -33,6 +33,7 @@ exports.searchCanzoni = onCall(async (request) => {
       titolo: hit.titolo,
       artista: hit.artista,
       album: hit.album,
+      cover: hit.cover,
       objectID: hit.objectID,
       highlight: hit._highlightResult,
     }));
@@ -42,58 +43,69 @@ exports.searchCanzoni = onCall(async (request) => {
   }
 });
 
-// const index = client.getIndex(ALGOLIA_INDEX_NAME);
+// Funzione per indicizzare un oggetto
+async function saveToAlgolia(data, objectID) {
+  await client.saveObjects({
+    indexName: ALGOLIA_INDEX_NAME,
+    objects: [{ objectID, ...data }],
+  });
+}
 
-/**
- * Trigger quando viene creato un documento Firestore
- * (es: /songs/{songId})
- */
+// Funzione per rimuovere da Algolia
+async function deleteFromAlgolia(objectID) {
+  await client.deleteObjects({
+    indexName: ALGOLIA_INDEX_NAME,
+    objectIDs: [objectID],
+  });
+}
+
+// CREAZIONE documento Firestore → indicizza su Algolia
 exports.onSongCreated = onDocumentCreated("canzoni/{cid}", async (event) => {
   const data = event.data.data();
   const objectID = event.params.cid;
 
-  await results.saveObject({
-    objectID,
-    ...data,
-  });
+  await saveToAlgolia(data, objectID);
 });
 
-/**
- * Trigger quando viene modificato
- */
+// AGGIORNAMENTO documento Firestore → aggiorna su Algolia
 exports.onSongUpdated = onDocumentUpdated("canzoni/{cid}", async (event) => {
   const newData = event.data.after.data();
   const objectID = event.params.cid;
 
-  await index.saveObject({
-    objectID,
-    ...newData,
-  });
+  await saveToAlgolia(newData, objectID);
 });
 
-/**
- * Trigger quando viene eliminato
- */
+// ELIMINAZIONE documento Firestore → rimuove da Algolia
 exports.onSongDeleted = onDocumentDeleted("canzoni/{cid}", async (event) => {
   const objectID = event.params.cid;
 
-  await results.deleteObject(objectID);
+  await deleteFromAlgolia(objectID);
 });
 
 exports.syncAllSongsToAlgolia = onRequest(async (req, res) => {
   try {
     const snapshot = await db.collection("canzoni").get();
 
+    if (snapshot.empty) {
+      console.warn("La collezione 'canzoni' è vuota.");
+      return res.status(200).send("Nessun documento da sincronizzare.");
+    }
+
     const objects = snapshot.docs.map((doc) => ({
       objectID: doc.id,
       ...doc.data(),
     }));
 
-    await results.saveObjects(objects);
+    console.log("Sto sincronizzando i seguenti oggetti su Algolia:", objects);
 
-    res.status(200).send("Sincronizzazione iniziale completata.");
+    await client.saveObjects({
+      indexName: ALGOLIA_INDEX_NAME,
+      objects,
+    });
+
+    res.status(200).send("Sincronizzazione completata con successo.");
   } catch (error) {
-    console.error("Errore nella sincronizzazione:", error);
-    res.status(500).send("Errore nella sincronizzazione.");
+    console.error("Errore nella sincronizzazione:", error.message, error);
+    res.status(500).send("Errore nella sincronizzazione: " + error.message);
   }
 });
