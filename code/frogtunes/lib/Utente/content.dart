@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frogtunes/AME/Artista/artist_screen.dart';
 import 'playlist.dart';
 
 class HomeContent extends StatelessWidget {
@@ -22,25 +23,58 @@ class HomeContent extends StatelessWidget {
                       child: Text('Ultime canzoni ascoltate',
                           style:
                               TextStyle(fontSize: 26, color: Colors.white)))),
-              const ListTile(
-                leading: Icon(Icons.music_note, color: Colors.white),
-                title: Text('bambino indaco',
-                    style: TextStyle(color: Colors.white)),
-                subtitle:
-                    Text('Narcolessia', style: TextStyle(color: Colors.grey)),
+              ListTile(
+                leading: const Icon(Icons.music_note, color: Colors.white),
+                title: const Text('bambino indaco', style: TextStyle(color: Colors.white)),
+                subtitle: const Text('Narcolessia', style: TextStyle(color: Colors.grey)),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ArtistScreen(
+                        canzoni: ['bambino indaco'],
+                        nomeArtista: 'Narcolessia',
+                        immagineArtista: 'https://via.placeholder.com/300x300', // URL della copertina
+                      ),
+                    ),
+                  );
+                },
               ),
-              const ListTile(
-                leading: Icon(Icons.music_note, color: Colors.white),
-                title: Text('Voragine', style: TextStyle(color: Colors.white)),
-                subtitle:
-                    Text('Marco444', style: TextStyle(color: Colors.grey)),
+              ListTile(
+                leading: const Icon(Icons.music_note, color: Colors.white),
+                title: const Text('Voragine', style: TextStyle(color: Colors.white)),
+                subtitle: const Text('Marco444', style: TextStyle(color: Colors.grey)),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ArtistScreen(
+                        canzoni: ['Voragine'],
+                        nomeArtista: 'Marco444',
+                        immagineArtista: 'https://via.placeholder.com/300x300', // URL della copertina
+                      ),
+                    ),
+                  );
+                },
               ),
-              const ListTile(
+              ListTile(
                 leading: Icon(Icons.music_note, color: Colors.white),
                 title:
                     Text('micixsempre', style: TextStyle(color: Colors.white)),
                 subtitle:
                     Text('Narcolessia', style: TextStyle(color: Colors.grey)),
+                    onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ArtistScreen(
+                        canzoni: ['micixsempre'],
+                        nomeArtista: 'Narcolessia',
+                        immagineArtista: 'https://via.placeholder.com/300x300', // URL della copertina
+                      ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(
                 height: 10,

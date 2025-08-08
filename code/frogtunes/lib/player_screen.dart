@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frogtunes/AME/Artista/artist_screen.dart';
 
 class PlayerScreen extends StatelessWidget {
   final String titolo;
@@ -46,10 +47,22 @@ class PlayerScreen extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 10),
-            Text(
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ArtistScreen(
+                      nomeArtista: artista,
+                    ),
+                  ),
+                );
+              },
+            child: Text(
               artista,
               style: const TextStyle(color: Colors.white70, fontSize: 18),
               textAlign: TextAlign.center,
+            ),
             ),
             const Spacer(),
             Slider(
