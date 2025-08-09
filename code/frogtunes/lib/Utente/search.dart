@@ -146,23 +146,33 @@ class _SearchViewState extends State<SearchView> {
                               style: const TextStyle(color: Colors.white),
                             ),
                             onTap: () async {
-                              // 3️⃣ Salva il brano dentro la playlist scelta
-                              await FirebaseFirestore.instance
+                              final playlistRef = FirebaseFirestore.instance
                                   .collection('playlists')
-                                  .doc(playlist.id)
-                                  .collection('songs')
-                                  .add({
+                                  .doc(playlist.id);
+
+                              // Aggiungi alla subcollection songs
+                              await playlistRef.collection('canzoni').add({
                                 'titolo': titolo,
                                 'artista': artista,
                                 'cover': cover,
                                 'addedAt': FieldValue.serverTimestamp(),
                               });
 
+                              // Aggiungi anche all'array songs nel documento playlist
+                              await playlistRef.update({
+                                'canzoni': FieldValue.arrayUnion([
+                                  {
+                                    'titolo': titolo,
+                                    'artista': artista,
+                                    'cover': cover,
+                                  }
+                                ])
+                              });
+
                               Navigator.pop(context); // Chiude il dialog
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(
-                                      "Aggiunto a ${playlist['name']}"),
+                                  content: Text("Aggiunto a ${playlist['name']}"),
                                 ),
                               );
                             },

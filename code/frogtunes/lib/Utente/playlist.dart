@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:frogtunes/AME/Artista/artist_screen.dart';  
 
 class PlaylistView extends StatefulWidget {
   const PlaylistView({super.key});
@@ -10,7 +11,7 @@ class PlaylistView extends StatefulWidget {
 }
 
 class _PlaylistViewState extends State<PlaylistView> {
-  final List<String> playlists = [];
+  final List<Map<String, String>> playlists = [];
   final String uid = FirebaseAuth.instance.currentUser!.uid;
 
   @override
@@ -27,7 +28,10 @@ class _PlaylistViewState extends State<PlaylistView> {
 
     setState(() {
       playlists.clear();
-      playlists.addAll(snapshot.docs.map((doc) => doc['name'] as String));
+      playlists.addAll(snapshot.docs.map((doc) => {
+          'id': doc.id, // ID documento Firestore
+          'name': doc['name'] as String
+        }));
     });
   }
 
@@ -71,11 +75,12 @@ class _PlaylistViewState extends State<PlaylistView> {
                     'name': nuovaPlaylist,
                     'uid': uid,
                     'createdAt': FieldValue.serverTimestamp(),
+                    'canzoni': [],
                   });
 
                   // Aggiorna lista locale
                   setState(() {
-                    playlists.add(nuovaPlaylist);
+                    playlists.add({'id': docRef.id, 'name': nuovaPlaylist});
                   });
 
                   Navigator.pop(context);
@@ -127,14 +132,15 @@ class _PlaylistViewState extends State<PlaylistView> {
               ),
             );
           } else {
-            final playlistName = playlists[index - 1];
+            final playlistId = playlists[index - 1]['id']!;
+            final playlistName = playlists[index - 1]['name']!;
             return GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        PlaylistDetailsView(playlistName: playlistName),
+                        PlaylistDetailsView(playlistId: playlistId, playlistName: playlistName),
                   ),
                 );
               },
@@ -171,28 +177,65 @@ class _PlaylistViewState extends State<PlaylistView> {
 }
 
 class PlaylistDetailsView extends StatelessWidget {
+  final String playlistId;
   final String playlistName;
 
-  const PlaylistDetailsView({super.key, required this.playlistName});
+  const PlaylistDetailsView({
+    super.key,
+    required this.playlistId,
+    required this.playlistName,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final List<String> songs = List.generate(5, (index) => 'Song $index');
+    final playlistRef = FirebaseFirestore.instance.collection('playlists').doc(playlistId);
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green,
         title: Text(playlistName),
       ),
-      body: ListView.builder(
-        itemCount: songs.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            leading: const Icon(Icons.music_note, color: Colors.white),
-            title: Text(
-              songs[index],
-              style: const TextStyle(color: Colors.white),
-            ),
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: playlistRef.snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            return const Center(child: Text("Playlist non trovata", style: TextStyle(color: Colors.white)));
+          }
+
+          final playlistData = snapshot.data!.data() as Map<String, dynamic>;
+          final canzoni = List<Map<String, dynamic>>.from(playlistData['canzoni'] ?? []);
+
+          if (canzoni.isEmpty) {
+            return const Center(child: Text("Nessuna canzone nella playlist", style: TextStyle(color: Colors.white)));
+          }
+
+          return ListView.builder(
+            itemCount: canzoni.length,
+            itemBuilder: (context, index) {
+              final canzone = canzoni[index];
+              return ListTile(
+                leading: const Icon(Icons.music_note, color: Colors.white),
+                title: Text(canzone['titolo'] ?? 'Titolo sconosciuto',
+                    style: const TextStyle(color: Colors.white)),
+                subtitle: Text(canzone['artista'] ?? 'Artista sconosciuto',
+                    style: const TextStyle(color: Colors.grey)),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ArtistScreen(
+                        canzoni: ['${canzone['titolo'] ?? 'Sconosciuto'}'],
+                        nomeArtista: '${canzone['artista'] ?? 'Sconosciuto'}',
+                        immagineArtista: 'https://via.placeholder.com/300x300', // URL della copertina
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
           );
         },
       ),
