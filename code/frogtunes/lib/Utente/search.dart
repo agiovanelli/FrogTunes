@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:../frogtunes/player_screen.dart';
+import 'package:../frogtunes/aggiungiPC.dart';
 import 'package:algolia/algolia.dart';
 import 'package:frogtunes/algolia_service.dart';
 
@@ -105,83 +106,12 @@ class _SearchViewState extends State<SearchView> {
               );
             },
             // Pressione lunga → aggiungi a playlist
-            onLongPress: () async {
-              final uid = FirebaseAuth.instance.currentUser!.uid;
-
-              // Recupera tutte le playlist dell'utente
-              final snapshot = await FirebaseFirestore.instance
-                  .collection('playlists')
-                  .where('uid', isEqualTo: uid)
-                  .get();
-
-              final playlists = snapshot.docs;
-
-              if (playlists.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Nessuna playlist trovata")),
-                );
-                return;
-              }
-
-              // Mostra il dialog per selezionare playlist
-              showDialog(
+            onLongPress: () {
+              showSongOptionsBottomSheet(
                 context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    backgroundColor: const Color(0xFF041F0F),
-                    title: const Text(
-                      "Aggiungi a playlist",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    content: SizedBox(
-                      width: double.maxFinite,
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: playlists.length,
-                        itemBuilder: (context, index) {
-                          final playlist = playlists[index];
-                          return ListTile(
-                            title: Text(
-                              playlist['name'],
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            onTap: () async {
-                              final playlistRef = FirebaseFirestore.instance
-                                  .collection('playlists')
-                                  .doc(playlist.id);
-
-                              // Aggiungi alla subcollection songs
-                              await playlistRef.collection('canzoni').add({
-                                'titolo': titolo,
-                                'artista': artista,
-                                'cover': cover,
-                                'addedAt': FieldValue.serverTimestamp(),
-                              });
-
-                              // Aggiungi anche all'array songs nel documento playlist
-                              await playlistRef.update({
-                                'canzoni': FieldValue.arrayUnion([
-                                  {
-                                    'titolo': titolo,
-                                    'artista': artista,
-                                    'cover': cover,
-                                  }
-                                ])
-                              });
-
-                              Navigator.pop(context); // Chiude il dialog
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text("Aggiunto a ${playlist['name']}"),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  );
-                },
+                titolo: titolo,
+                artista: artista,
+                cover: cover,
               );
             },
             leading: ClipRRect(
