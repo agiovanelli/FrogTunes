@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:frogtunes/AME/Artista/artist_screen.dart';
 import 'package:frogtunes/coda.dart';
 import 'bottoni.dart';
 
 class PlayerScreen extends StatefulWidget {
+  final String songId;
   final String titolo;
   final String artista;
   final String cover;
 
   const PlayerScreen({
     super.key,
+    required this.songId,
     required this.titolo,
     required this.artista,
     required this.cover,
@@ -17,6 +21,37 @@ class PlayerScreen extends StatefulWidget {
 
   @override
   State<PlayerScreen> createState() => _PlayerScreenState();
+}
+
+Future<void> toggleLikeSong({
+  required String songId,
+  required String titolo,
+  required String artista,
+  required String cover,
+}) async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return;
+
+  final songRef = FirebaseFirestore.instance
+      .collection('utenti')
+      .doc(user.uid)
+      .collection('likedSongs')
+      .doc(songId);
+
+  final doc = await songRef.get();
+
+  if (doc.exists) {
+    // Se già piaciuta → rimuovi
+    await songRef.delete();
+  } else {
+    // Se non piaciuta → aggiungi
+    await songRef.set({
+      'titolo': titolo,
+      'artista': artista,
+      'cover': cover,
+      'addedAt': FieldValue.serverTimestamp(),
+    });
+  }
 }
 
 class _PlayerScreenState extends State<PlayerScreen> {
@@ -67,8 +102,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                             itemBuilder: (context, index) {
                               final song = queue[index];
                               return ListTile(
-                                leading:
-                                    const Icon(Icons.music_note, color: Colors.white),
+                                leading: const Icon(Icons.music_note, color: Colors.white),
                                 title: Text(
                                   song['titolo'] ?? 'Senza titolo',
                                   style: const TextStyle(color: Colors.white),
@@ -97,6 +131,39 @@ class _PlayerScreenState extends State<PlayerScreen> {
     );
   }
 
+  Widget _likeButton(String songId) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return const SizedBox();
+
+    final songRef = FirebaseFirestore.instance
+        .collection('utenti')
+        .doc(user.uid)
+        .collection('likedSongs')
+        .doc(songId);
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: songRef.snapshots(),
+      builder: (context, snapshot) {
+        final isLiked = snapshot.data?.exists ?? false;
+
+        return IconButton(
+          icon: Icon(
+            isLiked ? Icons.favorite : Icons.favorite_border,
+            color: isLiked ? Colors.green : Colors.white,
+          ),
+          onPressed: () {
+            toggleLikeSong(
+              songId: songId,
+              titolo: widget.titolo,
+              artista: widget.artista,
+              cover: widget.cover,
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,6 +174,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
         actions: [
+          _likeButton(widget.songId),
           IconButton(
             icon: const Icon(Icons.queue_music, color: Colors.white),
             onPressed: () => _mostraCoda(context),

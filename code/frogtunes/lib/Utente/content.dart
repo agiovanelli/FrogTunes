@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frogtunes/AME/Artista/artist_screen.dart';
-import 'package:../frogtunes/player_screen.dart';
-import 'package:../frogtunes/aggiungiPC.dart';
+import 'package:frogtunes/player_screen.dart';
+import 'package:frogtunes/aggiungiPC.dart';
 import 'playlist.dart';
 
 class HomeContent extends StatelessWidget {

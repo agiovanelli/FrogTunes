@@ -48,57 +48,79 @@ Future<void> showSongOptionsBottomSheet({
               },
             ),
             const Divider(color: Colors.white24),
-            if (playlists.isNotEmpty)
-              ...playlists.map((playlist) {
-                return ListTile(
-                  leading: const Icon(Icons.playlist_add, color: Colors.white),
-                  title: Text(
-                    "Aggiungi a ${playlist['name']}",
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  onTap: () async {
-                    final playlistRef = FirebaseFirestore.instance
-                        .collection('playlists')
-                        .doc(playlist.id);
-
-                    // Aggiungi alla subcollection "canzoni"
-                    await playlistRef.collection('canzoni').add({
-                      'titolo': titolo,
-                      'artista': artista,
-                      'cover': cover,
-                      'addedAt': FieldValue.serverTimestamp(),
-                    });
-
-                    // Aggiungi anche all'array "canzoni"
-                    await playlistRef.update({
-                      'canzoni': FieldValue.arrayUnion([
-                        {
-                          'titolo': titolo,
-                          'artista': artista,
-                          'cover': cover,
-                        }
-                      ])
-                    });
-
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          "Aggiunto a ${playlist['name']}",
-                        ),
+            ListTile(
+              leading: const Icon(Icons.playlist_add, color: Colors.white),
+              title: const Text(
+                "Aggiungi alla playlist",
+                style: TextStyle(color: Colors.white),
+              ),
+              onTap: () {
+                // Apri pop-up con le playlist
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      backgroundColor: Colors.grey[900],
+                      title: const Text(
+                        "Seleziona playlist",
+                        style: TextStyle(color: Colors.white),
                       ),
+                      content: playlists.isEmpty
+                          ? const Text(
+                              "Nessuna playlist disponibile",
+                              style: TextStyle(color: Colors.white),
+                            )
+                          : SingleChildScrollView(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: playlists.map((playlist) {
+                                  return ListTile(
+                                    leading: const Icon(Icons.playlist_play, color: Colors.white),
+                                    title: Text(
+                                      playlist['name'],
+                                      style: const TextStyle(color: Colors.white),
+                                    ),
+                                    onTap: () async {
+                                      final playlistRef = FirebaseFirestore.instance
+                                          .collection('playlists')
+                                          .doc(playlist.id);
+
+                                      // Aggiungi alla subcollection "canzoni"
+                                      await playlistRef.collection('canzoni').add({
+                                        'titolo': titolo,
+                                        'artista': artista,
+                                        'cover': cover,
+                                        'addedAt': FieldValue.serverTimestamp(),
+                                      });
+
+                                      // Aggiungi anche all'array "canzoni"
+                                      await playlistRef.update({
+                                        'canzoni': FieldValue.arrayUnion([
+                                          {
+                                            'titolo': titolo,
+                                            'artista': artista,
+                                            'cover': cover,
+                                          }
+                                        ])
+                                      });
+
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text("Aggiunto a ${playlist['name']}"),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                            ),
                     );
                   },
                 );
-              }).toList()
-            else
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  "Nessuna playlist trovata",
-                  style: TextStyle(color: Colors.white70),
-                ),
-              ),
+              },
+            )
+
           ],
         ),
       );

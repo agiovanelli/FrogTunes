@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:../frogtunes/player_screen.dart';
-import 'package:../frogtunes/aggiungiPC.dart';
+import 'package:frogtunes/player_screen.dart';
+import 'package:frogtunes/aggiungiPC.dart';
 import 'package:algolia/algolia.dart';
 import 'package:frogtunes/algolia_service.dart';
 
@@ -36,6 +34,7 @@ class _SearchViewState extends State<SearchView> {
       final results = snapshot.hits.map((hit) {
         final data = hit.data;
         return {
+         'songId': data['cid'] ?? '',
          'titolo': data['titolo'] ?? '',
          'artista': data['artista'] ?? '',
          'cover': data['cover'] ?? 'https://via.placeholder.com/150', // Placeholder se non c'è una cover 
@@ -65,12 +64,12 @@ class _SearchViewState extends State<SearchView> {
               hintText: 'Cerca',
               hintStyle: const TextStyle(color: Colors.white70, fontSize: 18),
               filled: true,
-              fillColor: Colors.green[700], // Sfondo leggermente più scuro
+              fillColor: Colors.green[700],
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15), // Angoli smussati
-                borderSide: BorderSide.none, // Rimuove il bordo predefinito
+                borderRadius: BorderRadius.circular(15),
+                borderSide: BorderSide.none,
               ),
             ),
             style: const TextStyle(color: Colors.white, fontSize: 18),
@@ -82,6 +81,7 @@ class _SearchViewState extends State<SearchView> {
       itemCount: _searchResults.length,
       itemBuilder: (context, index) {
         final item = _searchResults[index];
+        final songId = item['songId'] ?? '';
         final titolo = item['titolo'] ?? 'Titolo sconosciuto';
         final artista = item['artista'] ?? 'Artista sconosciuto';
         final cover = item['cover'] ?? 'https://via.placeholder.com/150';
@@ -98,6 +98,7 @@ class _SearchViewState extends State<SearchView> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => PlayerScreen(
+                    songId: songId,
                     titolo: titolo,
                     artista: artista,
                     cover: cover,
@@ -105,7 +106,7 @@ class _SearchViewState extends State<SearchView> {
                 ),
               );
             },
-            // Pressione lunga → aggiungi a playlist
+            // Pressione lunga → aggiungi a playlist o alla coda
             onLongPress: () {
               showSongOptionsBottomSheet(
                 context: context,

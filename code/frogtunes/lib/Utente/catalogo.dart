@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:frogtunes/Utente/playlist.dart';
+import 'package:frogtunes/AME/Artista/artist_screen.dart';
 
 class LibraryView extends StatelessWidget {
   const LibraryView({super.key});
@@ -19,21 +23,35 @@ class LibraryView extends StatelessWidget {
                 child: Text('Le tue canzoni preferite',
                     style: TextStyle(fontSize: 26, color: Colors.white))),
           ),
-          const ListTile(
-            leading: Icon(Icons.music_note, color: Colors.white),
-            title:
-                Text('bambino indaco', style: TextStyle(color: Colors.white)),
-            subtitle: Text('Narcolessia', style: TextStyle(color: Colors.grey)),
+          const SizedBox(
+            height: 10,
           ),
-          const ListTile(
-            leading: Icon(Icons.music_note, color: Colors.white),
-            title: Text('Voragine', style: TextStyle(color: Colors.white)),
-            subtitle: Text('Marco444', style: TextStyle(color: Colors.grey)),
-          ),
-          const ListTile(
-            leading: Icon(Icons.music_note, color: Colors.white),
-            title: Text('micixsempre', style: TextStyle(color: Colors.white)),
-            subtitle: Text('Narcolessia', style: TextStyle(color: Colors.grey)),
+          GestureDetector(
+            onTap: (){
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const LikedSongsScreen()),
+              );
+            },
+            child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15.0),
+                ),
+                color: Colors.green.withOpacity(0.3),
+                elevation: 3,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.add_circle_outline_sharp, color: Colors.white, size: 50.0),
+                    SizedBox(height: 10),
+                    Text(
+                      "Canzoni preferite",
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
           ),
           const SizedBox(
             height: 10,
@@ -48,17 +66,53 @@ class LibraryView extends StatelessWidget {
                 child: Text('I tuoi artisti preferiti',
                     style: TextStyle(fontSize: 26, color: Colors.white))),
           ),
-          const ListTile(
+          ListTile(
             leading: Icon(Icons.assignment_ind, color: Colors.white),
             title: Text('Narcolessia', style: TextStyle(color: Colors.white)),
+            onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ArtistScreen(
+                        canzoni: ['micixsempre'],
+                        nomeArtista: 'Narcolessia',
+                        immagineArtista: 'https://via.placeholder.com/300x300', // URL della copertina
+                      ),
+                    ),
+                  );
+                }
           ),
-          const ListTile(
+          ListTile(
             leading: Icon(Icons.assignment_ind, color: Colors.white),
             title: Text('Marco444', style: TextStyle(color: Colors.white)),
+            onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ArtistScreen(
+                        canzoni: ['micixsempre'],
+                        nomeArtista: 'Narcolessia',
+                        immagineArtista: 'https://via.placeholder.com/300x300', // URL della copertina
+                      ),
+                    ),
+                  );
+                }
           ),
-          const ListTile(
+          ListTile(
             leading: Icon(Icons.assignment_ind, color: Colors.white),
             title: Text('Milky Chance', style: TextStyle(color: Colors.white)),
+            onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ArtistScreen(
+                        canzoni: ['micixsempre'],
+                        nomeArtista: 'Narcolessia',
+                        immagineArtista: 'https://via.placeholder.com/300x300', // URL della copertina
+                      ),
+                    ),
+                  );
+                }
           ),
           const SizedBox(
             height: 10,
@@ -84,6 +138,66 @@ class LibraryView extends StatelessWidget {
         ],
       ),
       backgroundColor: const Color.fromARGB(255, 4, 35, 5),
+    );
+  }
+}
+
+class LikedSongsScreen extends StatelessWidget {
+  const LikedSongsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF041F0F),
+      appBar: AppBar(
+        title: const Text("Brani che ti piacciono", style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('utenti')
+            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .collection('likedSongs')
+            .orderBy('addedAt', descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.green),
+            );
+          }
+
+          final songs = snapshot.data!.docs;
+
+          if (songs.isEmpty) {
+            return const Center(
+              child: Text(
+                "Non hai ancora messo mi piace a nessuna canzone",
+                style: TextStyle(color: Colors.white70),
+              ),
+            );
+          }
+
+          return ListView.builder(
+            itemCount: songs.length,
+            itemBuilder: (context, index) {
+              final song = songs[index];
+              return ListTile(
+                leading: Image.network(
+                  song['cover'],
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                ),
+                title: Text(song['titolo'], style: const TextStyle(color: Colors.white)),
+                subtitle: Text(song['artista'], style: const TextStyle(color: Colors.white70)),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
