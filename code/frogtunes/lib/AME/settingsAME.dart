@@ -10,14 +10,12 @@ class SettingsAMEPage extends StatefulWidget {
 }
 
 class _SettingsAMEPageState extends State<SettingsAMEPage> {
-  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _notificationsEnabled = true;
 
   @override
   void dispose() {
-    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -25,12 +23,10 @@ class _SettingsAMEPageState extends State<SettingsAMEPage> {
 
   void _saveSettings() {
     // Logica per salvare le impostazioni
-    String username = _usernameController.text;
     String email = _emailController.text;
     String password = _passwordController.text;
 
     print('Salvataggio impostazioni:');
-    print("Username: $username");
     print("Email: $email");
     print("Password: $password");
     print("Notifiche abilitate: $_notificationsEnabled");
@@ -73,31 +69,6 @@ class _SettingsAMEPageState extends State<SettingsAMEPage> {
               children: [
                 const SizedBox(
                   height: 10,
-                ),
-                TextField(
-                  controller: _usernameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Cambia nome utente',
-                    labelStyle:
-                        TextStyle(color: Colors.green), // Colore del label
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
-                      borderSide: BorderSide(color: Colors.green),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
-                      borderSide: BorderSide(color: Colors.green),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
-                      borderSide: BorderSide(
-                          color: Colors.green,
-                          width: 3), // Puoi cambiare lo spessore
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
                 ),
                 TextField(
                   controller: _emailController,

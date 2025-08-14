@@ -1,0 +1,2 @@
+C:/Users/ALEGI/Documents/GitHub/FrogTunes/code/frogtunes/android/app/.cxx/Debug/2uy64102/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/ALEGI/Documents/GitHub/FrogTunes/code/frogtunes/android/app/.cxx/Debug/2uy64102/arm64-v8a/CMakeFiles/rebuild_cache.dir
