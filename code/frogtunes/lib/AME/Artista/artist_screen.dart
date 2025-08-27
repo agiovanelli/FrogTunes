@@ -1,16 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ArtistScreen extends StatelessWidget {
-  final String nomeArtista;
+  final String artistId;
   final String? immagineArtista;
   final List<String> canzoni;
+  final String nomeArtista;
 
   const ArtistScreen({
     super.key,
+    required this.artistId,
     required this.nomeArtista,
     this.immagineArtista,
     this.canzoni = const [],
   });
+
+  Future<void> followArtist(String artistId, String nome, String coverUrl) async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final artistRef = FirebaseFirestore.instance
+        .collection('utenti')
+        .doc(uid)
+        .collection('followedArtists')
+        .doc(artistId); // artistId univoco
+
+    await artistRef.set({
+      'nome': nome,
+      'cover': coverUrl.isNotEmpty
+          ? coverUrl
+          : 'https://via.placeholder.com/150', // placeholder
+      'addedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +81,15 @@ class ArtistScreen extends StatelessWidget {
 
             // Pulsante Segui
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                followArtist(
+                  artistId, // usa l’ID dal DB
+                  nomeArtista,
+                  immagineArtista ?? '',
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Hai iniziato a seguire l’artista')),
+                );},
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
                 shape: RoundedRectangleBorder(

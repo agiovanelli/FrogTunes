@@ -227,9 +227,8 @@ class PlaylistDetailsView extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => ArtistScreen(
-                        canzoni: ['${canzone['titolo'] ?? 'Sconosciuto'}'],
+                        artistId: '',
                         nomeArtista: '${canzone['artista'] ?? 'Sconosciuto'}',
-                        immagineArtista: 'https://via.placeholder.com/300x300', // URL della copertina
                       ),
                     ),
                   );

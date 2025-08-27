@@ -39,30 +39,40 @@ class _LoginAMEViewState extends State<LoginAMEView> {
       final uid = userCredential.user?.uid;
       if (uid == null) {
         throw FirebaseAuthException(code: 'user-not-found', message: 'Utente non trovato.');
-      }
-
-      final doc = await FirebaseFirestore.instance.collection('utenti_ame').doc(uid).get();
-
-      if (!doc.exists) {
-        throw FirebaseAuthException(code: 'user-data-not-found', message: 'Dati utente non trovati.');
-      }
-
-      final ruoloRegistrato = doc.data()?['tipologia'];
-      if (ruoloRegistrato != selectedRole) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Accesso negato'),
-            content: Text('Hai selezionato il ruolo "$selectedRole" ma il tuo account è di tipo "$ruoloRegistrato".'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
+      }else{
+        if(selectedRole == 'Artista'){
+          final doc = await FirebaseFirestore.instance.collection('artisti').doc(uid).get();
+          if (!doc.exists) {
+            throw FirebaseAuthException(code: 'user-data-not-found', message: 'Dati utente non trovati.');
+          }
+        } else if(selectedRole == 'Manager'){
+          final doc = await FirebaseFirestore.instance.collection('manager').doc(uid).get();
+          if (!doc.exists) {
+            throw FirebaseAuthException(code: 'user-data-not-found', message: 'Dati utente non trovati.');
+          }
+        } else if(selectedRole == 'Etichetta'){
+          final doc = await FirebaseFirestore.instance.collection('etichette').doc(uid).get();
+          if (!doc.exists) {
+            throw FirebaseAuthException(code: 'user-data-not-found', message: 'Dati utente non trovati.');
+          }
+          final ruoloRegistrato = doc.data()?['tipologia'];
+          if (ruoloRegistrato != selectedRole) {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Accesso negato'),
+                content: Text('Hai selezionato il ruolo "$selectedRole" ma il tuo account è di tipo "$ruoloRegistrato".'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('OK'),
+                  ),
+                ],
               ),
-            ],
-          ),
-        );
-        return;
+            );
+            return;
+          }
+        }
       }
 
       Navigator.pushReplacement(
@@ -160,7 +170,7 @@ class _LoginAMEViewState extends State<LoginAMEView> {
                   Expanded(
                     child: RadioListTile<String>(
                       title: const Text('A', style: TextStyle(color: Colors.white)),
-                      value: 'Artista',
+                      value: 'Artisti',
                       groupValue: selectedRole,
                       activeColor: Colors.green,
                       onChanged: (value) => setState(() => selectedRole = value),
@@ -178,7 +188,7 @@ class _LoginAMEViewState extends State<LoginAMEView> {
                   Expanded(
                     child: RadioListTile<String>(
                       title: const Text('E', style: TextStyle(color: Colors.white)),
-                      value: 'Etichetta',
+                      value: 'Etichette',
                       groupValue: selectedRole,
                       activeColor: Colors.green,
                       onChanged: (value) => setState(() => selectedRole = value),

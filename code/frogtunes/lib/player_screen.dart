@@ -8,14 +8,14 @@ import 'bottoni.dart';
 class PlayerScreen extends StatefulWidget {
   final String songId;
   final String titolo;
-  final String artista;
+  final List<String> artistIds;
   final String cover;
 
   const PlayerScreen({
     super.key,
     required this.songId,
     required this.titolo,
-    required this.artista,
+    required this.artistIds,
     required this.cover,
   });
 
@@ -26,7 +26,7 @@ class PlayerScreen extends StatefulWidget {
 Future<void> toggleLikeSong({
   required String songId,
   required String titolo,
-  required String artista,
+  required List<String> artistIds,
   required String cover,
 }) async {
   final user = FirebaseAuth.instance.currentUser;
@@ -47,15 +47,41 @@ Future<void> toggleLikeSong({
     // Se non piaciuta → aggiungi
     await songRef.set({
       'titolo': titolo,
-      'artista': artista,
+      'artistIds': artistIds,
       'cover': cover,
       'addedAt': FieldValue.serverTimestamp(),
     });
   }
 }
 
+Future<List<String>> fetchArtistName(List<String> artistIds) async {
+  if (artistIds.isEmpty) return [];
+  
+  final doc = await FirebaseFirestore.instance.collection('artisti')
+    .where(FieldPath.documentId, whereIn: artistIds)
+    .get();
+  
+  return doc.docs
+      .map((doc) => doc.data()['nome'] as String? ?? "Artista sconosciuto")
+      .toList();
+}
+
 class _PlayerScreenState extends State<PlayerScreen> {
   final ControlliBottoni controls = ControlliBottoni();
+  List<String> nomiArtisti = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadArtisti();
+  }
+
+  Future<void> _loadArtisti() async {
+    final nomi = await fetchArtistName(widget.artistIds);
+    setState(() {
+      nomiArtisti = nomi;
+    });
+  }
 
   void _mostraCoda(BuildContext context) {
     showModalBottomSheet(
@@ -155,7 +181,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
             toggleLikeSong(
               songId: songId,
               titolo: widget.titolo,
-              artista: widget.artista,
+              artistIds: widget.artistIds,
               cover: widget.cover,
             );
           },
@@ -205,22 +231,37 @@ class _PlayerScreenState extends State<PlayerScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 10),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ArtistScreen(
-                      nomeArtista: widget.artista,
+            Wrap(
+              alignment: WrapAlignment.center,
+              children: List.generate(nomiArtisti.length, (index) {
+                final nome = nomiArtisti[index];
+                final artistId = widget.artistIds[index];
+
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ArtistScreen(
+                          artistId: artistId,
+                          nomeArtista: nome,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      index < nomiArtisti.length - 1 ? "$nome, " : nome,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 18,
+                        decoration: TextDecoration.underline,
+                      ),
                     ),
                   ),
                 );
-              },
-              child: Text(
-                widget.artista,
-                style: const TextStyle(color: Colors.white70, fontSize: 18),
-                textAlign: TextAlign.center,
-              ),
+              }),
             ),
             const Spacer(),
             Slider(

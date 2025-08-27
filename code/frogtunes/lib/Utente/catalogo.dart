@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:frogtunes/Utente/playlist.dart';
 import 'package:frogtunes/AME/Artista/artist_screen.dart';
 
 class LibraryView extends StatelessWidget {
@@ -66,53 +65,35 @@ class LibraryView extends StatelessWidget {
                 child: Text('I tuoi artisti preferiti',
                     style: TextStyle(fontSize: 26, color: Colors.white))),
           ),
-          ListTile(
-            leading: Icon(Icons.assignment_ind, color: Colors.white),
-            title: Text('Narcolessia', style: TextStyle(color: Colors.white)),
-            onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ArtistScreen(
-                        canzoni: ['micixsempre'],
-                        nomeArtista: 'Narcolessia',
-                        immagineArtista: 'https://via.placeholder.com/300x300', // URL della copertina
-                      ),
-                    ),
-                  );
-                }
+          const SizedBox(
+            height: 10,
           ),
-          ListTile(
-            leading: Icon(Icons.assignment_ind, color: Colors.white),
-            title: Text('Marco444', style: TextStyle(color: Colors.white)),
-            onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ArtistScreen(
-                        canzoni: ['micixsempre'],
-                        nomeArtista: 'Narcolessia',
-                        immagineArtista: 'https://via.placeholder.com/300x300', // URL della copertina
-                      ),
+          GestureDetector(
+            onTap: (){
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const FollowedArtistsScreen()),
+              );
+            },
+            child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15.0),
+                ),
+                color: Colors.green.withOpacity(0.3),
+                elevation: 3,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.music_note_outlined, color: Colors.white, size: 50.0),
+                    SizedBox(height: 10),
+                    Text(
+                      "Artisti preferiti",
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                      textAlign: TextAlign.center,
                     ),
-                  );
-                }
-          ),
-          ListTile(
-            leading: Icon(Icons.assignment_ind, color: Colors.white),
-            title: Text('Milky Chance', style: TextStyle(color: Colors.white)),
-            onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ArtistScreen(
-                        canzoni: ['micixsempre'],
-                        nomeArtista: 'Narcolessia',
-                        immagineArtista: 'https://via.placeholder.com/300x300', // URL della copertina
-                      ),
-                    ),
-                  );
-                }
+                  ],
+                ),
+              ),
           ),
           const SizedBox(
             height: 10,
@@ -193,6 +174,60 @@ class LikedSongsScreen extends StatelessWidget {
                 ),
                 title: Text(song['titolo'], style: const TextStyle(color: Colors.white)),
                 subtitle: Text(song['artista'], style: const TextStyle(color: Colors.white70)),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class FollowedArtistsScreen extends StatelessWidget {
+  const FollowedArtistsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: const Text("Artisti seguiti"),
+        backgroundColor: Colors.black,
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('utenti')
+            .doc(uid)
+            .collection('followedArtists')
+            .orderBy('addedAt', descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(
+              child: Text("Non segui ancora nessun artista",
+                  style: TextStyle(color: Colors.white)),
+            );
+          }
+
+          final artists = snapshot.data!.docs;
+
+          return ListView.builder(
+            itemCount: artists.length,
+            itemBuilder: (context, index) {
+              final artist = artists[index];
+              final cover = artist['cover'] ?? 'https://via.placeholder.com/150';
+              final nome = artist['nome'] ?? 'Artista sconosciuto';
+
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: NetworkImage(cover),
+                ),
+                title: Text(nome, style: const TextStyle(color: Colors.white)),
               );
             },
           );

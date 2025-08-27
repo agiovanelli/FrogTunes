@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:frogtunes/player_screen.dart';
 import 'package:frogtunes/aggiungiPC.dart';
 import 'package:algolia/algolia.dart';
@@ -31,15 +32,36 @@ class _SearchViewState extends State<SearchView> {
 
       final AlgoliaQuerySnapshot snapshot = await algoliaQuery.getObjects();
 
-      final results = snapshot.hits.map((hit) {
-        final data = hit.data;
-        return {
-         'songId': data['cid'] ?? '',
-         'titolo': data['titolo'] ?? '',
-         'artista': data['artista'] ?? '',
-         'cover': data['cover'] ?? 'https://via.placeholder.com/150', // Placeholder se non c'è una cover 
-        };
-      }).toList();
+      List<Map<String, dynamic>> results = snapshot.hits.map((hit) {
+      final data = hit.data;
+      final List<String> artistIds = List<String>.from(data['artistIds'] ?? []);
+
+      return {
+        'songId': data['cid'] ?? '',
+        'titolo': data['titolo'] ?? '',
+        'artistIds': artistIds,
+        'cover': data['cover'] ?? 'https://via.placeholder.com/150',
+      };
+    }).toList();
+
+    for (var item in results) {
+      List<String> artistIds = List<String>.from(item['artistIds']);
+      List<String> artistNames = [];
+
+      for (String id in artistIds) {
+        final doc = await FirebaseFirestore.instance
+            .collection('utenti')
+            .doc(id)
+            .get();
+        if (doc.exists) {
+          artistNames.add(doc['nome'] ?? 'Sconosciuto');
+        }
+      }
+
+      item['artista'] = artistNames.isNotEmpty
+          ? artistNames.join(', ')
+          : 'Artista sconosciuto';
+    }
 
       setState(() {
         _searchResults = results;
@@ -100,7 +122,7 @@ class _SearchViewState extends State<SearchView> {
                   builder: (context) => PlayerScreen(
                     songId: songId,
                     titolo: titolo,
-                    artista: artista,
+                    artistIds: item['artistIds'] ?? [],
                     cover: cover,
                   ),
                 ),

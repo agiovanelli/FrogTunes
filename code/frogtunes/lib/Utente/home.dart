@@ -228,7 +228,7 @@ void _showProfileDialog(BuildContext context, String uid) {
                                               (currentPhoto != null && currentPhoto.isNotEmpty ? currentPhoto : defaultPhotoURL);
 
                   // Se nessun aggiornamento ma l'utente ha già dati validi, chiudi comunque il dialog
-                  if (name.isEmpty && (finalPhotoURL == null || finalPhotoURL.isEmpty)) {
+                  if (name.isEmpty && (finalPhotoURL.isEmpty)) {
                     if(mounted) Navigator.of(context).pop(); // chiudi senza fare update
                     return;
                   }
@@ -242,7 +242,7 @@ void _showProfileDialog(BuildContext context, String uid) {
                     if (!context.mounted) return;
                   }
 
-                  if (finalPhotoURL != null && finalPhotoURL.isNotEmpty) {
+                  if (finalPhotoURL.isNotEmpty) {
                     updates['profileImageUrl'] = finalPhotoURL;
                     await FirebaseAuth.instance.currentUser?.updatePhotoURL(finalPhotoURL);
                     if (!context.mounted) return;

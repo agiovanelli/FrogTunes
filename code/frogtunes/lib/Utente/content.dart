@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:frogtunes/AME/Artista/artist_screen.dart';
-import 'package:frogtunes/player_screen.dart';
-import 'package:frogtunes/aggiungiPC.dart';
 import 'playlist.dart';
 
 class HomeContent extends StatelessWidget {
@@ -25,6 +23,7 @@ class HomeContent extends StatelessWidget {
                       child: Text('Ultime canzoni ascoltate',
                           style:
                               TextStyle(fontSize: 26, color: Colors.white)))),
+                              //da fare più avanti quando introduco possibilità di ascoltare canzoni
               ListTile(
                 leading: const Icon(Icons.music_note, color: Colors.white),
                 title: const Text('bambino indaco', style: TextStyle(color: Colors.white)),
@@ -34,9 +33,8 @@ class HomeContent extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => ArtistScreen(
-                        canzoni: ['bambino indaco'],
+                        artistId: '',
                         nomeArtista: 'Narcolessia',
-                        immagineArtista: 'https://via.placeholder.com/300x300', // URL della copertina
                       ),
                     ),
                   );
@@ -51,21 +49,12 @@ class HomeContent extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => ArtistScreen(
-                        canzoni: ['Voragine'],
+                        artistId: '',
                         nomeArtista: 'Marco444',
-                        immagineArtista: 'https://via.placeholder.com/300x300', // URL della copertina
                       ),
                     ),
                   );
                 },
-            //     onLongPress: () {
-            //     showSongOptionsBottomSheet(
-            //     context: context,
-            //     titolo: titolo,
-            //     artista: artista,
-            //     cover: cover,
-            //   );
-            // },
               ),
               ListTile(
                 leading: Icon(Icons.music_note, color: Colors.white),
@@ -78,9 +67,8 @@ class HomeContent extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => ArtistScreen(
-                        canzoni: ['micixsempre'],
+                        artistId: '',
                         nomeArtista: 'Narcolessia',
-                        immagineArtista: 'https://via.placeholder.com/300x300', // URL della copertina
                       ),
                     ),
                   );

@@ -37,12 +37,28 @@ class _RegistrazioneAMEViewState extends State<RegistrazioneAMEView> {
       User? user = userCredential.user;
       if (user != null) {
         // Salva info su Firestore
-        await FirebaseFirestore.instance.collection('utenti_ame').doc(user.uid).set({
-          'email': user.email,
-          'uid': user.uid,
-          'tipologia': selectedAccountType,
-          'dataRegistrazione': FieldValue.serverTimestamp(),
-        });
+        if(selectedAccountType == 'Artista') {
+          await FirebaseFirestore.instance.collection('artisti').doc(user.uid).set({
+            'email': user.email,
+            'uid': user.uid,
+            'tipologia': selectedAccountType,
+            'dataRegistrazione': FieldValue.serverTimestamp(),
+          });
+        } else if(selectedAccountType == 'Manager') {
+          await FirebaseFirestore.instance.collection('manager').doc(user.uid).set({
+            'email': user.email,
+            'uid': user.uid,
+            'tipologia': selectedAccountType,
+            'dataRegistrazione': FieldValue.serverTimestamp(),
+          });
+        } else if(selectedAccountType == 'Etichetta') {
+          await FirebaseFirestore.instance.collection('etichette').doc(user.uid).set({
+            'email': user.email,
+            'uid': user.uid,
+            'tipologia': selectedAccountType,
+            'dataRegistrazione': FieldValue.serverTimestamp(),
+          });
+        } 
       }
 
       Navigator.pushReplacement(
