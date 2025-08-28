@@ -16,7 +16,11 @@ class ArtistScreen extends StatelessWidget {
     this.canzoni = const [],
   });
 
-  Future<void> followArtist(String artistId, String nome, String coverUrl) async {
+  Future<void> toggleFollowArtist({
+    required String artistId,
+    required String nome,
+    required String coverUrl
+    }) async {
     final uid = FirebaseAuth.instance.currentUser!.uid;
     final artistRef = FirebaseFirestore.instance
         .collection('utenti')
@@ -24,6 +28,12 @@ class ArtistScreen extends StatelessWidget {
         .collection('followedArtists')
         .doc(artistId); // artistId univoco
 
+    final doc = await artistRef.get();
+    
+    if (doc.exists) {
+      // Se esiste, smetti di seguire
+      await artistRef.delete();
+    }else{
     await artistRef.set({
       'nome': nome,
       'cover': coverUrl.isNotEmpty
@@ -31,8 +41,8 @@ class ArtistScreen extends StatelessWidget {
           : 'https://via.placeholder.com/150', // placeholder
       'addedAt': FieldValue.serverTimestamp(),
     });
+    }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -82,13 +92,13 @@ class ArtistScreen extends StatelessWidget {
             // Pulsante Segui
             ElevatedButton(
               onPressed: () {
-                followArtist(
-                  artistId, // usa l’ID dal DB
-                  nomeArtista,
-                  immagineArtista ?? '',
+                toggleFollowArtist(
+                  artistId: artistId, // usa l’ID dal DB
+                  nome: nomeArtista,
+                  coverUrl: immagineArtista ?? '',
                 );
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Hai iniziato a seguire l’artista')),
+                  const SnackBar(content: Text('Hai iniziato a seguire l\'artista')),
                 );},
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
