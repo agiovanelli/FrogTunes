@@ -8,14 +8,14 @@ import 'bottoni.dart';
 class PlayerScreen extends StatefulWidget {
   final String songId;
   final String titolo;
-  final List<String> artistIds;
+  final List<String> artistId;
   final String cover;
 
   const PlayerScreen({
     super.key,
     required this.songId,
     required this.titolo,
-    required this.artistIds,
+    required this.artistId,
     required this.cover,
   });
 
@@ -26,7 +26,7 @@ class PlayerScreen extends StatefulWidget {
 Future<void> toggleLikeSong({
   required String songId,
   required String titolo,
-  required List<String> artistIds,
+  required List<String> artistId,
   required String cover,
 }) async {
   final user = FirebaseAuth.instance.currentUser;
@@ -47,18 +47,18 @@ Future<void> toggleLikeSong({
     // Se non piaciuta → aggiungi
     await songRef.set({
       'titolo': titolo,
-      'artistIds': artistIds,
+      'artistId': artistId,
       'cover': cover,
       'addedAt': FieldValue.serverTimestamp(),
     });
   }
 }
 
-Future<List<String>> fetchArtistName(List<String> artistIds) async {
-  if (artistIds.isEmpty) return [];
+Future<List<String>> fetchArtistName(List<String> artistId) async {
+  if (artistId.isEmpty) return [];
   
   final doc = await FirebaseFirestore.instance.collection('artisti')
-    .where(FieldPath.documentId, whereIn: artistIds)
+    .where(FieldPath.documentId, whereIn: artistId)
     .get();
   
   return doc.docs
@@ -73,11 +73,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
   @override
   void initState() {
     super.initState();
-    _loadArtisti();
+    _loadArtisti(nomiArtisti);
   }
 
-  Future<void> _loadArtisti() async {
-    final nomi = await fetchArtistName(widget.artistIds);
+  Future<void> _loadArtisti(List<String> id) async {
+    id = widget.artistId;
+    final nomi = await fetchArtistName(id);
     setState(() {
       nomiArtisti = nomi;
     });
@@ -181,7 +182,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
             toggleLikeSong(
               songId: songId,
               titolo: widget.titolo,
-              artistIds: widget.artistIds,
+              artistId: widget.artistId,
               cover: widget.cover,
             );
           },
@@ -235,7 +236,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
               alignment: WrapAlignment.center,
               children: List.generate(nomiArtisti.length, (index) {
                 final nome = nomiArtisti[index];
-                final artistId = widget.artistIds[index];
+                final artistId = widget.artistId[index];
 
                 return GestureDetector(
                   onTap: () {
@@ -256,7 +257,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 18,
-                        decoration: TextDecoration.underline,
                       ),
                     ),
                   ),

@@ -34,23 +34,23 @@ class _SearchViewState extends State<SearchView> {
 
       List<Map<String, dynamic>> results = snapshot.hits.map((hit) {
       final data = hit.data;
-      final List<String> artistIds = List<String>.from(data['artistIds'] ?? []);
+      final List<String> artistId = List<String>.from(data['artistId'] ?? []);
 
       return {
         'songId': data['cid'] ?? '',
         'titolo': data['titolo'] ?? '',
-        'artistIds': artistIds,
+        'artistId': artistId,
         'cover': data['cover'] ?? 'https://via.placeholder.com/150',
       };
     }).toList();
 
     for (var item in results) {
-      List<String> artistIds = List<String>.from(item['artistIds']);
+      List<String> artistId = List<String>.from(item['artistId'] ?? []);
       List<String> artistNames = [];
 
-      for (String id in artistIds) {
+      for (String id in artistId) {
         final doc = await FirebaseFirestore.instance
-            .collection('utenti')
+            .collection('artisti')
             .doc(id)
             .get();
         if (doc.exists) {
@@ -122,7 +122,7 @@ class _SearchViewState extends State<SearchView> {
                   builder: (context) => PlayerScreen(
                     songId: songId,
                     titolo: titolo,
-                    artistIds: item['artistIds'] ?? [],
+                    artistId: item['artistId'] ?? [],
                     cover: cover,
                   ),
                 ),

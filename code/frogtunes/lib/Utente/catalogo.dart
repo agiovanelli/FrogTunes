@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:frogtunes/player_screen.dart';
+import 'package:frogtunes/AME/Artista/artist_screen.dart';
 
 class LibraryView extends StatelessWidget {
   const LibraryView({super.key});
@@ -164,19 +166,58 @@ class LikedSongsScreen extends StatelessWidget {
             itemCount: songs.length,
             itemBuilder: (context, index) {
               final song = songs[index];
-              return ListTile(
-                leading: Image.network(
-                  song['cover'],
-                  width: 50,
-                  height: 50,
-                  fit: BoxFit.cover,
-                ),
-                title: Text(song['titolo'], style: const TextStyle(color: Colors.white)),
-                subtitle: Text(song['artista'], style: const TextStyle(color: Colors.white70)),
-              );
-            },
-          );
-        },
+              final List<String> artistIds = List<String>.from(song['artistId'] ?? []);
+
+              return FutureBuilder<List<String>>(
+                future: fetchArtistName(artistIds),
+                builder: (context, snapshot) {
+                  final artistNames = snapshot.data ?? ["Artista sconosciuto"];
+
+                return ListTile(
+                  leading: Image.network(
+                    song['cover'],
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                  ),
+                  title: Text(song['titolo'], style: const TextStyle(color: Colors.white)),
+                  subtitle: Wrap(
+                    alignment: WrapAlignment.start,
+                    children: List.generate(artistNames.length, (index) {
+                      final nome = artistNames[index];
+                      final id = artistIds[index];
+
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ArtistScreen(
+                                artistId: id,
+                                nomeArtista: nome,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: Text(
+                            index < artistNames.length - 1 ? "$nome, " : nome,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
       ),
     );
   }
