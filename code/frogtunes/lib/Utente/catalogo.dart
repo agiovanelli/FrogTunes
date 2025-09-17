@@ -185,16 +185,17 @@ class LikedSongsScreen extends StatelessWidget {
                     alignment: WrapAlignment.start,
                     children: List.generate(artistNames.length, (index) {
                       final nome = artistNames[index];
-                      final id = artistIds[index];
 
                       return GestureDetector(
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ArtistScreen(
-                                artistId: id,
-                                nomeArtista: nome,
+                              builder: (context) => PlayerScreen(
+                                songId: song.id,
+                                titolo: song['titolo'],
+                                artistId: artistIds,
+                                cover: song['cover'],
                               ),
                             ),
                           );
@@ -268,6 +269,17 @@ class FollowedArtistsScreen extends StatelessWidget {
                   backgroundImage: NetworkImage(cover),
                 ),
                 title: Text(nome, style: const TextStyle(color: Colors.white)),
+                onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ArtistScreen(
+                                artistId: artist['uid'],
+                                nomeArtista: nome,
+                              ),
+                            ),
+                          );
+                        },
               );
             },
           );

@@ -1,160 +1,383 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:frogtunes/player_screen.dart';
 
-class ArtistScreen extends StatelessWidget {
+class ArtistScreen extends StatefulWidget {
   final String artistId;
-  final String? immagineArtista;
-  final List<String> canzoni;
   final String nomeArtista;
+  final String? immagineArtista;
 
   const ArtistScreen({
     super.key,
     required this.artistId,
     required this.nomeArtista,
     this.immagineArtista,
-    this.canzoni = const [],
   });
 
-  Future<void> toggleFollowArtist({
-    required String artistId,
-    required String nome,
-    required String coverUrl
-    }) async {
+  @override
+  State<ArtistScreen> createState() => _ArtistScreenState();
+}
+
+class _ArtistScreenState extends State<ArtistScreen> {
+  bool isFollowing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFollowing();
+  }
+
+  Future<void> _checkFollowing() async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final doc = await FirebaseFirestore.instance
+        .collection('utenti')
+        .doc(uid)
+        .collection('followedArtists')
+        .doc(widget.artistId)
+        .get();
+    setState(() => isFollowing = doc.exists);
+  }
+
+  Future<void> _toggleFollow() async {
     final uid = FirebaseAuth.instance.currentUser!.uid;
     final artistRef = FirebaseFirestore.instance
         .collection('utenti')
         .doc(uid)
         .collection('followedArtists')
-        .doc(artistId); // artistId univoco
+        .doc(widget.artistId);
 
-    final doc = await artistRef.get();
-    
-    if (doc.exists) {
-      // Se esiste, smetti di seguire
+    if (isFollowing) {
       await artistRef.delete();
-    }else{
-    await artistRef.set({
-      'nome': nome,
-      'cover': coverUrl.isNotEmpty
-          ? coverUrl
-          : 'https://via.placeholder.com/150', // placeholder
-      'addedAt': FieldValue.serverTimestamp(),
-    });
+    } else {
+      await artistRef.set({
+        'uid': widget.artistId,
+        'nome': widget.nomeArtista,
+        'cover': widget.immagineArtista ?? 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f',
+        'addedAt': FieldValue.serverTimestamp(),
+      });
     }
+    setState(() => isFollowing = !isFollowing);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF041F0F),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: Text(
-          nomeArtista,
-          style: const TextStyle(color: Colors.white),
-        ),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 300,
+            pinned: true,
+            backgroundColor: Colors.black,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(widget.nomeArtista),
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.network(
+                    widget.immagineArtista ??
+                        'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f',
+                    fit: BoxFit.cover,
+                  ),
+                  const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.transparent, Colors.black87],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      onPressed: _toggleFollow,
+                      child: Text(
+                        isFollowing ? 'Seguito' : 'Segui',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    "Brani popolari",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  ArtistSongs(artistId: widget.artistId),
+                  const Text(
+                    "Ultime pubblicazioni",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  ArtistLastSongs(artistId: widget.artistId),
+                  const Text(
+                    "Compare in",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  ArtistFeaturing(artistId: widget.artistId),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: 20),
+    );
+  }
+}
 
-            // Immagine artista
-            ClipRRect(
-              borderRadius: BorderRadius.circular(100),
-              child: Image.network(
-                immagineArtista ??
-                    "https://via.placeholder.com/200x200?text=Artista",
-                height: 200,
-                width: 200,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.person, size: 100, color: Colors.white),
+/// Lista dei brani di un artista specifico
+class ArtistSongs extends StatelessWidget {
+  final String artistId;
+
+  const ArtistSongs({super.key, required this.artistId});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('canzoni')
+          .where('artistId', arrayContains: artistId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.green),
+          );
+        }
+
+        final songs = snapshot.data!.docs;
+        if (songs.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Center(
+              child: Text(
+                "Nessun brano disponibile",
+                style: TextStyle(color: Colors.white70),
               ),
             ),
-            const SizedBox(height: 20),
+          );
+        }
 
-            // Nome artista
-            Text(
-              nomeArtista,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 10),
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: songs.length,
+          itemBuilder: (context, index) {
+            final song = songs[index];
 
-            // Pulsante Segui
-            ElevatedButton(
-              onPressed: () {
-                toggleFollowArtist(
-                  artistId: artistId, // usa l’ID dal DB
-                  nome: nomeArtista,
-                  coverUrl: immagineArtista ?? '',
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Hai iniziato a seguire l\'artista')),
-                );},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
+            return ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  song['cover'],
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
                 ),
               ),
-              child: const Text(
-                "Segui",
-                style: TextStyle(color: Colors.white),
+              title: Text(
+                song['titolo'],
+                style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
-            ),
-            const SizedBox(height: 30),
-
-            // Titolo sezione canzoni popolari
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Brani popolari",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+              onTap: () {
+                Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PlayerScreen(
+                    songId: song['cid'],
+                    titolo: song['titolo'],
+                    artistId: [artistId],
+                    cover: song['cover'],
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // Lista canzoni
-            ListView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemCount: canzoni.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.green,
-                    child: const Icon(Icons.play_arrow, color: Colors.white),
-                  ),
-                  title: Text(
-                    canzoni[index],
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  onTap: () {
-                    // Qui apri il player della canzone
-                  },
-                );
+              );
               },
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class ArtistLastSongs extends StatelessWidget {
+  final String artistId;
+
+  const ArtistLastSongs({super.key, required this.artistId});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('canzoni')
+          .where('artistId', arrayContains: artistId)
+          .orderBy('addedAt', descending: true) //aggiungere quando sono state create canzoni
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.green),
+          );
+        }
+
+        final songs = snapshot.data!.docs;
+        if (songs.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Center(
+              child: Text(
+                "Nessun brano disponibile",
+                style: TextStyle(color: Colors.white70),
+              ),
             ),
-            const SizedBox(height: 40),
-          ],
-        ),
-      ),
+          );
+        }
+
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: songs.length,
+          itemBuilder: (context, index) {
+            final song = songs[index];
+
+            return ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  song['cover'],
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              title: Text(
+                song['titolo'],
+                style: const TextStyle(color: Colors.white, fontSize: 16),
+              ),
+              onTap: () {
+                Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PlayerScreen(
+                    songId: song['cid'],
+                    titolo: song['titolo'],
+                    artistId: [artistId],
+                    cover: song['cover'],
+                  ),
+                ),
+              );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class ArtistFeaturing extends StatelessWidget {
+  final String artistId;
+
+  const ArtistFeaturing({super.key, required this.artistId});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('canzoni')
+          .where('artistId', arrayContains: artistId) //impostare quando c'è artista ma non come primo presente in lista
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.green),
+          );
+        }
+
+        final songs = snapshot.data!.docs;
+        if (songs.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Center(
+              child: Text(
+                "Nessun brano disponibile",
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: songs.length,
+          itemBuilder: (context, index) {
+            final song = songs[index];
+
+            return ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  song['cover'],
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              title: Text(
+                song['titolo'],
+                style: const TextStyle(color: Colors.white, fontSize: 16),
+              ),
+              onTap: () {
+                Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PlayerScreen(
+                    songId: song['cid'],
+                    titolo: song['titolo'],
+                    artistId: [artistId],
+                    cover: song['cover'],
+                  ),
+                ),
+              );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }
