@@ -46,7 +46,7 @@ exports.searchCanzoni = onCall(async (request) => {
 // Funzione per indicizzare un oggetto
 async function saveToAlgolia(data, objectID) {
   try{
-    const artistIds = data.artisti || [];
+    const artistIds = data.artistId || [];
     let artistNames = [];
 
     if(artistIds.length > 0){
@@ -61,13 +61,13 @@ async function saveToAlgolia(data, objectID) {
     const record = {
       objectID,
       ...data,
-      artistIds,
-      artisti: artistNames,
+      // artistIds,
+      artista: artistNames,
     };
 
     await client.saveObjects({
       indexName: ALGOLIA_INDEX_NAME,
-      objects: [{ objectID, ...data }],
+      objects: [{ objectID, ...record }],
     });
 
     console.log(`Canzone ${objectID} indicizzata con successo.`);
@@ -122,7 +122,7 @@ exports.syncAllSongsToAlgolia = onRequest(async (req, res) => {
       const data = doc.data();
       const objectID = doc.id;
 
-      const artistIds = data.artisti || [];
+      const artistIds = data.artistId || [];
       let artistNames = [];
 
       if (artistIds.length > 0) {
@@ -137,8 +137,8 @@ exports.syncAllSongsToAlgolia = onRequest(async (req, res) => {
       objects.push({
         objectID,
         ...data,
-        artistIds,
-        artisti: artistNames, // array di nomi leggibili
+        // artistIds,
+        artista: artistNames, // array di nomi leggibili
       });
     }
 

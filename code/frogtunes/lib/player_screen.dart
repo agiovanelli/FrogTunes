@@ -61,9 +61,14 @@ Future<List<String>> fetchArtistName(List<String> artistId) async {
     .where(FieldPath.documentId, whereIn: artistId)
     .get();
   
-  return doc.docs
-      .map((doc) => doc.data()['nome'] as String? ?? "Artista sconosciuto")
-      .toList();
+  // Mappiamo id -> nome
+  final Map<String, String> mappa = {
+    for (var d in doc.docs)
+      d.id: d.data()['nome'] as String? ?? 'Artista sconosciuto'
+  };
+
+  // Ricostruiamo l’elenco nello stesso ordine degli ID in ingresso
+  return artistId.map((id) => mappa[id] ?? 'Artista sconosciuto').toList();
 }
 
 class _PlayerScreenState extends State<PlayerScreen> {

@@ -176,6 +176,7 @@ class ArtistSongs extends StatelessWidget {
         }
 
         final songs = snapshot.data!.docs;
+        
         if (songs.isEmpty) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 20),
@@ -194,6 +195,7 @@ class ArtistSongs extends StatelessWidget {
           itemCount: songs.length,
           itemBuilder: (context, index) {
             final song = songs[index];
+            final List<String> artistIds = List<String>.from(song['artistId'] ?? []);
 
             return ListTile(
               contentPadding: EdgeInsets.zero,
@@ -217,7 +219,7 @@ class ArtistSongs extends StatelessWidget {
                   builder: (context) => PlayerScreen(
                     songId: song['cid'],
                     titolo: song['titolo'],
-                    artistId: [artistId],
+                    artistId: artistIds,
                     cover: song['cover'],
                   ),
                 ),
@@ -270,6 +272,7 @@ class ArtistLastSongs extends StatelessWidget {
           itemCount: songs.length,
           itemBuilder: (context, index) {
             final song = songs[index];
+            final List<String> artistIds = List<String>.from(song['artistId'] ?? []);
 
             return ListTile(
               contentPadding: EdgeInsets.zero,
@@ -293,7 +296,7 @@ class ArtistLastSongs extends StatelessWidget {
                   builder: (context) => PlayerScreen(
                     songId: song['cid'],
                     titolo: song['titolo'],
-                    artistId: [artistId],
+                    artistId: artistIds,
                     cover: song['cover'],
                   ),
                 ),
@@ -326,7 +329,11 @@ class ArtistFeaturing extends StatelessWidget {
           );
         }
 
-        final songs = snapshot.data!.docs;
+        final songs = snapshot.data!.docs.where((doc) {
+          final List<dynamic> artists = doc['artistId'] ?? [];
+          return artists.length > 1 && artists[0] != artistId;
+        }).toList();
+
         if (songs.isEmpty) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 20),
@@ -368,7 +375,7 @@ class ArtistFeaturing extends StatelessWidget {
                   builder: (context) => PlayerScreen(
                     songId: song['cid'],
                     titolo: song['titolo'],
-                    artistId: [artistId],
+                    artistId: List<String>.from(song['artistId']),
                     cover: song['cover'],
                   ),
                 ),
