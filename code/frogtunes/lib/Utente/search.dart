@@ -132,8 +132,9 @@ class _SearchViewState extends State<SearchView> {
             onLongPress: () {
               showSongOptionsBottomSheet(
                 context: context,
+                songId: songId,
                 titolo: titolo,
-                artista: artista,
+                artistId: item['artistId'] ?? [],
                 cover: cover,
               );
             },

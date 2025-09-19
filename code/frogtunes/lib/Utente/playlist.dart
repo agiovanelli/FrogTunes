@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:frogtunes/AME/Artista/artist_screen.dart';  
+import 'package:firebase_auth/firebase_auth.dart';  
+import 'package:frogtunes/player_screen.dart';
 
 class PlaylistView extends StatefulWidget {
   const PlaylistView({super.key});
 
   @override
   State<PlaylistView> createState() => _PlaylistViewState();
+}
+
+class PlaylistSettings{
+  static Future<void> creaPlaylist() async{
+    // Funzione vuota per evitare errori di riferimento
+  }
 }
 
 class _PlaylistViewState extends State<PlaylistView> {
@@ -35,7 +41,7 @@ class _PlaylistViewState extends State<PlaylistView> {
     });
   }
 
-  Future<void> _creaPlaylist() async {
+  Future<void> creaPlaylist() async {
     showDialog(
       context: context,
       builder: (context) {
@@ -95,86 +101,148 @@ class _PlaylistViewState extends State<PlaylistView> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: GridView.builder(
-        padding: const EdgeInsets.all(8.0),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 30.0,
-          mainAxisSpacing: 20.0,
-          childAspectRatio: 1.0,
-        ),
-        itemCount: playlists.length + 1,
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            // Pulsante Crea Playlist
-            return GestureDetector(
-              onTap: _creaPlaylist,
-              child: Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('playlists')
+          .orderBy('createdAt', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData) {
+          return const Center(
+            child: Text('Nessuna playlist', style: TextStyle(color: Colors.white)),
+          );
+        }
+
+        final docs = snapshot.data!.docs;
+
+        return GridView.builder(
+          padding: const EdgeInsets.all(8.0),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 30.0,
+            mainAxisSpacing: 20.0,
+            childAspectRatio: 1.0,
+          ),
+          // +1 per il pulsante "Crea playlist"
+          itemCount: docs.length + 1,
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              // Crea Playlist
+              return GestureDetector(
+                onTap: creaPlaylist,
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15.0),
+                  ),
+                  color: Colors.green.withOpacity(1),
+                  elevation: 3,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.add, color: Colors.white, size: 50.0),
+                      SizedBox(height: 10),
+                      Text(
+                        "Crea playlist",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
-                color: Colors.green.withOpacity(0.3),
-                elevation: 3,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.add, color: Colors.white, size: 50.0),
-                    SizedBox(height: 10),
-                    Text(
-                      "Crea playlist",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                      textAlign: TextAlign.center,
+              );
+            } else {
+              // Singola playlist
+              final doc = docs[index - 1];
+              final playlistId = doc.id;
+              final playlistName = doc['name'] ?? 'Senza nome';
+
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PlaylistDetailsView(
+                        playlistId: playlistId,
+                        playlistName: playlistName,
+                      ),
                     ),
-                  ],
-                ),
-              ),
-            );
-          } else {
-            final playlistId = playlists[index - 1]['id']!;
-            final playlistName = playlists[index - 1]['name']!;
-            return GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        PlaylistDetailsView(playlistId: playlistId, playlistName: playlistName),
+                  );
+                },
+              onLongPress: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    backgroundColor: const Color(0xFF041F0F),
+                    title: const Text(
+                      "Elimina playlist",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    content: Text(
+                      "Sei sicuro di voler eliminare la playlist \"$playlistName\"?",
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                    actions: [
+                      TextButton(
+                        child: const Text("Annulla", style: TextStyle(color: Colors.white70)),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                        onPressed: () async {
+                          await FirebaseFirestore.instance
+                              .collection('playlists')
+                              .doc(playlistId)
+                              .delete();
+
+                          setState(() {
+                            playlists.removeAt(index - 1);
+                          });
+
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Playlist eliminata")),
+                          );
+                        },
+                        child: const Text("Elimina"),
+                      ),
+                    ],
                   ),
                 );
               },
               child: Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                color: Colors.green,
-                elevation: 3,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    const Icon(
-                      Icons.music_note,
-                      color: Colors.white,
-                      size: 50.0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15.0),
                     ),
-                    const SizedBox(height: 10),
-                    Text(
-                      playlistName,
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
-                      textAlign: TextAlign.center,
+                    color: Colors.green.withOpacity(0.3),
+                    elevation: 3,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.queue_music, color: Colors.white, size: 40.0),
+                        const SizedBox(height: 10),
+                        Text(
+                          playlistName,
+                          style: const TextStyle(color: Colors.white, fontSize: 16),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-            );
-          }
+                  ),
+                );
+              }
+            },
+          );
         },
       ),
-      backgroundColor: const Color.fromARGB(255, 4, 35, 5),
+    backgroundColor: const Color.fromARGB(255, 4, 35, 5),
     );
   }
-}
+  }
 
 class PlaylistDetailsView extends StatelessWidget {
   final String playlistId;
@@ -193,49 +261,137 @@ class PlaylistDetailsView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green,
-        title: Text(playlistName),
+        title: StreamBuilder<DocumentSnapshot>(
+          stream: playlistRef.snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Text("...");
+            }
+            final data = snapshot.data!.data() as Map<String, dynamic>;
+            return Text(data['name'] ?? 'Playlist');
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit, color: Colors.white),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  String nuovoNome = playlistName;
+                  return AlertDialog(
+                    backgroundColor: const Color(0xFF041F0F),
+                    title: const Text(
+                      "Modifica nome",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    content: TextField(
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        hintText: "Nome playlist",
+                        hintStyle: TextStyle(color: Colors.white54),
+                      ),
+                      controller: TextEditingController(text: playlistName),
+                      onChanged: (val) {
+                        nuovoNome = val;
+                      },
+                    ),
+                    actions: [
+                      TextButton(
+                        child: const Text("Annulla", style: TextStyle(color: Colors.white70)),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                        onPressed: () async {
+                          if (nuovoNome.isNotEmpty) {
+                            await playlistRef.update({'name': nuovoNome});
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Nome playlist aggiornato")),
+                            );
+                          }
+                        },
+                        child: const Text("Salva"),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ],
       ),
-      body: StreamBuilder<DocumentSnapshot>(
-        stream: playlistRef.snapshots(),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: playlistRef.collection('canzoni').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(child: Text("Playlist non trovata", style: TextStyle(color: Colors.white)));
-          }
-
-          final playlistData = snapshot.data!.data() as Map<String, dynamic>;
-          final canzoni = List<Map<String, dynamic>>.from(playlistData['canzoni'] ?? []);
-
-          if (canzoni.isEmpty) {
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return const Center(child: Text("Nessuna canzone nella playlist", style: TextStyle(color: Colors.white)));
           }
+
+          final canzoni = snapshot.data!.docs.map((doc) {
+            return doc.data() as Map<String, dynamic>;
+          }).toList();
 
           return ListView.builder(
             itemCount: canzoni.length,
             itemBuilder: (context, index) {
               final canzone = canzoni[index];
-              return ListTile(
-                leading: const Icon(Icons.music_note, color: Colors.white),
-                title: Text(canzone['titolo'] ?? 'Titolo sconosciuto',
-                    style: const TextStyle(color: Colors.white)),
-                subtitle: Text(canzone['artista'] ?? 'Artista sconosciuto',
-                    style: const TextStyle(color: Colors.grey)),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ArtistScreen(
-                        artistId: '',
-                        nomeArtista: '${canzone['artista'] ?? 'Sconosciuto'}',
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-          );
+              final List<String> artistIds = List<String>.from(canzone['artistId'] ?? []);
+
+              return FutureBuilder<List<String>>(
+                future: fetchArtistName(artistIds),
+                builder: (context, snapshot) {
+                  final artistNames = snapshot.data ?? ["Artista sconosciuto"];
+
+                return ListTile(
+                  leading: Image.network(
+                    canzone['cover'],
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                  ),
+                  title: Text(canzone['titolo'], style: const TextStyle(color: Colors.white, fontSize: 18)),
+                  subtitle: Wrap(
+                    alignment: WrapAlignment.start,
+                    children: List.generate(artistNames.length, (index) {
+                      final nome = artistNames[index];
+
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PlayerScreen(
+                                songId: canzone['cid'],
+                                titolo: canzone['titolo'],
+                                artistId: artistIds,
+                                cover: canzone['cover'],
+                              ),
+                            ),
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: Text(
+                            index < artistNames.length - 1 ? "$nome, " : nome,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                );
+              },
+            );
+          },
+        );
         },
       ),
       backgroundColor: const Color.fromARGB(255, 4, 35, 5),
