@@ -4,6 +4,7 @@ import 'package:frogtunes/player_screen.dart';
 import 'package:frogtunes/aggiungiPC.dart';
 import 'package:algolia/algolia.dart';
 import 'package:frogtunes/algolia_service.dart';
+import 'package:frogtunes/audio_service.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -15,6 +16,7 @@ class SearchView extends StatefulWidget {
 class _SearchViewState extends State<SearchView> {
   final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _searchResults = [];
+  final audio = AudioService();
 
   void _performSearch(String query) async {
     if (query.isEmpty) {
@@ -40,6 +42,7 @@ class _SearchViewState extends State<SearchView> {
         'songId': data['cid'] ?? '',
         'titolo': data['titolo'] ?? '',
         'artistId': artistId,
+        'audioUrl': data['audioUrl'] ?? '',
         'cover': data['cover'] ?? 'https://via.placeholder.com/150',
       };
     }).toList();
@@ -105,6 +108,7 @@ class _SearchViewState extends State<SearchView> {
         final item = _searchResults[index];
         final songId = item['songId'] ?? '';
         final titolo = item['titolo'] ?? 'Titolo sconosciuto';
+        final audioUrl = item['audioUrl'] ?? '';
         final artista = item['artista'] ?? 'Artista sconosciuto';
         final cover = item['cover'] ?? 'https://via.placeholder.com/150';
 
@@ -158,11 +162,18 @@ class _SearchViewState extends State<SearchView> {
               artista,
               style: const TextStyle(color: Colors.white70),
             ),
-            trailing: IconButton(
-              icon: const Icon(Icons.play_arrow, color: Colors.white, size: 30),
-              onPressed: () {
-                print('Play: $titolo');
-                // Qui in futuro: riproduzione audio
+            trailing: 
+            IconButton(
+              icon: Icon(
+                    audio.isPlaying
+                        ? Icons.pause
+                        : Icons.play_arrow,
+                    color: Colors.white,
+                    size: 40,
+                  ),
+              onPressed: () async{
+                await audio.setUrl(audioUrl); // oppure audio.setUrl(urlSingolo);
+                audio.isPlaying ? audio.pause() : audio.play();
               },
             ),
           ),
