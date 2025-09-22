@@ -5,6 +5,7 @@ import 'package:frogtunes/aggiungiPC.dart';
 import 'package:algolia/algolia.dart';
 import 'package:frogtunes/algolia_service.dart';
 import 'package:frogtunes/audio_service.dart';
+import 'package:frogtunes/mini_player.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -96,19 +97,29 @@ class _SearchViewState extends State<SearchView> {
                 borderRadius: BorderRadius.circular(15),
                 borderSide: BorderSide.none,
               ),
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.clear, color: Colors.white),
+              onPressed: () {
+                _searchController.clear();
+                setState(() {
+                  _searchResults = [];
+                });
+              },
+            ),
             ),
             style: const TextStyle(color: Colors.white, fontSize: 18),
             onChanged: _performSearch,
           ),
         ),
       ),
-      body: ListView.builder(
+      body:Stack(
+        children: [
+      ListView.builder(
       itemCount: _searchResults.length,
       itemBuilder: (context, index) {
         final item = _searchResults[index];
         final songId = item['songId'] ?? '';
         final titolo = item['titolo'] ?? 'Titolo sconosciuto';
-        final audioUrl = item['audioUrl'] ?? '';
         final artista = item['artista'] ?? 'Artista sconosciuto';
         final cover = item['cover'] ?? 'https://via.placeholder.com/150';
 
@@ -172,23 +183,27 @@ class _SearchViewState extends State<SearchView> {
                     size: 40,
                   ),
               onPressed: () async{
-                await audio.setUrl(audioUrl); // oppure audio.setUrl(urlSingolo);
-                audio.isPlaying ? audio.pause() : audio.play();
+                final audio = AudioService();
+                // audio.isPlaying ? audio.pause() : audio.play();
+                await audio.playSong(
+                  songId: songId,
+                  url: item['audioUrl'],
+                  title: titolo,
+                  artist: artista,
+                  artistId: item['artistId'] ?? [],
+                  cover: cover,
+                );
               },
             ),
           ),
         );
       },
     ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _searchController.clear();
-          setState(() {
-            _searchResults = [];
-          });
-        },
-        backgroundColor: Colors.green[700],
-        child: const Icon(Icons.clear, color: Colors.white),
+          const Align(
+            alignment: Alignment.bottomCenter,
+            child: MiniPlayer(),
+          ),
+        ],
       ),
     );
   }
