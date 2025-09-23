@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 
 import 'package:frogtunes/AME/Artista/artist_screen.dart';
 import 'package:frogtunes/coda.dart';
@@ -66,9 +67,20 @@ Future<List<String>> fetchArtistName(List<String> artistId) async {
   return artistId.map((id) => mappa[id] ?? 'Artista sconosciuto').toList();
 }
 
+Future<String> fetchUrl(String songId) async {
+  final doc = await FirebaseFirestore.instance
+      .collection('canzoni')
+      .doc(songId)
+      .get();
+  return doc.data()?['audioUrl'] ?? '';
+}
+
 class _PlayerScreenState extends State<PlayerScreen> {
   final audio = AudioService();
   List<String> nomiArtisti = [];
+  late final StreamSubscription<Duration> _positionSub;
+  late final StreamSubscription<Duration?> _durationSub;
+
   Duration position = Duration.zero;
   Duration duration = Duration.zero;
 
@@ -76,27 +88,34 @@ class _PlayerScreenState extends State<PlayerScreen> {
   void initState() {
     super.initState();
     _loadArtisti(widget.artistId);
-    _loadAndPlay();
 
-    audio.positionStream.listen((p) => setState(() => position = p));
-    audio.durationStream.listen((d) {
-      if (d != null) setState(() => duration = d);
+    // Ascolta i cambiamenti di posizione e durata da qualsiasi punto
+    _positionSub = audio.positionStream.listen((p) {
+      if (mounted) setState(() => position = p);
     });
+
+    _durationSub = audio.durationStream.listen((d) {
+      if (mounted && d != null) setState(() => duration = d);
+    });
+
+    // Avvia la canzone corrente
+    if(audio.currentSongId.value != widget.songId){
+      fetchUrl(widget.songId).then((url) {
+        audio.playSong(
+          songId: widget.songId,
+          url: url,
+          title: widget.titolo,
+          artistId: widget.artistId,
+          artist: nomiArtisti.isNotEmpty ? nomiArtisti.join(', ') : 'Artista sconosciuto',
+          cover: widget.cover,
+        );
+      });
+    }
   }
 
   Future<void> _loadArtisti(List<String> id) async {
     final nomi = await fetchArtistName(id);
     setState(() => nomiArtisti = nomi);
-  }
-
-  Future<void> _loadAndPlay() async {
-    final doc = await FirebaseFirestore.instance
-        .collection('canzoni')
-        .doc(widget.songId)
-        .get();
-    final url = doc['audioUrl'] as String;
-    await audio.setUrl(url);
-    await audio.play();
   }
 
   void _mostraCoda(BuildContext context) {
@@ -291,7 +310,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   color: audio.isShuffle ? Colors.green : Colors.white,
                   onPressed: () async {
                     await audio.toggleShuffle();
-                    setState(() {});
                   },
                 ),
                 const SizedBox(width: 10),
@@ -327,7 +345,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   color: audio.isLoop ? Colors.green : Colors.white,
                   onPressed: () async {
                     await audio.toggleLoop();
-                    setState(() {});
                   },
                 ),
               ],
@@ -337,5 +354,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _positionSub.cancel();
+    _durationSub.cancel();
+    super.dispose();
   }
 }

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';  
 import 'package:frogtunes/player_screen.dart';
+import 'package:frogtunes/audio_service.dart';
+import 'package:frogtunes/mini_player.dart';
+import 'dart:async';
 
 class PlaylistView extends StatefulWidget {
   const PlaylistView({super.key});
@@ -17,13 +20,29 @@ class PlaylistSettings{
 }
 
 class _PlaylistViewState extends State<PlaylistView> {
+  final audio = AudioService();
   final List<Map<String, String>> playlists = [];
   final String uid = FirebaseAuth.instance.currentUser!.uid;
+
+  late final StreamSubscription<Duration> _positionSub;
+  late final StreamSubscription<Duration?> _durationSub;
+
+  Duration position = Duration.zero;
+  Duration duration = Duration.zero;
 
   @override
   void initState() {
     super.initState();
     _caricaPlaylist();
+
+    // Ascolta i cambiamenti di posizione e durata da qualsiasi punto
+    _positionSub = audio.positionStream.listen((p) {
+      if (mounted) setState(() => position = p);
+    });
+
+    _durationSub = audio.durationStream.listen((d) {
+      if (mounted && d != null) setState(() => duration = d);
+    });
   }
 
   Future<void> _caricaPlaylist() async {
@@ -36,7 +55,7 @@ class _PlaylistViewState extends State<PlaylistView> {
       playlists.clear();
       playlists.addAll(snapshot.docs.map((doc) => {
           'id': doc.id, // ID documento Firestore
-          'name': doc['name'] as String
+          'name': doc['name'] as String,
         }));
     });
   }
@@ -242,7 +261,14 @@ Widget build(BuildContext context) {
     backgroundColor: const Color.fromARGB(255, 4, 35, 5),
     );
   }
+
+  @override
+  void dispose() {
+    _positionSub.cancel();
+    _durationSub.cancel();
+    super.dispose();
   }
+}
 
 class PlaylistDetailsView extends StatelessWidget {
   final String playlistId;
@@ -267,11 +293,41 @@ class PlaylistDetailsView extends StatelessWidget {
             if (!snapshot.hasData) {
               return const Text("...");
             }
+
+
             final data = snapshot.data!.data() as Map<String, dynamic>;
             return Text(data['name'] ?? 'Playlist');
+
           },
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.play_arrow, color: Colors.white),
+            onPressed: () async {
+              final playlistSnapshot = await playlistRef.collection('canzoni').get();
+
+              if (playlistSnapshot.docs.isNotEmpty) {
+                final playlistUrls = playlistSnapshot.docs.map((doc) {
+                  final data = doc.data();
+                  return data['url'] as String? ?? '';
+                }).where((url) => url.isNotEmpty).toList();
+
+                if (playlistUrls.isNotEmpty) {
+                  final audio = AudioService();
+                  await audio.setPlaylist(playlistUrls);
+                  await audio.play();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("La playlist è vuota")),
+                  );
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("La playlist è vuota")),
+                );
+              }
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.edit, color: Colors.white),
             onPressed: () {
@@ -322,7 +378,10 @@ class PlaylistDetailsView extends StatelessWidget {
           ),
         ],
       ),
-      body: StreamBuilder<QuerySnapshot>(
+      body:Stack(
+        children: [
+
+      StreamBuilder<QuerySnapshot>(
         stream: playlistRef.collection('canzoni').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -394,6 +453,12 @@ class PlaylistDetailsView extends StatelessWidget {
         );
         },
       ),
+          const Align(
+                alignment: Alignment.bottomCenter,
+                child: MiniPlayer(),
+          ),
+        ]
+      ), 
       backgroundColor: const Color.fromARGB(255, 4, 35, 5),
     );
   }

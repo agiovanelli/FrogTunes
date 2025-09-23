@@ -6,6 +6,7 @@ import 'package:frogtunes/Utente/playlist.dart';
 
 Future<void> showSongOptionsBottomSheet({
   required BuildContext context,
+  required String audioUrl,
   required String songId,
   required String titolo,
   required List<String> artistId,
@@ -39,6 +40,7 @@ Future<void> showSongOptionsBottomSheet({
               ),
               onTap: () {
                 Coda.aggiungi({
+                  'url': audioUrl,
                   'cid': songId,
                   'titolo': titolo,
                   'artistId': artistId,
@@ -92,6 +94,7 @@ Future<void> showSongOptionsBottomSheet({
                                               .doc(playlist.id);
 
                                           await playlistRef.collection('canzoni').add({
+                                            'url': audioUrl,
                                             'cid': songId,
                                             'titolo': titolo,
                                             'artistId': artistId,

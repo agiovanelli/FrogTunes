@@ -5,7 +5,6 @@ import 'package:frogtunes/aggiungiPC.dart';
 import 'package:algolia/algolia.dart';
 import 'package:frogtunes/algolia_service.dart';
 import 'package:frogtunes/audio_service.dart';
-import 'package:frogtunes/mini_player.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -147,6 +146,7 @@ class _SearchViewState extends State<SearchView> {
             onLongPress: () {
               showSongOptionsBottomSheet(
                 context: context,
+                audioUrl: item['audioUrl'],
                 songId: songId,
                 titolo: titolo,
                 artistId: item['artistId'] ?? [],
@@ -183,8 +183,6 @@ class _SearchViewState extends State<SearchView> {
                     size: 40,
                   ),
               onPressed: () async{
-                final audio = AudioService();
-                // audio.isPlaying ? audio.pause() : audio.play();
                 await audio.playSong(
                   songId: songId,
                   url: item['audioUrl'],
@@ -199,10 +197,6 @@ class _SearchViewState extends State<SearchView> {
         );
       },
     ),
-          const Align(
-            alignment: Alignment.bottomCenter,
-            child: MiniPlayer(),
-          ),
         ],
       ),
     );
