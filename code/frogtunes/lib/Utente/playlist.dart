@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';  
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:frogtunes/Utente/home.dart';  
 import 'package:frogtunes/player_screen.dart';
 import 'package:frogtunes/audio_service.dart';
 import 'package:frogtunes/mini_player.dart';
@@ -283,8 +284,10 @@ class PlaylistDetailsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final playlistRef = FirebaseFirestore.instance.collection('playlists').doc(playlistId);
-
-    return Scaffold(
+    
+  return HomeView(
+      showAppBar: false,
+      extraPage: Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green,
         title: StreamBuilder<DocumentSnapshot>(
@@ -294,10 +297,8 @@ class PlaylistDetailsView extends StatelessWidget {
               return const Text("...");
             }
 
-
             final data = snapshot.data!.data() as Map<String, dynamic>;
             return Text(data['name'] ?? 'Playlist');
-
           },
         ),
         actions: [
@@ -460,6 +461,7 @@ class PlaylistDetailsView extends StatelessWidget {
         ]
       ), 
       backgroundColor: const Color.fromARGB(255, 4, 35, 5),
+      ),
     );
   }
 }

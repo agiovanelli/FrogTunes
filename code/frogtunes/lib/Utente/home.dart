@@ -13,7 +13,16 @@ import 'package:frogtunes/Utente/settings.dart';
 import 'package:frogtunes/Utente/catalogo.dart';
 
 class HomeView extends StatefulWidget {
-  const HomeView({super.key});
+  final Widget? extraPage;
+  final int initialIndex;
+  final bool showAppBar;
+  
+  const HomeView({
+    this.initialIndex = 1,
+    this.showAppBar = true, // di default visibile
+    this.extraPage,
+    super.key,
+  });
 
   @override
   _HomeViewState createState() => _HomeViewState();
@@ -278,60 +287,71 @@ void _showProfileDialog(BuildContext context, String uid) {
 }
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    setState(() => _selectedIndex = index);
+      
+      if (widget.extraPage != null) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => HomeView(), // nuova root con pagina scelta
+          ),
+          (route) => false,
+        );
+      }
   }
 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    final bool isExtra = widget.extraPage != null;
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 4, 35, 5),
-        title: Row(
-          children:[
-            CircleAvatar(
-              backgroundColor: Colors.white,
-              backgroundImage: userData?['profileImageUrl'] != null && userData!['profileImageUrl'] != ''
-                  ? NetworkImage(userData!['profileImageUrl'])
-                  : user?.photoURL != null && user?.photoURL != ''
-                      ? NetworkImage(user!.photoURL!)
-                      : const NetworkImage('https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f'),
+      appBar: 
+      widget.showAppBar
+        ? AppBar(
+            backgroundColor: const Color.fromARGB(255, 4, 35, 5),
+            title: Row(
+              children:[
+                CircleAvatar(
+                  backgroundColor: Colors.white,
+                  backgroundImage: userData?['profileImageUrl'] != null && userData!['profileImageUrl'] != ''
+                      ? NetworkImage(userData!['profileImageUrl'])
+                      : user?.photoURL != null && user?.photoURL != ''
+                          ? NetworkImage(user!.photoURL!)
+                          : const NetworkImage('https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f'),
+                ),
+                const SizedBox(width: 10),
+                Expanded(child:
+                  Text(
+                    'Ciao ${userData?['username'] ?? user?.displayName ?? 'Utente'}',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 10),
-            Expanded(child:
-              Text(
-                'Ciao ${userData?['username'] ?? user?.displayName ?? 'Utente'}',
-                style: const TextStyle(color: Colors.white),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.settings, color: Colors.white),
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SettingsPage()),
+                  );
+                },
               ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsPage()),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => LoginView()),
-              );
-            },
-          ),
-        ],
-      ),
-      body: _pages[_selectedIndex],
+              IconButton(
+                icon: const Icon(Icons.logout, color: Colors.white),
+                onPressed: () async {
+                  await FirebaseAuth.instance.signOut();
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginView()),
+                  );
+                },
+              ),
+            ],
+          )
+        : null,
+      body: isExtra ? widget.extraPage! : _pages[_selectedIndex],
       backgroundColor: const Color.fromARGB(255, 4, 35, 5),
       bottomNavigationBar: BottomNavigationBar(
         selectedItemColor: Colors.white,

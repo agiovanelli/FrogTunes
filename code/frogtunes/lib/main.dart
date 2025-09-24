@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:frogtunes/Utente/login.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'firebase_options.dart';
+import 'package:frogtunes/root.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.green,
         brightness: Brightness.dark,
       ),
-      home: LoginView(),
+      home: RootPage(),
     );
   }
 }

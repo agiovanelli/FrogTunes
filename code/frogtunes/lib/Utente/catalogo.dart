@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:frogtunes/player_screen.dart';
 import 'package:frogtunes/AME/Artista/artist_screen.dart';
+import 'package:frogtunes/Utente/home.dart';
 
 class LibraryView extends StatelessWidget {
   const LibraryView({super.key});
@@ -129,7 +130,9 @@ class LikedSongsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return HomeView(
+      showAppBar: false,
+      extraPage: Scaffold(
       backgroundColor: const Color(0xFF041F0F),
       appBar: AppBar(
         title: const Text("Brani che ti piacciono", style: TextStyle(color: Colors.white)),
@@ -220,6 +223,7 @@ class LikedSongsScreen extends StatelessWidget {
         );
       },
       ),
+    ),
     );
   }
 }
@@ -231,7 +235,9 @@ class FollowedArtistsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser!.uid;
 
-    return Scaffold(
+    return HomeView(
+      showAppBar: false,
+      extraPage: Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text("Artisti seguiti"),
@@ -285,6 +291,7 @@ class FollowedArtistsScreen extends StatelessWidget {
           );
         },
       ),
+    ),
     );
   }
 }
