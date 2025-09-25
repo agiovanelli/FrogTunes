@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:frogtunes/Utente/home.dart';  
+import 'package:firebase_auth/firebase_auth.dart';  
 import 'package:frogtunes/player_screen.dart';
 import 'package:frogtunes/audio_service.dart';
 import 'package:frogtunes/mini_player.dart';
@@ -285,9 +284,7 @@ class PlaylistDetailsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final playlistRef = FirebaseFirestore.instance.collection('playlists').doc(playlistId);
     
-  return HomeView(
-      showAppBar: false,
-      extraPage: Scaffold(
+  return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green,
         title: StreamBuilder<DocumentSnapshot>(
@@ -308,10 +305,17 @@ class PlaylistDetailsView extends StatelessWidget {
               final playlistSnapshot = await playlistRef.collection('canzoni').get();
 
               if (playlistSnapshot.docs.isNotEmpty) {
-                final playlistUrls = playlistSnapshot.docs.map((doc) {
-                  final data = doc.data();
-                  return data['url'] as String? ?? '';
-                }).where((url) => url.isNotEmpty).toList();
+              final playlistUrls = playlistSnapshot.docs.map((doc) {
+                
+                // Mappa completa per ogni canzone
+                return {
+                  'songId': doc['cid'] ?? '',
+                  'url': doc['url'] ?? '',
+                  'title': doc['titolo'] ?? '',
+                  'artistId': doc['artistId'] ?? [],
+                  'cover': doc['cover'] ?? '',
+                };
+              }).where((track) => (track['url'] as String).isNotEmpty).toList();
 
                 if (playlistUrls.isNotEmpty) {
                   final audio = AudioService();
@@ -461,7 +465,6 @@ class PlaylistDetailsView extends StatelessWidget {
         ]
       ), 
       backgroundColor: const Color.fromARGB(255, 4, 35, 5),
-      ),
     );
   }
 }

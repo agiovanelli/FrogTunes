@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'audio_service.dart';
 import 'player_screen.dart';
 
@@ -43,6 +44,8 @@ class MiniPlayer extends StatelessWidget {
                       width: 50,
                       height: 50,
                       fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.music_note, size: 40, color: Colors.white),
                     ),
                   ),
                 ),
@@ -54,26 +57,36 @@ class MiniPlayer extends StatelessWidget {
                     children: [
                       Text(title,
                           style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold)),
+                              color: Colors.white, fontWeight: FontWeight.bold)),
                       ValueListenableBuilder<String>(
                         valueListenable: audio.currentArtist,
                         builder: (_, artist, __) => Text(
                           artist,
-                          style: const TextStyle(
-                              color: Colors.white70, fontSize: 12),
+                          style: const TextStyle(color: Colors.white70, fontSize: 12),
                         ),
                       ),
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: Icon(
-                    audio.isPlaying ? Icons.pause : Icons.play_arrow,
-                    color: Colors.white,
-                  ),
-                  onPressed: () {
-                    audio.isPlaying ? audio.pause() : audio.play();
+
+                // --- qui usiamo lo stream del player per aggiornare l'icona in tempo reale ---
+                StreamBuilder<PlayerState>(
+                  stream: audio.stateStream,
+                  builder: (context, snapshot) {
+                    final playing = snapshot.data?.playing ?? false;
+                    return IconButton(
+                      icon: Icon(
+                        playing ? Icons.pause : Icons.play_arrow,
+                        color: Colors.white,
+                      ),
+                      onPressed: () async {
+                        if (playing) {
+                          await audio.pause();
+                        } else {
+                          await audio.play();
+                        }
+                      },
+                    );
                   },
                 ),
               ],

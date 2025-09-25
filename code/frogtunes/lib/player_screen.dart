@@ -76,7 +76,7 @@ Future<String> fetchUrl(String songId) async {
 }
 
 class _PlayerScreenState extends State<PlayerScreen> {
-  final audio = AudioService();
+  late final AudioService audio;
   List<String> nomiArtisti = [];
   late final StreamSubscription<Duration> _positionSub;
   late final StreamSubscription<Duration?> _durationSub;
@@ -84,33 +84,38 @@ class _PlayerScreenState extends State<PlayerScreen> {
   Duration position = Duration.zero;
   Duration duration = Duration.zero;
 
+  late final ValueNotifier<String> currentTitle;
+  late final ValueNotifier<String> currentCover;
+  late final ValueNotifier<String> currentArtist;
+
   @override
   void initState() {
     super.initState();
+    audio = AudioService();
     _loadArtisti(widget.artistId);
 
-    // Ascolta i cambiamenti di posizione e durata da qualsiasi punto
+    currentTitle = audio.currentTitle;
+    currentCover = audio.currentCover;
+    currentArtist = audio.currentArtist;
+
+    // ascolta le modifiche per aggiornare la UI
+    currentTitle.addListener(() {
+      if (mounted) setState(() {});
+    });
+    currentCover.addListener(() {
+      if (mounted) setState(() {});
+    });
+    currentArtist.addListener(() {
+      if (mounted) setState(() {});
+    });
+
+    // posizione e durata
     _positionSub = audio.positionStream.listen((p) {
       if (mounted) setState(() => position = p);
     });
-
     _durationSub = audio.durationStream.listen((d) {
       if (mounted && d != null) setState(() => duration = d);
     });
-
-    // Avvia la canzone corrente
-    if(audio.currentSongId.value != widget.songId){
-      fetchUrl(widget.songId).then((url) {
-        audio.playSong(
-          songId: widget.songId,
-          url: url,
-          title: widget.titolo,
-          artistId: widget.artistId,
-          artist: nomiArtisti.isNotEmpty ? nomiArtisti.join(', ') : 'Artista sconosciuto',
-          cover: widget.cover,
-        );
-      });
-    }
   }
 
   Future<void> _loadArtisti(List<String> id) async {
@@ -223,7 +228,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
         actions: [
-          _likeButton(widget.songId),
+          _likeButton(audio.currentSongId.value),
           IconButton(
             icon: const Icon(Icons.queue_music, color: Colors.white),
             onPressed: () => _mostraCoda(context),
@@ -239,7 +244,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: Image.network(
-                widget.cover,
+                currentCover.value,
                 height: 300,
                 width: 300,
                 fit: BoxFit.cover,
@@ -248,36 +253,40 @@ class _PlayerScreenState extends State<PlayerScreen> {
               ),
             ),
             const SizedBox(height: 30),
-            Text(widget.titolo,
-                style: const TextStyle(
-                    color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center),
+            Text(
+              currentTitle.value,
+              style: const TextStyle(
+                  color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 10),
             Wrap(
-              alignment: WrapAlignment.center,
-              children: List.generate(nomiArtisti.length, (index) {
-                final nome = nomiArtisti[index];
-                final artistId = widget.artistId[index];
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            ArtistScreen(artistId: artistId, nomeArtista: nome),
+            alignment: WrapAlignment.center,
+            children: List.generate(nomiArtisti.length, (index) {
+              final nome = nomiArtisti[index];
+              final artistId = audio.currentArtistId.value[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ArtistScreen(
+                        artistId: artistId,
+                        nomeArtista: nome,
                       ),
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Text(
-                      index < nomiArtisti.length - 1 ? "$nome, " : nome,
-                      style: const TextStyle(color: Colors.white70, fontSize: 18),
                     ),
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    index < audio.currentArtistId.value.length - 1 ? "$nome, " : nome,
+                    style: const TextStyle(color: Colors.white70, fontSize: 18),
                   ),
-                );
-              }),
-            ),
+                ),
+              );
+            }),
+          ),
             const Spacer(),
             // Barra progresso collegata ad AudioService
             Slider(

@@ -5,6 +5,7 @@ import 'package:frogtunes/aggiungiPC.dart';
 import 'package:algolia/algolia.dart';
 import 'package:frogtunes/algolia_service.dart';
 import 'package:frogtunes/audio_service.dart';
+import 'package:just_audio/just_audio.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -28,49 +29,54 @@ class _SearchViewState extends State<SearchView> {
 
     try {
       final AlgoliaQuery algoliaQuery = AlgoliaService.instance
-          .index('canzoni') // Nome dell’indice su Algolia
+          .index('canzoni')
           .query(query)
           .setHitsPerPage(20);
 
       final AlgoliaQuerySnapshot snapshot = await algoliaQuery.getObjects();
 
       List<Map<String, dynamic>> results = snapshot.hits.map((hit) {
-      final data = hit.data;
-      final List<String> artistId = List<String>.from(data['artistId'] ?? []);
+        final data = hit.data;
+        final List<String> artistId = List<String>.from(data['artistId'] ?? []);
 
-      return {
-        'songId': data['cid'] ?? '',
-        'titolo': data['titolo'] ?? '',
-        'artistId': artistId,
-        'audioUrl': data['audioUrl'] ?? '',
-        'cover': data['cover'] ?? 'https://via.placeholder.com/150',
-      };
-    }).toList();
+        return {
+          'songId': data['cid'] ?? '',
+          'titolo': data['titolo'] ?? '',
+          'artistId': artistId,
+          'audioUrl': data['audioUrl'] ?? '',
+          'cover': data['cover'] ?? 'https://via.placeholder.com/150',
+        };
+      }).toList();
 
-    for (var item in results) {
-      List<String> artistId = List<String>.from(item['artistId'] ?? []);
-      List<String> artistNames = [];
-
-      for (String id in artistId) {
-        final doc = await FirebaseFirestore.instance
-            .collection('artisti')
-            .doc(id)
-            .get();
-        if (doc.exists) {
-          artistNames.add(doc['nome'] ?? 'Sconosciuto');
+      // Per ogni risultato, recupera i nomi degli artisti in parallelo
+      for (var item in results) {
+        final List<String> artistId = List<String>.from(item['artistId'] ?? []);
+        if (artistId.isEmpty) {
+          item['artista'] = 'Artista sconosciuto';
+          continue;
         }
-      }
 
-      item['artista'] = artistNames.isNotEmpty
-          ? artistNames.join(', ')
-          : 'Artista sconosciuto';
-    }
+        final futures = artistId.map((id) =>
+            FirebaseFirestore.instance.collection('artisti').doc(id).get());
+        final docs = await Future.wait(futures);
+
+        final artistNames = <String>[];
+        for (final doc in docs) {
+          if (doc.exists) {
+            artistNames.add(doc['nome'] ?? 'Sconosciuto');
+          }
+        }
+
+        item['artista'] =
+            artistNames.isNotEmpty ? artistNames.join(', ') : 'Artista sconosciuto';
+      }
 
       setState(() {
         _searchResults = results;
       });
     } catch (e) {
-      print('Errore nella ricerca Algolia: $e');
+      // stampa l'errore in console (meglio gestire anche con UI)
+      debugPrint('Errore nella ricerca Algolia: $e');
     }
   }
 
@@ -96,107 +102,141 @@ class _SearchViewState extends State<SearchView> {
                 borderRadius: BorderRadius.circular(15),
                 borderSide: BorderSide.none,
               ),
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.clear, color: Colors.white),
-              onPressed: () {
-                _searchController.clear();
-                setState(() {
-                  _searchResults = [];
-                });
-              },
-            ),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.clear, color: Colors.white),
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() {
+                    _searchResults = [];
+                  });
+                },
+              ),
             ),
             style: const TextStyle(color: Colors.white, fontSize: 18),
             onChanged: _performSearch,
           ),
         ),
       ),
-      body:Stack(
+      body: Stack(
         children: [
-      ListView.builder(
-      itemCount: _searchResults.length,
-      itemBuilder: (context, index) {
-        final item = _searchResults[index];
-        final songId = item['songId'] ?? '';
-        final titolo = item['titolo'] ?? 'Titolo sconosciuto';
-        final artista = item['artista'] ?? 'Artista sconosciuto';
-        final cover = item['cover'] ?? 'https://via.placeholder.com/150';
+          ListView.builder(
+            itemCount: _searchResults.length,
+            itemBuilder: (context, index) {
+              final item = _searchResults[index];
+              final songId = item['songId'] ?? '';
+              final titolo = item['titolo'] ?? 'Titolo sconosciuto';
+              final artista = item['artista'] ?? 'Artista sconosciuto';
+              final cover = item['cover'] ?? 'https://via.placeholder.com/150';
+              final audioUrl = item['audioUrl'] ?? '';
 
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          elevation: 2,
-          color: Colors.green[900],
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PlayerScreen(
-                    songId: songId,
-                    titolo: titolo,
-                    artistId: item['artistId'] ?? [],
-                    cover: cover,
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                shape:
+                    RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 2,
+                color: Colors.green[900],
+                child: ListTile(
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PlayerScreen(
+                          songId: songId,
+                          titolo: titolo,
+                          artistId: item['artistId'] ?? [],
+                          cover: cover,
+                        ),
+                      ),
+                    );
+                  },
+                  onLongPress: () {
+                    showSongOptionsBottomSheet(
+                      context: context,
+                      audioUrl: audioUrl,
+                      songId: songId,
+                      titolo: titolo,
+                      artistId: item['artistId'] ?? [],
+                      cover: cover,
+                    );
+                  },
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      cover,
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.music_note, size: 40, color: Colors.white);
+                      },
+                    ),
+                  ),
+                  title: Text(
+                    titolo,
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    artista,
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                  trailing: ValueListenableBuilder<String>(
+                    valueListenable: audio.currentSongId,
+                    builder: (context, currentId, _) {
+                      // stream per lo stato di riproduzione
+                      return StreamBuilder(
+                        stream: audio.stateStream,
+                        builder: (context, snapshot) {
+                          final playing =
+                              (snapshot.data != null && snapshot.data is PlayerState)
+                                  ? (snapshot.data as PlayerState).playing
+                                  : false;
+
+                          final isThisSongPlaying = (currentId == songId) && playing;
+
+                          return IconButton(
+                            icon: Icon(
+                              isThisSongPlaying ? Icons.pause : Icons.play_arrow,
+                              color: Colors.white,
+                              size: 40,
+                            ),
+                            onPressed: () async {
+                              if (audioUrl == null || audioUrl.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Audio non disponibile')),
+                                );
+                                return;
+                              }
+                              if (currentId == songId) {
+                                // stessa canzone: toggle play/pause
+                                if (playing) {
+                                  await audio.pause();
+                                } else {
+                                  await audio.play();
+                                }
+                              } else {
+                                // canzone diversa: imposta (playlist da 1) e parti
+                                await audio.playSong(
+                                  songId: songId,
+                                  url: audioUrl,
+                                  title: titolo,
+                                  artist: artista,
+                                  artistId: item['artistId'] ?? [],
+                                  cover: cover,
+                                );
+                              }
+                            },
+                          );
+                        },
+                      );
+                    },
                   ),
                 ),
               );
             },
-            // Pressione lunga → aggiungi a playlist o alla coda
-            onLongPress: () {
-              showSongOptionsBottomSheet(
-                context: context,
-                audioUrl: item['audioUrl'],
-                songId: songId,
-                titolo: titolo,
-                artistId: item['artistId'] ?? [],
-                cover: cover,
-              );
-            },
-            leading: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                cover,
-                width: 60,
-                height: 60,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Icons.music_note, size: 40, color: Colors.white);
-                },
-              ),
-            ),
-            title: Text(
-              titolo,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(
-              artista,
-              style: const TextStyle(color: Colors.white70),
-            ),
-            trailing: 
-            IconButton(
-              icon: Icon(
-                    audio.isPlaying
-                        ? Icons.pause
-                        : Icons.play_arrow,
-                    color: Colors.white,
-                    size: 40,
-                  ),
-              onPressed: () async{
-                await audio.playSong(
-                  songId: songId,
-                  url: item['audioUrl'],
-                  title: titolo,
-                  artist: artista,
-                  artistId: item['artistId'] ?? [],
-                  cover: cover,
-                );
-              },
-            ),
           ),
-        );
-      },
-    ),
         ],
       ),
     );

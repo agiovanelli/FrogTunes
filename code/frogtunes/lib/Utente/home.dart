@@ -11,16 +11,15 @@ import 'package:frogtunes/Utente/content.dart';
 import 'package:frogtunes/Utente/search.dart';
 import 'package:frogtunes/Utente/settings.dart';
 import 'package:frogtunes/Utente/catalogo.dart';
+import '../mini_player.dart';
 
 class HomeView extends StatefulWidget {
-  final Widget? extraPage;
   final int initialIndex;
   final bool showAppBar;
   
   const HomeView({
     this.initialIndex = 1,
     this.showAppBar = true, // di default visibile
-    this.extraPage,
     super.key,
   });
 
@@ -288,21 +287,11 @@ void _showProfileDialog(BuildContext context, String uid) {
 
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
-      
-      if (widget.extraPage != null) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (_) => HomeView(), // nuova root con pagina scelta
-          ),
-          (route) => false,
-        );
-      }
   }
 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final bool isExtra = widget.extraPage != null;
 
     return Scaffold(
       appBar: 
@@ -351,7 +340,14 @@ void _showProfileDialog(BuildContext context, String uid) {
             ],
           )
         : null,
-      body: isExtra ? widget.extraPage! : _pages[_selectedIndex],
+      body: Stack(
+        children: [ _pages[_selectedIndex],
+        const Align(
+                alignment: Alignment.bottomCenter,
+                child: MiniPlayer(),
+          ),
+        ],
+      ),
       backgroundColor: const Color.fromARGB(255, 4, 35, 5),
       bottomNavigationBar: BottomNavigationBar(
         selectedItemColor: Colors.white,
