@@ -47,7 +47,6 @@ class AudioService {
   Stream<Duration?> get durationStream => _player.durationStream;
   Stream<PlayerState> get stateStream => _player.playerStateStream;
 
-  // --- playSong: sempre imposta una "playlist" anche per 1 brano ---
   Future<void> playSong({
     required String songId,
     required String url,
@@ -62,6 +61,11 @@ class AudioService {
       return;
     }
 
+    // Stessa canzone già in riproduzione, non fare nulla
+    if (currentSongId.value == songId && _player.playing) {
+      return;
+    }
+
     // Aggiorna i metadati
     currentSongId.value = songId;
     currentTitle.value = title;
@@ -70,21 +74,28 @@ class AudioService {
     currentCover.value = cover;
 
     // Crea sempre una lista di AudioSource (playlist) anche con 1 elemento
-    final sources = <AudioSource>[
-      AudioSource.uri(
-        Uri.parse(url),
-        tag: {
-          'songId': songId,
-          'title': title,
-          'artist': artist,
-          'artistId': artistId,
-          'cover': cover,
-        },
-      ),
-    ];
+    final sources = <AudioSource>[];
+      if (url.isNotEmpty) {
+        sources.add(
+          AudioSource.uri(
+            Uri.parse(url),
+            tag: {
+              'songId': songId,
+              'title': title,
+              'artist': artist,
+              'artistId': artistId,
+              'cover': cover,
+            },
+          ),
+        );
+      } else {
+        print("URL della canzone vuoto, non riprodotta");
+        return;
+      }
 
+    await _player.stop();
     // Imposta la playlist
-    await _player.setAudioSources(sources);
+    await _player.setAudioSources(sources); //SISTEMARE
     await _player.play();
   }
 
@@ -103,6 +114,7 @@ class AudioService {
       );
     }).toList();
 
+    await _player.stop();
     await _player.setAudioSources(sources);
   }
 

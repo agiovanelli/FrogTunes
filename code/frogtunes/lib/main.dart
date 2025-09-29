@@ -12,7 +12,7 @@ void main() async{
   );
 
   await FirebaseAppCheck.instance.activate(
-    androidProvider: AndroidProvider.debug, // per sviluppo
+    androidProvider: AndroidProvider.debug, // Per sviluppo
     appleProvider: AppleProvider.debug,
   );
 
@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.green,
         brightness: Brightness.dark,
       ),
-      home: RootPage(),
+      home: RootPage(), // Punto alla root page per decide se mostrare login o home
     );
   }
 }

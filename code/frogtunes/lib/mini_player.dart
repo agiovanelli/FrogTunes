@@ -3,6 +3,7 @@ import 'package:just_audio/just_audio.dart';
 import 'audio_service.dart';
 import 'player_screen.dart';
 
+// Mini player che mostra la traccia corrente e i controlli di riproduzione
 class MiniPlayer extends StatelessWidget {
   const MiniPlayer({super.key});
 
@@ -10,11 +11,13 @@ class MiniPlayer extends StatelessWidget {
   Widget build(BuildContext context) {
     final audio = AudioService();
 
+    // Aggiorna il mini player quando cambia la traccia
     return ValueListenableBuilder<String>(
       valueListenable: audio.currentTitle,
       builder: (_, title, __) {
         if (title.isEmpty) return const SizedBox.shrink();
 
+        // Mini player visibile solo se c'è una traccia in riproduzione
         return GestureDetector(
           onTap: () {
             Navigator.push(
@@ -69,10 +72,11 @@ class MiniPlayer extends StatelessWidget {
                   ),
                 ),
 
-                // --- qui usiamo lo stream del player per aggiornare l'icona in tempo reale ---
+                // Stream del player per aggiornare l'icona in tempo reale
                 StreamBuilder<PlayerState>(
                   stream: audio.stateStream,
                   builder: (context, snapshot) {
+                    // Stato di riproduzione attuale
                     final playing = snapshot.data?.playing ?? false;
                     return IconButton(
                       icon: Icon(
@@ -80,6 +84,7 @@ class MiniPlayer extends StatelessWidget {
                         color: Colors.white,
                       ),
                       onPressed: () async {
+                        // Toggle play/pause in base allo stato del player
                         if (playing) {
                           await audio.pause();
                         } else {

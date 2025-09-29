@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frogtunes/AME/homeAME.dart';
+import 'package:frogtunes/AME/home_ame.dart';
 
 class SettingsAMEPage extends StatefulWidget {
   const SettingsAMEPage({super.key, required this.selectedRole});

@@ -6,8 +6,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
 
-import 'package:frogtunes/AME/settingsAME.dart';
-import 'package:frogtunes/AME/loginAME.dart';
+import 'package:frogtunes/AME/settings_ame.dart';
+import 'package:frogtunes/AME/login_ame.dart';
 import 'package:frogtunes/AME/Artista/analytic.dart';
 import 'package:frogtunes/AME/Artista/contentA.dart';
 import 'package:frogtunes/AME/Artista/profile.dart';
