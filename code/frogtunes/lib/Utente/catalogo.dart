@@ -27,6 +27,7 @@ class LibraryView extends StatelessWidget {
             height: 10,
           ),
           GestureDetector(
+            // Bottone per accedere alla schermata delle canzoni preferite
             onTap: (){
               Navigator.push(
                 context,
@@ -37,7 +38,7 @@ class LibraryView extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15.0),
                 ),
-                color: Colors.green.withOpacity(0.3),
+                color: Colors.green.withValues(alpha: 0.3),
                 elevation: 3,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -70,6 +71,7 @@ class LibraryView extends StatelessWidget {
             height: 10,
           ),
           GestureDetector(
+            // Bottone per accedere alla schermata degli artisti preferiti
             onTap: (){
               Navigator.push(
                 context,
@@ -80,7 +82,7 @@ class LibraryView extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15.0),
                 ),
-                color: Colors.green.withOpacity(0.3),
+                color: Colors.green.withValues(alpha: 0.3),
                 elevation: 3,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -124,6 +126,7 @@ class LibraryView extends StatelessWidget {
   }
 }
 
+// Classe per visualizzare le canzoni preferite dell'utente
 class LikedSongsScreen extends StatelessWidget {
   const LikedSongsScreen({super.key});
 
@@ -138,6 +141,7 @@ class LikedSongsScreen extends StatelessWidget {
         elevation: 0,
       ),
       body: StreamBuilder<QuerySnapshot>(
+        // Recupera le canzoni preferite dell'utente dal Firestore
         stream: FirebaseFirestore.instance
             .collection('utenti')
             .doc(FirebaseAuth.instance.currentUser!.uid)
@@ -153,6 +157,7 @@ class LikedSongsScreen extends StatelessWidget {
 
           final songs = snapshot.data!.docs;
 
+          // Se non ci sono canzoni preferite, mostra un messaggio
           if (songs.isEmpty) {
             return const Center(
               child: Text(
@@ -168,11 +173,13 @@ class LikedSongsScreen extends StatelessWidget {
               final song = songs[index];
               final List<String> artistIds = List<String>.from(song['artistId'] ?? []);
 
+              // Recupera i nomi degli artisti dato un elenco di ID
               return FutureBuilder<List<String>>(
                 future: fetchArtistName(artistIds),
                 builder: (context, snapshot) {
                   final artistNames = snapshot.data ?? ["Artista sconosciuto"];
 
+                // Costruisce la lista delle canzoni preferite
                 return ListTile(
                   leading: Image.network(
                     song['cover'],
@@ -187,6 +194,7 @@ class LikedSongsScreen extends StatelessWidget {
                       final nome = artistNames[index];
 
                       return GestureDetector(
+                        // Bottone per accedere al player della canzone
                         onTap: () {
                           Navigator.push(
                             context,
@@ -202,6 +210,7 @@ class LikedSongsScreen extends StatelessWidget {
                         },
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 2),
+                          // Mostra i nomi degli artisti separati da una virgola se ce ne sono più di uno
                           child: Text(
                             index < artistNames.length - 1 ? "$nome, " : nome,
                             style: const TextStyle(
@@ -224,6 +233,7 @@ class LikedSongsScreen extends StatelessWidget {
   }
 }
 
+// Classe per visualizzare gli artisti seguiti dall'utente
 class FollowedArtistsScreen extends StatelessWidget {
   const FollowedArtistsScreen({super.key});
 
@@ -238,6 +248,7 @@ class FollowedArtistsScreen extends StatelessWidget {
         backgroundColor: Colors.black,
       ),
       body: StreamBuilder<QuerySnapshot>(
+        // Recupera gli artisti seguiti dall'utente dal Firestore
         stream: FirebaseFirestore.instance
             .collection('utenti')
             .doc(uid)
@@ -248,6 +259,8 @@ class FollowedArtistsScreen extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
+
+          // Se non ci sono artisti seguiti, mostra un messaggio
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return const Center(
               child: Text("Non segui ancora nessun artista",
@@ -257,6 +270,7 @@ class FollowedArtistsScreen extends StatelessWidget {
 
           final artists = snapshot.data!.docs;
 
+          // Costruisce la lista degli artisti seguiti
           return ListView.builder(
             itemCount: artists.length,
             itemBuilder: (context, index) {
@@ -269,6 +283,7 @@ class FollowedArtistsScreen extends StatelessWidget {
                   backgroundImage: NetworkImage(cover),
                 ),
                 title: Text(nome, style: const TextStyle(color: Colors.white)),
+                // Bottone per accedere alla schermata dell'artista
                 onTap: () {
                           Navigator.push(
                             context,

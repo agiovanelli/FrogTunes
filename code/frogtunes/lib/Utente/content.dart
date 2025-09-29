@@ -8,6 +8,7 @@ class HomeContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      // Contenuto della schermata principale dell'utente, mostra le ultime canzoni ascoltate e le playlist
       children: <Widget>[
         Padding(
           padding: const EdgeInsets.all(8.0),
@@ -90,6 +91,7 @@ class HomeContent extends StatelessWidget {
               const SizedBox(height: 5),
               SizedBox(
                 height: 365,
+                // Mostra la vista delle playlist
                 child: PlaylistView(),
               ),
             ],

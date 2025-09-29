@@ -25,6 +25,7 @@ class PlayerScreen extends StatefulWidget {
   State<PlayerScreen> createState() => _PlayerScreenState();
 }
 
+// Funzione per aggiungere o rimuovere la canzone dai preferiti
 Future<void> toggleLikeSong({
   required String songId,
   required String titolo,
@@ -53,6 +54,7 @@ Future<void> toggleLikeSong({
   }
 }
 
+// Funzione per recuperare i nomi degli artisti dato una lista di ID
 Future<List<String>> fetchArtistName(List<String> artistId) async {
   if (artistId.isEmpty) return [];
   final doc = await FirebaseFirestore.instance
@@ -67,6 +69,7 @@ Future<List<String>> fetchArtistName(List<String> artistId) async {
   return artistId.map((id) => mappa[id] ?? 'Artista sconosciuto').toList();
 }
 
+// Funzione per recuperare l'URL audio di una canzone dato il suo ID
 Future<String> fetchUrl(String songId) async {
   final doc = await FirebaseFirestore.instance
       .collection('canzoni')
@@ -78,12 +81,16 @@ Future<String> fetchUrl(String songId) async {
 class _PlayerScreenState extends State<PlayerScreen> {
   late final AudioService audio;
   List<String> nomiArtisti = [];
+
+  // Variabili per ascoltare i cambiamenti di posizione e durata
   late final StreamSubscription<Duration> _positionSub;
   late final StreamSubscription<Duration?> _durationSub;
 
+  // Variabili per posizione e durata
   Duration position = Duration.zero;
   Duration duration = Duration.zero;
 
+  // ValueNotifiers per titolo, cover e artista corrente
   late final ValueNotifier<String> currentTitle;
   late final ValueNotifier<String> currentCover;
   late final ValueNotifier<String> currentArtist;
@@ -92,8 +99,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
   void initState() {
     super.initState();
     audio = AudioService();
-    _loadArtisti(widget.artistId);
+    _loadArtisti(widget.artistId); // Carica i nomi degli artisti
 
+    // Inizializza i ValueNotifiers
     currentTitle = audio.currentTitle;
     currentCover = audio.currentCover;
     currentArtist = audio.currentArtist;
@@ -102,14 +110,16 @@ class _PlayerScreenState extends State<PlayerScreen> {
     currentTitle.addListener(() {
       if (mounted) setState(() {});
     });
+    
     currentCover.addListener(() {
       if (mounted) setState(() {});
     });
+
     currentArtist.addListener(() {
       if (mounted) setState(() {});
     });
 
-    // posizione e durata
+    // Posizione e durata
     _positionSub = audio.positionStream.listen((p) {
       if (mounted) setState(() => position = p);
     });
@@ -117,12 +127,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
       if (mounted && d != null) setState(() => duration = d);
     });
   }
-
+ 
+  // Funzione per assegnare i nomi degli artisti in una variabile data una lista di ID
   Future<void> _loadArtisti(List<String> id) async {
     final nomi = await fetchArtistName(id);
     setState(() => nomiArtisti = nomi);
   }
 
+  // Funzione per mostrare la coda di riproduzione
   void _mostraCoda(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -144,6 +156,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                             fontWeight: FontWeight.bold)),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete_forever, color: Colors.red),
+                      // Bottone per cancellare tutta la coda
                       onPressed: () {
                         Coda.cancellaCoda();
                         setStateModal(() {});
@@ -153,9 +166,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   const Divider(color: Colors.white24),
                   Expanded(
                     child: queue.isEmpty
+                        // Se la coda è vuota mostra un messaggio
                         ? const Center(
                             child: Text("La coda è vuota",
                                 style: TextStyle(color: Colors.white70)))
+                        // Altrimenti mostra la lista delle canzoni in coda riportando titolo e artista
                         : ListView.builder(
                             itemCount: queue.length,
                             itemBuilder: (context, index) {
@@ -168,11 +183,16 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                     style: const TextStyle(color: Colors.white70)),
                                 trailing: IconButton(
                                   icon: const Icon(Icons.close, color: Colors.red),
+                                  // Bottone per rimuovere la canzone dalla coda
                                   onPressed: () {
                                     Coda.rimuovi(index);
-                                    setStateModal(() {});
                                   },
                                 ),
+                                  // Bottone per riprodurre la canzone selezionata e rimuovere quelle precedenti
+                                onTap: () {
+                                  Coda.playFrom(index, audio);
+                                  Navigator.pop(context);
+                                },
                               );
                             },
                           ),
@@ -185,7 +205,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
       },
     );
   }
+ 
+  // Funzione per formattare la durata in minuti e secondi
+  String _format(Duration d) =>
+      "${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}";
 
+  // Widget per il bottone delle canzoni preferite
   Widget _likeButton(String songId) {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return const SizedBox();
@@ -195,6 +220,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
         .collection('likedSongs')
         .doc(songId);
 
+    // Aggiorna l'icona in base allo stato della canzone nei preferiti
     return StreamBuilder<DocumentSnapshot>(
       stream: songRef.snapshots(),
       builder: (context, snapshot) {
@@ -202,6 +228,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
         return IconButton(
           icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border,
               color: isLiked ? Colors.green : Colors.white),
+          // Aggiungi o rimuovi la canzone dai preferiti
           onPressed: () {
             toggleLikeSong(
               songId: songId,
@@ -215,9 +242,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
     );
   }
 
-  String _format(Duration d) =>
-      "${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}";
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -228,9 +252,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
         actions: [
-          _likeButton(audio.currentSongId.value),
+          audio.currentSongId.value.isEmpty ? _likeButton(widget.songId) : _likeButton(audio.currentSongId.value),
           IconButton(
             icon: const Icon(Icons.queue_music, color: Colors.white),
+            // Bottone per mostrare la coda di riproduzione
             onPressed: () => _mostraCoda(context),
           ),
         ],
@@ -244,7 +269,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: Image.network(
-                currentCover.value,
+                currentCover.value.isEmpty ? widget.cover : currentCover.value,
                 height: 300,
                 width: 300,
                 fit: BoxFit.cover,
@@ -253,23 +278,26 @@ class _PlayerScreenState extends State<PlayerScreen> {
               ),
             ),
             const SizedBox(height: 30),
+            // Titolo della canzone aggiornato in tempo reale
             Text(
-              currentTitle.value,
+              currentTitle.value.isEmpty ? widget.titolo : currentTitle.value,
               style: const TextStyle(
                   color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 10),
+            // Nomi degli artisti aggiornati in tempo reale
             Wrap(
             alignment: WrapAlignment.center,
             children: List.generate(nomiArtisti.length, (index) {
               final nome = nomiArtisti[index];
-              final artistId = audio.currentArtistId.value[index];
+              final artistId = audio.currentArtist.value.isEmpty ? widget.artistId[index] : audio.currentArtistId.value[index];
               return GestureDetector(
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
+                      // Vai alla schermata dell'artista al cliccando sul nome
                       builder: (_) => ArtistScreen(
                         artistId: artistId,
                         nomeArtista: nome,
@@ -278,7 +306,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   );
                 },
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 4), 
+                  // Riporta la virgola tra i nomi degli artisti se sono più di uno
                   child: Text(
                     index < audio.currentArtistId.value.length - 1 ? "$nome, " : nome,
                     style: const TextStyle(color: Colors.white70, fontSize: 18),
@@ -311,9 +340,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
               ],
             ),
             const SizedBox(height: 20),
+            // Bottoni di controllo della riproduzione
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                // Bottone per attivare/disattivare la riproduzione casuale
                 IconButton(
                   icon: const Icon(Icons.shuffle, size: 30),
                   color: audio.isShuffle ? Colors.green : Colors.white,
@@ -322,12 +353,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   },
                 ),
                 const SizedBox(width: 10),
+                // Bottone per riprodurre la canzone precedente
                 IconButton(
                   icon: const Icon(Icons.skip_previous, size: 40),
                   onPressed: () => audio.previous(), //non funziona
                   color: Colors.white,
                 ),
                 const SizedBox(width: 15),
+                // Bottone per play/pause
                 IconButton(
                   icon: Icon(
                     audio.isPlaying
@@ -340,12 +373,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   color: Colors.white,
                 ),
                 const SizedBox(width: 15),
+                // Bottone per riprodurre la canzone successiva
                 IconButton(
                   icon: const Icon(Icons.skip_next, size: 40),
-                  onPressed: () => audio.next(), //non funziona
+                  onPressed: () => audio.next(), //non funziona se non c'è la coda
                   color: Colors.white,
                 ),
                 const SizedBox(width: 10),
+                // Bottone per attivare/disattivare la ripetizione loop
                 IconButton(
                   icon: Icon(
                     audio.isLoop ? Icons.repeat_one : Icons.repeat,
