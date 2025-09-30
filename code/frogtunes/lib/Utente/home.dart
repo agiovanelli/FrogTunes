@@ -18,19 +18,20 @@ class HomeView extends StatefulWidget {
   final bool showAppBar;
   
   const HomeView({
-    this.initialIndex = 1,
-    this.showAppBar = true, // di default visibile
+    this.initialIndex = 1, // Indice di default è 1 quindi allo start ci mostra sempre la Home
+    this.showAppBar = true, // Appbar di default visibile
     super.key,
   });
 
   @override
-  _HomeViewState createState() => _HomeViewState();
+  HomeViewState createState() => HomeViewState();
 }
 
-class _HomeViewState extends State<HomeView> {
+class HomeViewState extends State<HomeView> {
   int _selectedIndex = 1;
-  Map<String, dynamic>? userData;
+  Map<String, dynamic>? userData; // Dati utente caricati da Firestore
 
+  // Pagine per la navigazione
   final List<Widget> _pages = [
     const SearchView(),
     const HomeContent(),
@@ -43,6 +44,7 @@ class _HomeViewState extends State<HomeView> {
     _checkAndShowProfileDialog();
   }
 
+  // Funzione per controllare se mostrare il dialog di completamento profilo in caso fosse il suo primo accesso
   Future<void> _checkAndShowProfileDialog() async {
   final user = FirebaseAuth.instance.currentUser;
 
@@ -71,224 +73,226 @@ class _HomeViewState extends State<HomeView> {
   }
 }
 
-void _showProfileDialog(BuildContext context, String uid) {
-  final TextEditingController nameController = TextEditingController();
-  File? _selectedImage;
+  // Funzione per mostrare il dialog di completamento profilo (username e foto profilo)
+  void _showProfileDialog(BuildContext context, String uid) {
+    final TextEditingController nameController = TextEditingController();
+    // File? selectedImage; //testare se bugga
 
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) {
-      File? selectedImage;
-      String? uploadedPhotoUrl;
-      return StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: const Text('Completa il tuo profilo'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: () async {
-                      try {
-                        debugPrint('📸 Avvio selezione immagine...');
-                        final picker = ImagePicker();
-                        final pickedImage =
-                            await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
-
-                        if (pickedImage != null) {
-                          setState(() {
-                            _selectedImage = File(pickedImage.path);
-                          });
-                        }
-                        // final XFile? pickedFile = await picker.pickImage(
-                        //   source: ImageSource.gallery,
-                        // );
-
-                        if (pickedImage == null) {
-                          debugPrint('❌ Nessuna immagine selezionata.');
-                          if(context.mounted){
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Nessuna immagine selezionata')),
-                          );
-                          }
-                          return;
-                        }
-
-                        debugPrint('✅ Immagine selezionata: ${pickedImage.path}');
-                        final file = File(pickedImage.path);
-
-                        final exists = await file.exists();
-                        debugPrint('📁 File esiste? $exists');
-
-                        if (!exists) {
-                          throw PlatformException(
-                            code: 'no_valid_image_uri',
-                            message: 'Il file selezionato non esiste più o non è accessibile.',
-                          );
-                        }
-
-                        if(context.mounted){
-                          setState(() {
-                            selectedImage = file;
-                          });
-                        }
-
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        File? selectedImage;
+        String? uploadedPhotoUrl;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Completa il tuo profilo'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: () async {
                         try {
-                          debugPrint('⏫ Inizio upload su Firebase Storage...');
-                            final ref = FirebaseStorage.instance
-                                .ref()
-                                .child('profile_pictures')
-                                .child('$uid.jpg');
-                            await ref.putFile(_selectedImage!);
-                            final imageUrl = await ref.getDownloadURL();
+                          debugPrint('📸 Avvio selezione immagine...');
+                          final picker = ImagePicker();
+                          final pickedImage =
+                              await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
 
-                            await FirebaseFirestore.instance.collection('utenti').doc(uid).update({
-                              'profileImageUrl': imageUrl,
-                            });
-
-                          // final storageRef = FirebaseStorage.instance
-                          //   .ref()
-                          //   .child('profile_pictures/$uid.jpg');
-                          
-                          final UploadTask uploadTask = ref.putFile(file);
-                          final TaskSnapshot snapshot = await uploadTask.whenComplete(() => null);
-
-                          if (snapshot.state == TaskState.success) {
-                            final imageUrl = await snapshot.ref.getDownloadURL();
-                            debugPrint('✅ Upload completato. URL: $imageUrl');
-
-                            if(context.mounted){
+                          if (pickedImage != null) {
                             setState(() {
-                              uploadedPhotoUrl = imageUrl;
+                              selectedImage = File(pickedImage.path);
                             });
-                            }
-                          } else {
-                            debugPrint('❌ Upload fallito. Stato: ${snapshot.state}');
+                          }
+                          // final XFile? pickedFile = await picker.pickImage(
+                          //   source: ImageSource.gallery,
+                          // );
+
+                          if (pickedImage == null) {
+                            debugPrint('❌ Nessuna immagine selezionata.');
                             if(context.mounted){
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Nessuna immagine selezionata')),
+                            );
+                            }
+                            return;
+                          }
+
+                          debugPrint('✅ Immagine selezionata: ${pickedImage.path}');
+                          final file = File(pickedImage.path);
+
+                          final exists = await file.exists();
+                          debugPrint('📁 File esiste? $exists');
+
+                          if (!exists) {
+                            throw PlatformException(
+                              code: 'no_valid_image_uri',
+                              message: 'Il file selezionato non esiste più o non è accessibile.',
+                            );
+                          }
+
+                          if(context.mounted){
+                            setState(() {
+                              selectedImage = file;
+                            });
+                          }
+
+                          try {
+                            debugPrint('⏫ Inizio upload su Firebase Storage...');
+                              final ref = FirebaseStorage.instance
+                                  .ref()
+                                  .child('profile_pictures')
+                                  .child('$uid.jpg');
+                              await ref.putFile(selectedImage!);
+                              final imageUrl = await ref.getDownloadURL();
+
+                              await FirebaseFirestore.instance.collection('utenti').doc(uid).update({
+                                'profileImageUrl': imageUrl,
+                              });
+
+                            // final storageRef = FirebaseStorage.instance
+                            //   .ref()
+                            //   .child('profile_pictures/$uid.jpg');
+                            
+                            final UploadTask uploadTask = ref.putFile(file);
+                            final TaskSnapshot snapshot = await uploadTask.whenComplete(() => null);
+
+                            if (snapshot.state == TaskState.success) {
+                              final imageUrl = await snapshot.ref.getDownloadURL();
+                              debugPrint('✅ Upload completato. URL: $imageUrl');
+
+                              if(context.mounted){
+                              setState(() {
+                                uploadedPhotoUrl = imageUrl;
+                              });
+                              }
+                            } else {
+                              debugPrint('❌ Upload fallito. Stato: ${snapshot.state}');
+                              if(context.mounted){
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Errore nel caricamento dell\'immagine.')),
+                              );
+                              }
+                            }
+                          } catch (e) {
+                            debugPrint('❌ Errore durante l\'upload o il recupero dell\'URL: $e');
+                            if(context.mounted){ 
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Errore nel caricamento dell\'immagine.')),
                             );
                             }
                           }
-                        } catch (e) {
-                          debugPrint('❌ Errore durante l\'upload o il recupero dell\'URL: $e');
+
+                        } on PlatformException catch (e) {
+                          debugPrint('❌ Errore PlatformException: ${e.code} - ${e.message}');
+                          if(context.mounted){
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Errore: ${e.message}')),
+                          );
+                          }
+                        } catch (e, stack) {
+                          debugPrint('❌ Errore generico: $e');
+                          debugPrint('📜 Stack trace: $stack');
                           if(context.mounted){ 
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Errore nel caricamento dell\'immagine.')),
+                            const SnackBar(content: Text('Errore sconosciuto nel caricamento.')),
                           );
                           }
                         }
+                      },
 
-                      } on PlatformException catch (e) {
-                        debugPrint('❌ Errore PlatformException: ${e.code} - ${e.message}');
-                        if(context.mounted){
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Errore: ${e.message}')),
-                        );
-                        }
-                      } catch (e, stack) {
-                        debugPrint('❌ Errore generico: $e');
-                        debugPrint('📜 Stack trace: $stack');
-                        if(context.mounted){ 
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Errore sconosciuto nel caricamento.')),
-                        );
-                        }
-                      }
-                    },
-
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.grey[300],
-                      backgroundImage: selectedImage != null
-                          ? FileImage(selectedImage!)
-                          : null,
-                      child: selectedImage == null
-                          ? const Icon(Icons.add_a_photo, size: 30)
-                          : null,
+                      child: CircleAvatar(
+                        radius: 40,
+                        backgroundColor: Colors.grey[300],
+                        backgroundImage: selectedImage != null
+                            ? FileImage(selectedImage!)
+                            : null,
+                        child: selectedImage == null
+                            ? const Icon(Icons.add_a_photo, size: 30)
+                            : null,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Username'),
-                  ),
-                ],
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(labelText: 'Username'),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  final String name = nameController.text.trim();
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    final String name = nameController.text.trim();
 
-                  final docRef = FirebaseFirestore.instance.collection('utenti').doc(uid);
-                  final doc = await docRef.get();
+                    final docRef = FirebaseFirestore.instance.collection('utenti').doc(uid);
+                    final doc = await docRef.get();
 
-                  if (!context.mounted) return;
-
-                  final currentData = doc.data();
-                  final currentPhoto = currentData?['profileImageUrl'];
-
-                  const String defaultPhotoURL = 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f';
-                  final String finalPhotoURL = uploadedPhotoUrl ??
-                                              (currentPhoto != null && currentPhoto.isNotEmpty ? currentPhoto : defaultPhotoURL);
-
-                  // Se nessun aggiornamento ma l'utente ha già dati validi, chiudi comunque il dialog
-                  if (name.isEmpty && (finalPhotoURL.isEmpty)) {
-                    if(mounted) Navigator.of(context).pop(); // chiudi senza fare update
-                    return;
-                  }
-
-
-                  // Costruisci mappa degli aggiornamenti
-                  final Map<String, dynamic> updates = {};
-                  if (name.isNotEmpty) {
-                    updates['username'] = name;
-                    await FirebaseAuth.instance.currentUser?.updateDisplayName(name);
                     if (!context.mounted) return;
-                  }
 
-                  if (finalPhotoURL.isNotEmpty) {
-                    updates['profileImageUrl'] = finalPhotoURL;
-                    await FirebaseAuth.instance.currentUser?.updatePhotoURL(finalPhotoURL);
-                    if (!context.mounted) return;
-                  }
+                    final currentData = doc.data();
+                    final currentPhoto = currentData?['profileImageUrl'];
 
-                  // Salva su Firestore
-                  if (updates.isNotEmpty) {
-                    await docRef.update(updates);
+                    const String defaultPhotoURL = 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f';
+                    final String finalPhotoURL = uploadedPhotoUrl ??
+                                                (currentPhoto != null && currentPhoto.isNotEmpty ? currentPhoto : defaultPhotoURL);
 
-                    if(context.mounted){
-                    setState(() {
-                      userData = {
-                        'username': updates['username'] ?? currentData?['username'],
-                        'profileImageUrl': updates['profileImageUrl'] ?? currentData?['profileImageUrl'],
-                      };
-                    });
+                    // Se nessun aggiornamento ma l'utente ha già dati validi, chiudi comunque il dialog
+                    if (name.isEmpty && (finalPhotoURL.isEmpty)) {
+                      if(mounted) Navigator.of(context).pop(); // chiudi senza fare update
+                      return;
                     }
-                    if (!context.mounted) return;
-                  }
-
-                  if(context.mounted) Navigator.of(context).pop(); // Chiudi il dialog
-                },
 
 
-                child: const Text('Salva'),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
-}
+                    // Costruisci mappa degli aggiornamenti
+                    final Map<String, dynamic> updates = {};
+                    if (name.isNotEmpty) {
+                      updates['username'] = name;
+                      await FirebaseAuth.instance.currentUser?.updateDisplayName(name);
+                      if (!context.mounted) return;
+                    }
+
+                    if (finalPhotoURL.isNotEmpty) {
+                      updates['profileImageUrl'] = finalPhotoURL;
+                      await FirebaseAuth.instance.currentUser?.updatePhotoURL(finalPhotoURL);
+                      if (!context.mounted) return;
+                    }
+
+                    // Salva su Firestore
+                    if (updates.isNotEmpty) {
+                      await docRef.update(updates);
+
+                      if(context.mounted){
+                      setState(() {
+                        userData = {
+                          'username': updates['username'] ?? currentData?['username'],
+                          'profileImageUrl': updates['profileImageUrl'] ?? currentData?['profileImageUrl'],
+                        };
+                      });
+                      }
+                      if (!context.mounted) return;
+                    }
+
+                    if(context.mounted) Navigator.of(context).pop(); // Chiudi il dialog
+                  },
+
+
+                  child: const Text('Salva'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
   }
 
+  // Costruzione UI Appbar e BottomNavigationBar
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -331,10 +335,12 @@ void _showProfileDialog(BuildContext context, String uid) {
                 icon: const Icon(Icons.logout, color: Colors.white),
                 onPressed: () async {
                   await FirebaseAuth.instance.signOut();
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => LoginView()),
-                  );
+                  if (context.mounted){
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginView()),
+                    );
+                  }
                 },
               ),
             ],
@@ -342,6 +348,7 @@ void _showProfileDialog(BuildContext context, String uid) {
         : null,
       body: Stack(
         children: [ _pages[_selectedIndex],
+        // Aggiungi il MiniPlayer in basso se c'è una canzone in riproduzione
         const Align(
                 alignment: Alignment.bottomCenter,
                 child: MiniPlayer(),

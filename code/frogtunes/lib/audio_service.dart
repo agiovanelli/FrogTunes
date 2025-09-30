@@ -1,11 +1,13 @@
+import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter/foundation.dart';
+import 'coda.dart';
 
 class AudioService {
   static final AudioService _instance = AudioService._internal();
   factory AudioService() => _instance;
   AudioService._internal() {
-    // ascolta lo stato del player per aggiornare isPlayingNotifier
+    // Ascolta lo stato del player per aggiornare isPlayingNotifier
     _player.playerStateStream.listen((state) {
     isPlayingNotifier.value = state.playing;
     });
@@ -89,7 +91,6 @@ class AudioService {
           ),
         );
       } else {
-        print("URL della canzone vuoto, non riprodotta");
         return;
       }
 
@@ -114,6 +115,7 @@ class AudioService {
       );
     }).toList();
 
+    Coda.loadPlaylist(tracks);
     await _player.stop();
     await _player.setAudioSources(sources);
   }

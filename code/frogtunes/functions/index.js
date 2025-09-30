@@ -22,7 +22,7 @@ exports.searchCanzoni = onCall(async (request) => {
       searchParams: {
         query,
         hitsPerPage: 10,
-        attributesToHighlight: ['titolo', 'artista'],
+        attributesToHighlight: ['title', 'artista'],
         typoTolerance: true,
         highlightPreTag: '<mark>',
         highlightPostTag: '</mark>',
@@ -30,7 +30,7 @@ exports.searchCanzoni = onCall(async (request) => {
     });
 
     return results.hits.map((hit) => ({
-      titolo: hit.titolo,
+      title: hit.title,
       artista: hit.artista,
       album: hit.album,
       cover: hit.cover,

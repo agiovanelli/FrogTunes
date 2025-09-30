@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:frogtunes/player_screen.dart';
-import 'package:frogtunes/aggiungiPC.dart';
+import 'package:frogtunes/aggiungi_pc.dart';
 import 'package:algolia/algolia.dart';
 import 'package:frogtunes/algolia_service.dart';
 import 'package:frogtunes/audio_service.dart';
@@ -11,14 +11,15 @@ class SearchView extends StatefulWidget {
   const SearchView({super.key});
 
   @override
-  _SearchViewState createState() => _SearchViewState();
+  SearchViewState createState() => SearchViewState();
 }
 
-class _SearchViewState extends State<SearchView> {
+class SearchViewState extends State<SearchView> {
   final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _searchResults = [];
   final audio = AudioService();
 
+  // Funzione per eseguire la ricerca su Algolia
   void _performSearch(String query) async {
     if (query.isEmpty) {
       setState(() {
@@ -27,6 +28,7 @@ class _SearchViewState extends State<SearchView> {
       return;
     }
 
+    // Recupera tramite query su Algolia in modo dinamico
     try {
       final AlgoliaQuery algoliaQuery = AlgoliaService.instance
           .index('canzoni')
@@ -75,7 +77,7 @@ class _SearchViewState extends State<SearchView> {
         _searchResults = results;
       });
     } catch (e) {
-      // stampa l'errore in console (meglio gestire anche con UI)
+      // Stampa l'errore in console (meglio gestire anche con UI)
       debugPrint('Errore nella ricerca Algolia: $e');
     }
   }
@@ -104,6 +106,7 @@ class _SearchViewState extends State<SearchView> {
               ),
               suffixIcon: IconButton(
                 icon: const Icon(Icons.clear, color: Colors.white),
+                // Bottone per cancellare il testo della ricerca
                 onPressed: () {
                   _searchController.clear();
                   setState(() {
@@ -138,7 +141,8 @@ class _SearchViewState extends State<SearchView> {
                 child: ListTile(
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  onTap: () {
+                  // Bottone per aprire il player e riprodurre la canzone
+                  onTap: () async {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -150,7 +154,24 @@ class _SearchViewState extends State<SearchView> {
                         ),
                       ),
                     );
+
+                    if (audioUrl == null || audioUrl.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Audio non disponibile')),
+                      );
+                      return;
+                    }
+                    
+                    await audio.playSong(
+                      songId: songId,
+                      url: audioUrl,
+                      title: titolo,
+                      artist: artista,
+                      artistId: item['artistId'] ?? [],
+                      cover: cover,
+                    );
                   },
+                  // Bottone per mostrare il bottom sheet con opzioni aggiuntive di aggiunta a coda o a playlist
                   onLongPress: () {
                     showSongOptionsBottomSheet(
                       context: context,
@@ -158,6 +179,7 @@ class _SearchViewState extends State<SearchView> {
                       songId: songId,
                       titolo: titolo,
                       artistId: item['artistId'] ?? [],
+                      artist: artista,
                       cover: cover,
                     );
                   },
@@ -173,6 +195,7 @@ class _SearchViewState extends State<SearchView> {
                       },
                     ),
                   ),
+                  // Rappresentazione del title, artista e bottone di play/pause
                   title: Text(
                     titolo,
                     style: const TextStyle(
@@ -185,7 +208,7 @@ class _SearchViewState extends State<SearchView> {
                   trailing: ValueListenableBuilder<String>(
                     valueListenable: audio.currentSongId,
                     builder: (context, currentId, _) {
-                      // stream per lo stato di riproduzione
+                      // Stream per lo stato di riproduzione
                       return StreamBuilder(
                         stream: audio.stateStream,
                         builder: (context, snapshot) {
@@ -202,6 +225,7 @@ class _SearchViewState extends State<SearchView> {
                               color: Colors.white,
                               size: 40,
                             ),
+                            // La pressione sul bottone attiva o interrompre la riproduzione della canzone
                             onPressed: () async {
                               if (audioUrl == null || audioUrl.isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -209,15 +233,15 @@ class _SearchViewState extends State<SearchView> {
                                 );
                                 return;
                               }
+                              // Controlla se la canzone in riproduzione è quella selezionata, se lo è mette in pausa o riprende 
                               if (currentId == songId) {
-                                // stessa canzone: toggle play/pause
                                 if (playing) {
                                   await audio.pause();
                                 } else {
                                   await audio.play();
                                 }
                               } else {
-                                // canzone diversa: imposta (playlist da 1) e parti
+                                // Se è diversa fa partire la riproduzione (imposta playlist da 1)
                                 await audio.playSong(
                                   songId: songId,
                                   url: audioUrl,

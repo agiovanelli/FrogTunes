@@ -90,7 +90,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   Duration position = Duration.zero;
   Duration duration = Duration.zero;
 
-  // ValueNotifiers per titolo, cover e artista corrente
+  // ValueNotifiers per title, cover e artista corrente
   late final ValueNotifier<String> currentTitle;
   late final ValueNotifier<String> currentCover;
   late final ValueNotifier<String> currentArtist;
@@ -106,7 +106,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     currentCover = audio.currentCover;
     currentArtist = audio.currentArtist;
 
-    // ascolta le modifiche per aggiornare la UI
+    // Ascolta le modifiche per aggiornare la UI
     currentTitle.addListener(() {
       if (mounted) setState(() {});
     });
@@ -135,7 +135,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   }
 
   // Funzione per mostrare la coda di riproduzione
-  void _mostraCoda(BuildContext context) {
+  void _mostraCoda(BuildContext context, AudioService audio) {
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF041F0F),
@@ -149,48 +149,64 @@ class _PlayerScreenState extends State<PlayerScreen> {
               child: Column(
                 children: [
                   ListTile(
-                    title: const Text('Coda di riproduzione',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold)),
+                    title: const Text(
+                      'Coda di riproduzione',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete_forever, color: Colors.red),
-                      // Bottone per cancellare tutta la coda
                       onPressed: () {
                         Coda.cancellaCoda();
-                        setStateModal(() {});
+                        setStateModal(() {}); // Aggiorna la coda
                       },
                     ),
                   ),
                   const Divider(color: Colors.white24),
                   Expanded(
                     child: queue.isEmpty
-                        // Se la coda è vuota mostra un messaggio
                         ? const Center(
-                            child: Text("La coda è vuota",
-                                style: TextStyle(color: Colors.white70)))
-                        // Altrimenti mostra la lista delle canzoni in coda riportando titolo e artista
+                            child: Text(
+                              "La coda è vuota",
+                              style: TextStyle(color: Colors.white70),
+                            ),
+                          )
                         : ListView.builder(
                             itemCount: queue.length,
                             itemBuilder: (context, index) {
                               final song = queue[index];
+                              final isPlaying =
+                                  audio.currentSongId == song['songId']; // Evidenzia canzone in riproduzione
                               return ListTile(
-                                leading: const Icon(Icons.music_note, color: Colors.white),
-                                title: Text(song['titolo'] ?? 'Senza titolo',
-                                    style: const TextStyle(color: Colors.white)),
-                                subtitle: Text(song['artista'] ?? 'Sconosciuto',
-                                    style: const TextStyle(color: Colors.white70)),
+                                leading: Icon(
+                                  isPlaying ? Icons.play_arrow : Icons.music_note,
+                                  color: isPlaying ? Colors.greenAccent : Colors.white,
+                                ),
+                                title: Text(
+                                  song['titolo'] ?? 'Senza titolo',
+                                  style: TextStyle(
+                                    color: isPlaying ? Colors.greenAccent : Colors.white,
+                                    fontWeight:
+                                        isPlaying ? FontWeight.bold : FontWeight.normal,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  song['artista'] ?? 'Sconosciuto',
+                                  style: const TextStyle(color: Colors.white70),
+                                ),
                                 trailing: IconButton(
                                   icon: const Icon(Icons.close, color: Colors.red),
-                                  // Bottone per rimuovere la canzone dalla coda
                                   onPressed: () {
                                     Coda.rimuovi(index);
+                                    setStateModal(() {}); // Aggiorna la coda quando rimuovo canzone
                                   },
                                 ),
-                                  // Bottone per riprodurre la canzone selezionata e rimuovere quelle precedenti
                                 onTap: () {
                                   Coda.playFrom(index, audio);
+                                  setStateModal(() {}); // Aggiorna coda quando clicco su una canzone da riprodurre
                                   Navigator.pop(context);
                                 },
                               );
@@ -256,7 +272,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
           IconButton(
             icon: const Icon(Icons.queue_music, color: Colors.white),
             // Bottone per mostrare la coda di riproduzione
-            onPressed: () => _mostraCoda(context),
+            onPressed: () => _mostraCoda(context, audio),
           ),
         ],
       ),
@@ -278,7 +294,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
               ),
             ),
             const SizedBox(height: 30),
-            // Titolo della canzone aggiornato in tempo reale
+            // title della canzone aggiornato in tempo reale
             Text(
               currentTitle.value.isEmpty ? widget.titolo : currentTitle.value,
               style: const TextStyle(
