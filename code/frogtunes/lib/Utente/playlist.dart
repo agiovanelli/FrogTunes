@@ -198,80 +198,58 @@ class _PlaylistViewState extends State<PlaylistView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: StreamBuilder<QuerySnapshot>(
-        // Ordina le playlist in ordine di creazione -> da far diventare che le ordina in base a quella ascoltata per ultima
-        stream: FirebaseFirestore.instance
-          .collection('playlists')
-          .orderBy('createdAt', descending: true)
-          .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          
-          if (!snapshot.hasData) {
-            return const Center(
-              child: Text('Nessuna playlist', style: TextStyle(color: Colors.white)),
-            );
-          }
-
-        final docs = snapshot.data!.docs;
-
-        return GridView.builder(
-          padding: const EdgeInsets.all(8.0),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 30.0,
-            mainAxisSpacing: 20.0,
-            childAspectRatio: 1.0,
-          ),
-          // +1 per il pulsante "Crea playlist"
-          itemCount: docs.length + 1,
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              // Crea Playlist
-              return GestureDetector(
-                onTap: _creaPlaylist,
-                child: Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15.0),
-                  ),
-                  color: Colors.green.withValues(alpha: 1),
-                  elevation: 3,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.add, color: Colors.white, size: 50.0),
-                      SizedBox(height: 10),
-                      Text(
-                        "Crea playlist",
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
+      body: GridView.builder(
+        padding: const EdgeInsets.all(8.0),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 30.0,
+          mainAxisSpacing: 20.0,
+          childAspectRatio: 1.0,
+        ),
+        itemCount: playlists.length + 1,
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            // Crea Playlist
+            return GestureDetector(
+              onTap: _creaPlaylist,
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15.0),
                 ),
-              );
-            } else {
-              // Visualizzazione delle singole playlist
-              final doc = docs[index - 1];
-              final playlistId = doc.id;
-              final playlistName = doc['name'] ?? 'Senza nome';
-
-              return GestureDetector(
-                // Bottone che fa visualizzare l'interno della playlist
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PlaylistDetailsView(
-                        playlistId: playlistId,
-                        playlistName: playlistName,
-                      ),
+                color: Colors.green.withValues(alpha: 1),
+                elevation: 3,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.add, color: Colors.white, size: 50.0),
+                    SizedBox(height: 10),
+                    Text(
+                      "Crea playlist",
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                      textAlign: TextAlign.center,
                     ),
-                  );
-                },
-              // Se si tiene premuto c'è la possibilità di eliminare la playlist
+                  ],
+                ),
+              ),
+            );
+          } else {
+            // Visualizzazione delle singole playlist
+            final playlist = playlists[index - 1];
+            final playlistId = playlist['id'] ?? '';
+            final playlistName = playlist['name'] ?? 'Senza nome';
+
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PlaylistDetailsView(
+                      playlistId: playlistId,
+                      playlistName: playlistName,
+                    ),
+                  ),
+                );
+              },
               onLongPress: () {
                 showDialog(
                   context: context,
@@ -293,16 +271,13 @@ class _PlaylistViewState extends State<PlaylistView> {
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                         onPressed: () async {
-                          // Elimina la playlist che ha lo stesso id di quella selezionata
                           await FirebaseFirestore.instance
                               .collection('playlists')
                               .doc(playlistId)
                               .delete();
-
                           setState(() {
                             playlists.removeAt(index - 1);
                           });
-
                           if(context.mounted){
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -317,31 +292,29 @@ class _PlaylistViewState extends State<PlaylistView> {
                 );
               },
               child: Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15.0),
+                ),
+                color: Colors.green.withValues(alpha: 0.3),
+                elevation: 3,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.queue_music, color: Colors.white, size: 40.0),
+                    const SizedBox(height: 10),
+                    Text(
+                      playlistName,
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      textAlign: TextAlign.center,
                     ),
-                    color: Colors.green.withValues(alpha: 0.3),
-                    elevation: 3,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.queue_music, color: Colors.white, size: 40.0),
-                        const SizedBox(height: 10),
-                        Text(
-                          playlistName,
-                          style: const TextStyle(color: Colors.white, fontSize: 16),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-            },
-          );
+                  ],
+                ),
+              ),
+            );
+          }
         },
       ),
-    backgroundColor: const Color.fromARGB(255, 4, 35, 5),
+      backgroundColor: const Color.fromARGB(255, 4, 35, 5),
     );
   }
 
@@ -390,23 +363,25 @@ class PlaylistDetailsView extends StatelessWidget {
             onPressed: () async {
               final playlistSnapshot = await playlistRef.collection('canzoni').get();
 
-              if(context.mounted){  
+              if (context.mounted) {
                 if (playlistSnapshot.docs.isNotEmpty) {
-                final playlistUrls = playlistSnapshot.docs.map((doc) {
-                  
-                  // Mappa completa per ogni canzone
-                  return {
-                    'songId': doc['cid'] ?? '',
-                    'url': doc['url'] ?? '',
-                    'title': doc['titolo'] ?? '',
-                    'artistId': doc['artistId'] ?? [],
-                    'cover': doc['cover'] ?? '',
-                  };
-                }).where((track) => (track['url'] as String).isNotEmpty).toList();
-
-                  // Se playlist non vuota inizia riproduzione
-                  if (playlistUrls.isNotEmpty) {
-                    await audio.setPlaylist(playlistUrls);
+                  // Recupera i nomi degli artisti per ogni canzone
+                  final playlistUrls = <Map<String, dynamic>>[];
+                  for (final doc in playlistSnapshot.docs) {
+                    final artistIds = List<String>.from(doc['artistId'] ?? []);
+                    final artistNames = await fetchArtistName(artistIds);
+                    playlistUrls.add({
+                      'songId': doc['cid'] ?? '',
+                      'url': doc['url'] ?? '',
+                      'title': doc['titolo'] ?? '',
+                      'artistId': artistIds,
+                      'artist': artistNames.join(', '),
+                      'cover': doc['cover'] ?? '',
+                    });
+                  }
+                  final filteredUrls = playlistUrls.where((track) => (track['url'] as String).isNotEmpty).toList();
+                  if (filteredUrls.isNotEmpty) {
+                    await audio.setPlaylist(filteredUrls);
                     await audio.play();
                   } else {
                     // Altrimenti comunica che è vuota
@@ -540,41 +515,48 @@ class PlaylistDetailsView extends StatelessWidget {
                     onTap: () async {
                       final playlistSnapshot = await playlistRef.collection('canzoni').get();
 
-                      if(context.mounted){  
+                      if (context.mounted) {
                         if (playlistSnapshot.docs.isNotEmpty) {
-                        final playlistUrls = playlistSnapshot.docs.map((doc) {
-                          
-                          // Mappa completa per ogni canzone
-                          return {
-                            'songId': doc['cid'] ?? '',
-                            'url': doc['url'] ?? '',
-                            'title': doc['titolo'] ?? '',
-                            'artistId': doc['artistId'] ?? [],
-                            'cover': doc['cover'] ?? '',
-                          };
-                        }).where((track) => (track['url'] as String).isNotEmpty).toList();
-
-                          // Se playlist non vuota inizia riproduzione
-                          if (playlistUrls.isNotEmpty) {
-                            await audio.setPlaylist(playlistUrls);
-                            await audio.play();
-
-                            // Apri il PlayerScreen
-                            if(context.mounted){
+                          // Recupera i dati per ogni canzone
+                          final playlistUrls = <Map<String, dynamic>>[];
+                          for (final doc in playlistSnapshot.docs) {
+                            final artistIds = List<String>.from(doc['artistId'] ?? []);
+                            final artistNames = await fetchArtistName(artistIds);
+                            playlistUrls.add({
+                              'songId': doc['cid'] ?? '',
+                              'url': doc['url'] ?? '',
+                              'title': doc['titolo'] ?? '',
+                              'artistId': artistIds,
+                              'artist': artistNames.join(', '),
+                              'cover': doc['cover'] ?? '',
+                            });
+                          }
+                          final filteredUrls = playlistUrls.where((track) => (track['url'] as String).isNotEmpty).toList();
+                          if (filteredUrls.isNotEmpty) {
+                            // Trova l'indice della canzone selezionata nella lista filtrata
+                            final selectedSongId = canzone['cid'] ?? '';
+                            final selectedIndex = filteredUrls.indexWhere((track) => track['songId'] == selectedSongId);
+                            int indexToPlay = 0;
+                            if (selectedIndex != -1) {
+                              indexToPlay = selectedIndex;
+                            }
+                            // Apri subito il PlayerScreen, poi avvia la riproduzione
+                            if (context.mounted) {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => PlayerScreen(
-                                    songId: playlistUrls[0]['songId'],
-                                    titolo: playlistUrls[0]['title'],
-                                    artistId: List<String>.from(playlistUrls[0]['artistId']),
-                                    cover: playlistUrls[0]['cover'],
+                                  builder: (context) => PlayerScreen(
+                                    songId: filteredUrls[indexToPlay]['songId'],
+                                    titolo: filteredUrls[indexToPlay]['title'],
+                                    artistId: List<String>.from(filteredUrls[indexToPlay]['artistId']),
+                                    cover: filteredUrls[indexToPlay]['cover'],
                                   ),
                                 ),
                               );
                             }
+                            await audio.setPlaylist(filteredUrls, initialIndex: indexToPlay);
+                            await audio.play();
                           } else {
-                            // Altrimenti comunica che è vuota
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text("La playlist è vuota")),
                             );

@@ -6,7 +6,20 @@ class Coda {
 
   // Funzione per aggiungere una canzone alla coda
   static void aggiungi(Map<String, dynamic> song) {
-    coda.add(song);
+    final audio = AudioService();
+    final currentIndex = audio.player.currentIndex ?? -1;
+    int insertIndex = (currentIndex + 1);
+    if (insertIndex < 0 || insertIndex > coda.length) {
+      insertIndex = coda.length;
+    }
+    coda.insert(insertIndex, {
+      'songId': song['songId'] ?? '',
+      'url': song['url'] ?? '',
+      'title': song['title'] ?? '',
+      'artistId': song['artistId'] ?? [],
+      'artist': song['artist'] ?? 'Artista sconosciuto',
+      'cover': song['cover'] ?? '',
+    });
   }
 
   // Funzione per rimuovere una canzone dalla coda tramite l'indice

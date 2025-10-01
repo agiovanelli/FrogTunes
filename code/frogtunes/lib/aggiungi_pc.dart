@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'coda.dart';
 import 'package:frogtunes/Utente/playlist.dart';
+import 'package:frogtunes/audio_service.dart';
 
 // Funzione per mostrare il bottom sheet con le opzioni della canzone
 Future<void> showSongOptionsBottomSheet({
@@ -42,19 +42,22 @@ Future<void> showSongOptionsBottomSheet({
                   "Aggiungi alla coda",
                   style: TextStyle(color: Colors.white),
                 ),
-                onTap: () {
-                  Coda.aggiungi({
+                onTap: () async {
+                  final audio = AudioService();
+                  await audio.addToQueue({
                     'url': audioUrl,
-                    'cid': songId,
-                    'titolo': titolo,
+                    'songId': songId,
+                    'title': titolo,
                     'artistId': artistId,
-                    'artista': artist,
+                    'artist': artist,
                     'cover': cover,
                   });
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Aggiunto alla coda")),
-                  );
+                  if(context.mounted){
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Aggiunto alla coda")),
+                    );
+                  }
                 },
               ),
               const Divider(color: Colors.white24),

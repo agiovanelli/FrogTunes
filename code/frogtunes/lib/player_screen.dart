@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 
 import 'package:frogtunes/AME/Artista/artist_screen.dart';
-import 'package:frogtunes/coda.dart';
 import 'audio_service.dart';
 
 class PlayerScreen extends StatefulWidget {
@@ -134,89 +133,121 @@ class _PlayerScreenState extends State<PlayerScreen> {
     setState(() => nomiArtisti = nomi);
   }
 
-  // Funzione per mostrare la coda di riproduzione
+  // Funzione per mostrare la coda reale del player
   void _mostraCoda(BuildContext context, AudioService audio) {
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF041F0F),
       isScrollControlled: true,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setStateModal) {
-            final queue = Coda.getCoda();
-            return SizedBox(
-              height: MediaQuery.of(context).size.height * 0.6,
-              child: Column(
-                children: [
-                  ListTile(
-                    title: const Text(
-                      'Coda di riproduzione',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete_forever, color: Colors.red),
-                      onPressed: () {
-                        Coda.cancellaCoda();
-                        setStateModal(() {}); // Aggiorna la coda
-                      },
-                    ),
+        return SizedBox(
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: Column(
+            children: [
+              ListTile(
+                title: const Text(
+                  'Coda di riproduzione',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const Divider(color: Colors.white24),
-                  Expanded(
-                    child: queue.isEmpty
-                        ? const Center(
-                            child: Text(
-                              "La coda è vuota",
-                              style: TextStyle(color: Colors.white70),
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_forever, color: Colors.red),
+                  tooltip: 'Svuota coda',
+                  onPressed: () async {
+                    await audio.player.stop();
+                    // Elimina tutte le tracce tranne quella in riproduzione
+                    final currentIdx = audio.player.currentIndex;
+                    // Se la coda contiene già solo la traccia corrente, non fare nulla
+                    if (currentIdx != null
+                        && audio.queue.length > 0
+                        && currentIdx >= 0
+                        && currentIdx < audio.queue.length) {
+                      // Se la coda contiene già solo la traccia corrente, non fare nulla
+                      if (audio.queue.length == 1 && currentIdx == 0 && context.mounted) {
+                        Navigator.pop(context);
+                        return;
+                      }
+                      // Ricostruisci la coda con solo la traccia corrente, solo se esiste
+                      if (audio.queue.children.isNotEmpty && currentIdx >= 0 && currentIdx < audio.queue.children.length) {
+                        final currentSource = audio.queue.children[currentIdx];
+                        await audio.queue.clear();
+                        await audio.queue.add(currentSource);
+                        await audio.player.setAudioSource(
+                          audio.queue,
+                          initialIndex: 0,
+                          initialPosition: audio.player.position,
+                        );
+                        // Riavvia la riproduzione solo se era attiva
+                        if (audio.player.playing || audio.player.position > Duration.zero) {
+                          await audio.player.play();
+                        }
+                      }
+                    }
+                  },
+                ),
+              ),
+              const Divider(color: Colors.white24),
+              Expanded(
+                child: StreamBuilder<List<dynamic>>(
+                  stream: audio.player.sequenceStream,
+                  builder: (context, snapshot) {
+                    final sequence = snapshot.data;
+                    if (sequence == null || sequence.isEmpty) {
+                      return const Center(
+                        child: Text(
+                          "La coda è vuota",
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                      );
+                    }
+                    return ListView.builder(
+                      itemCount: sequence.length,
+                      itemBuilder: (context, index) {
+                        final audioSource = sequence[index];
+                        final tag = audioSource.tag as Map<String, dynamic>?;
+                        final isPlaying = audio.player.currentIndex == index;
+                        return ListTile(
+                          leading: Icon(
+                            isPlaying ? Icons.play_arrow : Icons.music_note,
+                            color: isPlaying ? Colors.greenAccent : Colors.white,
+                          ),
+                          title: Text(
+                            tag?['title']?.toString() ?? 'Senza titolo',
+                            style: TextStyle(
+                              color: isPlaying ? Colors.greenAccent : Colors.white,
+                              fontWeight:
+                                  isPlaying ? FontWeight.bold : FontWeight.normal,
                             ),
-                          )
-                        : ListView.builder(
-                            itemCount: queue.length,
-                            itemBuilder: (context, index) {
-                              final song = queue[index];
-                              final isPlaying =
-                                  audio.currentSongId == song['songId']; // Evidenzia canzone in riproduzione
-                              return ListTile(
-                                leading: Icon(
-                                  isPlaying ? Icons.play_arrow : Icons.music_note,
-                                  color: isPlaying ? Colors.greenAccent : Colors.white,
-                                ),
-                                title: Text(
-                                  song['titolo'] ?? 'Senza titolo',
-                                  style: TextStyle(
-                                    color: isPlaying ? Colors.greenAccent : Colors.white,
-                                    fontWeight:
-                                        isPlaying ? FontWeight.bold : FontWeight.normal,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  song['artista'] ?? 'Sconosciuto',
-                                  style: const TextStyle(color: Colors.white70),
-                                ),
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.close, color: Colors.red),
-                                  onPressed: () {
-                                    Coda.rimuovi(index);
-                                    setStateModal(() {}); // Aggiorna la coda quando rimuovo canzone
-                                  },
-                                ),
-                                onTap: () {
-                                  Coda.playFrom(index, audio);
-                                  setStateModal(() {}); // Aggiorna coda quando clicco su una canzone da riprodurre
-                                  Navigator.pop(context);
-                                },
-                              );
+                          ),
+                          subtitle: Text(
+                            tag?['artist']?.toString() ?? 'Sconosciuto',
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            tooltip: 'Rimuovi dalla coda',
+                            onPressed: () async {
+                              // Rimuovi la traccia dalla coda usando l'istanza _queue
+                              if (audio.queue.length > 1 && index >= 0 && index < audio.queue.length) {
+                                await audio.queue.removeAt(index);
+                              }
                             },
                           ),
-                  ),
-                ],
+                          onTap: () {
+                            audio.player.seek(Duration.zero, index: index);
+                            Navigator.pop(context);
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
-            );
-          },
+            ],
+          ),
         );
       },
     );
