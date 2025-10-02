@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
+import 'package:just_audio/just_audio.dart';
 
 import 'package:frogtunes/AME/Artista/artist_screen.dart';
 import 'audio_service.dart';
@@ -153,40 +154,68 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete_forever, color: Colors.red),
-                  tooltip: 'Svuota coda',
-                  onPressed: () async {
-                    await audio.player.stop();
-                    // Elimina tutte le tracce tranne quella in riproduzione
-                    final currentIdx = audio.player.currentIndex;
-                    // Se la coda contiene già solo la traccia corrente, non fare nulla
-                    if (currentIdx != null
-                        && audio.queue.length > 0
-                        && currentIdx >= 0
-                        && currentIdx < audio.queue.length) {
-                      // Se la coda contiene già solo la traccia corrente, non fare nulla
-                      if (audio.queue.length == 1 && currentIdx == 0 && context.mounted) {
-                        Navigator.pop(context);
-                        return;
-                      }
-                      // Ricostruisci la coda con solo la traccia corrente, solo se esiste
-                      if (audio.queue.children.isNotEmpty && currentIdx >= 0 && currentIdx < audio.queue.children.length) {
-                        final currentSource = audio.queue.children[currentIdx];
-                        await audio.queue.clear();
-                        await audio.queue.add(currentSource);
-                        await audio.player.setAudioSource(
-                          audio.queue,
-                          initialIndex: 0,
-                          initialPosition: audio.player.position,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ValueListenableBuilder<LoopMode>(
+                      valueListenable: audio.loopModeNotifier,
+                      builder: (context, loopMode, _) {
+                        final isLoopActive = loopMode == LoopMode.all;
+                        return IconButton(
+                          icon: Icon(
+                            Icons.repeat,
+                            color: isLoopActive ? Colors.green : Colors.white,
+                          ),
+                          tooltip: isLoopActive ? 'Loop coda attivo' : 'Loop tutta la coda',
+                          onPressed: () async {
+                            await audio.player.setLoopMode(
+                              isLoopActive ? LoopMode.off : LoopMode.all
+                            );
+                            // Mostra un messaggio di conferma in fase di testing si tiene
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  isLoopActive
+                                    ? "Loop coda disattivato"
+                                    : "Loop coda attivo: la coda si ripete all'infinito"
+                                ),
+                              ),
+                            );
+                          },
                         );
-                        // Riavvia la riproduzione solo se era attiva
-                        if (audio.player.playing || audio.player.position > Duration.zero) {
-                          await audio.player.play();
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_forever, color: Colors.red),
+                      tooltip: 'Svuota coda',
+                      onPressed: () async {
+                        await audio.player.stop();
+                        final currentIdx = audio.player.currentIndex;
+                        if (currentIdx != null
+                            && audio.queue.length > 0
+                            && currentIdx >= 0
+                            && currentIdx < audio.queue.length) {
+                          if (audio.queue.length == 1 && currentIdx == 0 && context.mounted) {
+                            Navigator.pop(context);
+                            return;
+                          }
+                          if (audio.queue.children.isNotEmpty && currentIdx >= 0 && currentIdx < audio.queue.children.length) {
+                            final currentSource = audio.queue.children[currentIdx];
+                            await audio.queue.clear();
+                            await audio.queue.add(currentSource);
+                            await audio.player.setAudioSource(
+                              audio.queue,
+                              initialIndex: 0,
+                              initialPosition: audio.player.position,
+                            );
+                            if (audio.player.playing || audio.player.position > Duration.zero) {
+                              await audio.player.play();
+                            }
+                          }
                         }
-                      }
-                    }
-                  },
+                      },
+                    ),
+                  ],
                 ),
               ),
               const Divider(color: Colors.white24),

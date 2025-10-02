@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'coda.dart';
 
 class AudioService {
+  // Notifier per loopMode
+  final ValueNotifier<LoopMode> loopModeNotifier = ValueNotifier(LoopMode.off);
   // Getter pubblico per la coda (ConcatenatingAudioSource)
   ConcatenatingAudioSource get queue => _queue;
 
@@ -17,18 +19,25 @@ class AudioService {
       isPlayingNotifier.value = state.playing;
     });
 
+    // Aggiorna loopModeNotifier quando cambia
+    _player.loopModeStream.listen((mode) {
+      loopModeNotifier.value = mode;
+    });
+
     // Ascolta i cambiamenti di traccia per aggiornare i metadati correnti
     _player.currentIndexStream.listen((index) async {
-      // Se si passa alla prossima canzone, rimuovi la precedente dalla coda
-      final prevIndex = index != null ? index - 1 : null;
-      // Evita RangeError: non rimuovere se la coda ha solo una traccia
-      if (_queue.length > 1 && prevIndex != null && prevIndex >= 0 && prevIndex < _queue.length) {
-        await _queue.removeAt(prevIndex);
-        // Dopo la rimozione, aggiorna l'indice del player
-        if (_player.currentIndex != null && _player.currentIndex! > 0) {
-          await _player.seekToNext();
-        }
-      }
+      
+      // Se disabilito questa parte, non rimuove la traccia precedente dalla coda
+      // // Se si passa alla prossima canzone, rimuovi la precedente dalla coda
+      // final prevIndex = index != null ? index - 1 : null;
+      // // Evita RangeError: non rimuovere se la coda ha solo una traccia
+      // if (_queue.length > 1 && prevIndex != null && prevIndex >= 0 && prevIndex < _queue.length) {
+      //   await _queue.removeAt(prevIndex);
+      //   // Dopo la rimozione, aggiorna l'indice del player
+      //   if (_player.currentIndex != null && _player.currentIndex! > 0) {
+      //     await _player.seekToNext();
+      //   }
+      // }
 
       if (index == null) return;
       // Evita RangeError: controlla che index sia valido rispetto alla sequence

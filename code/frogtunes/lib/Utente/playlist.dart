@@ -5,6 +5,7 @@ import 'package:frogtunes/player_screen.dart';
 import 'package:frogtunes/AME/Artista/artist_screen.dart';
 import 'package:frogtunes/audio_service.dart';
 import 'package:frogtunes/mini_player.dart';
+import 'package:just_audio/just_audio.dart';
 import 'dart:async';
 
 class PlaylistView extends StatefulWidget {
@@ -362,7 +363,6 @@ class PlaylistDetailsView extends StatelessWidget {
             // Bottone per far partire tutte le canzoni presenti nella playlist
             onPressed: () async {
               final playlistSnapshot = await playlistRef.collection('canzoni').get();
-
               if (context.mounted) {
                 if (playlistSnapshot.docs.isNotEmpty) {
                   // Recupera i nomi degli artisti per ogni canzone
@@ -395,6 +395,34 @@ class PlaylistDetailsView extends StatelessWidget {
                   );
                 }
               }
+            },
+          ),
+          ValueListenableBuilder<LoopMode>(
+            valueListenable: audio.loopModeNotifier,
+            builder: (context, loopMode, _) {
+              final isLoopActive = loopMode == LoopMode.all;
+              return IconButton(
+                icon: Icon(
+                  isLoopActive ? Icons.repeat_one : Icons.repeat,
+                  color: Colors.white,
+                ),
+                tooltip: isLoopActive ? 'Loop playlist attivo' : 'Loop playlist',
+                onPressed: () async {
+                  await audio.player.setLoopMode(
+                    isLoopActive ? LoopMode.off : LoopMode.all
+                  );
+                  // Mostra un messaggio di conferma in fase di testing si tiene 
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        isLoopActive
+                          ? "Loop playlist disattivato"
+                          : "Loop playlist attivo: la playlist si ripete all'infinito"
+                      ),
+                    ),
+                  );
+                },
+              );
             },
           ),
           IconButton(
@@ -432,7 +460,6 @@ class PlaylistDetailsView extends StatelessWidget {
                         onPressed: () async {
                           if (nuovoNome.isNotEmpty) {
                             await playlistRef.update({'name': nuovoNome});
-
                             if(context.mounted){
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
