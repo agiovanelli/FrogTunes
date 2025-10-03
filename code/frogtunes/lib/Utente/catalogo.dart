@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:frogtunes/player_screen.dart';
 import 'package:frogtunes/AME/Artista/artist_screen.dart';
+import 'package:frogtunes/aggiungi_pc.dart';
 
 class LibraryView extends StatelessWidget {
   const LibraryView({super.key});
@@ -140,7 +141,9 @@ class LikedSongsScreen extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
       ),
-      body: StreamBuilder<QuerySnapshot>(
+      body: Stack(
+        children: [
+      StreamBuilder<QuerySnapshot>(
         // Recupera le canzoni preferite dell'utente dal Firestore
         stream: FirebaseFirestore.instance
             .collection('utenti')
@@ -222,6 +225,27 @@ class LikedSongsScreen extends StatelessWidget {
                       );
                     }),
                   ),
+                        onTap: ()async {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ArtistScreen(
+                                artistId: artistIds[index],
+                                nomeArtista: artistNames[index],),
+                            ),
+                          );
+                        },
+                        onLongPress: () {
+                          showSongOptionsBottomSheet(
+                            context: context,
+                            audioUrl: song['audioUrl'],
+                            songId: song['cid'],
+                            titolo: song['titolo'],
+                            artistId: List<String>.from(song['artistId'] ?? []),
+                            artist: artistNames.join(', '),
+                            cover: song['cover'] ?? '',
+                          );
+                        },
                 );
               },
             );
@@ -229,6 +253,8 @@ class LikedSongsScreen extends StatelessWidget {
         );
       },
       ),
+        ],
+      )
     );
   }
 }

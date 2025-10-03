@@ -27,6 +27,7 @@ class PlayerScreen extends StatefulWidget {
 
 // Funzione per aggiungere o rimuovere la canzone dai preferiti
 Future<void> toggleLikeSong({
+  required String audioUrl,
   required String songId,
   required String titolo,
   required List<String> artistId,
@@ -46,6 +47,8 @@ Future<void> toggleLikeSong({
     await songRef.delete();
   } else {
     await songRef.set({
+      'audioUrl': audioUrl,
+      'cid': songId,
       'titolo': titolo,
       'artistId': artistId,
       'cover': cover,
@@ -256,7 +259,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                             style: const TextStyle(color: Colors.white70),
                           ),
                           trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
+                            icon: const Icon(Icons.remove_circle, color: Colors.red),
                             tooltip: 'Rimuovi dalla coda',
                             onPressed: () async {
                               // Rimuovi la traccia dalla coda usando l'istanza _queue
@@ -305,8 +308,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
           icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border,
               color: isLiked ? Colors.green : Colors.white),
           // Aggiungi o rimuovi la canzone dai preferiti
-          onPressed: () {
+          onPressed: () async {
             toggleLikeSong(
+              audioUrl: await fetchUrl(songId),
               songId: songId,
               titolo: widget.titolo,
               artistId: widget.artistId,

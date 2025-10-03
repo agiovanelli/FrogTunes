@@ -44,19 +44,28 @@ Future<void> showSongOptionsBottomSheet({
                 ),
                 onTap: () async {
                   final audio = AudioService();
-                  await audio.addToQueue({
-                    'url': audioUrl,
-                    'songId': songId,
-                    'title': titolo,
-                    'artistId': artistId,
-                    'artist': artist,
-                    'cover': cover,
-                  });
-                  if(context.mounted){
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Aggiunto alla coda")),
-                    );
+                  if(audio.isPlaying){
+                    await audio.addToQueue({
+                      'url': audioUrl,
+                      'songId': songId,
+                      'title': titolo,
+                      'artistId': artistId,
+                      'artist': artist,
+                      'cover': cover,
+                    });
+                    if(context.mounted){
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Aggiunto alla coda")),
+                      );
+                    }
+                  } else{
+                    if(context.mounted){
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Fai prima partire una canzone")),
+                      );
+                    }
                   }
                 },
               ),

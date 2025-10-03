@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';  
 import 'package:frogtunes/player_screen.dart';
 import 'package:frogtunes/AME/Artista/artist_screen.dart';
+import 'package:frogtunes/aggiungi_pc.dart';
 import 'package:frogtunes/audio_service.dart';
 import 'package:frogtunes/mini_player.dart';
 import 'package:just_audio/just_audio.dart';
@@ -594,6 +595,17 @@ class PlaylistDetailsView extends StatelessWidget {
                           );
                         }
                       }
+                    },
+                    onLongPress: () {
+                      showSongOptionsBottomSheet(
+                        context: context,
+                        audioUrl: canzone['url'],
+                        songId: canzone['cid'],
+                        titolo: canzone['titolo'],
+                        artistId: List<String>.from(canzone['artistId'] ?? []),
+                        artist: artistNames.join(', '),
+                        cover: canzone['cover'] ?? '',
+                      );
                     },
                   );
                 },
