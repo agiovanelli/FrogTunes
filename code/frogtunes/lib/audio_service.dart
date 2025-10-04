@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'coda.dart';
 
 class AudioService {
   // Notifier per loopMode
   final ValueNotifier<LoopMode> loopModeNotifier = ValueNotifier(LoopMode.off);
+
   // Getter pubblico per la coda (ConcatenatingAudioSource)
   ConcatenatingAudioSource get queue => _queue;
 
@@ -23,6 +26,9 @@ class AudioService {
     _player.loopModeStream.listen((mode) {
       loopModeNotifier.value = mode;
     });
+
+    // Carica i metadati della traccia corrente all'avvio
+    String? lastSavedSongId;
 
     // Ascolta i cambiamenti di traccia per aggiornare i metadati correnti
     _player.currentIndexStream.listen((index) async {
@@ -48,10 +54,20 @@ class AudioService {
 
       final tag = source.tag as Map<String, dynamic>;
       currentSongId.value = tag['songId'] ?? '';
+      currentUrl.value = tag['audioUrl'] ?? '';
       currentTitle.value = tag['title'] ?? '';
       currentArtist.value = tag['artist'] ?? '';
       currentArtistId.value = List<String>.from(tag['artistId'] ?? []);
       currentCover.value = tag['cover'] ?? '';
+
+      // Salva la canzone recentemente riprodotta
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      final songId = tag['songId'];
+      final audioUrl = tag['audioUrl'] ?? '';
+      if (userId != null && songId != null && songId != '' && songId != lastSavedSongId) {
+        await saveRecentlyPlayed(userId, songId, audioUrl, tag['title'] ?? '', tag['artist'] ?? '', List<String>.from(tag['artistId'] ?? []), tag['cover'] ?? '');
+        lastSavedSongId = songId;
+      }
     });
   }
 
@@ -60,6 +76,7 @@ class AudioService {
 
   // Info della traccia corrente (usati dal MiniPlayer)
   final ValueNotifier<String> currentSongId = ValueNotifier('');
+  final ValueNotifier<String> currentUrl = ValueNotifier('');
   final ValueNotifier<String> currentTitle = ValueNotifier('');
   final ValueNotifier<List<String>> currentArtistId = ValueNotifier([]);
   final ValueNotifier<String> currentArtist = ValueNotifier('');
@@ -90,6 +107,7 @@ class AudioService {
     // Se la canzone è già in riproduzione, non riavviare
     if (currentSongId.value == songId && _player.playing) {
       // Aggiorna solo i metadati se necessario
+      currentUrl.value = url;
       currentTitle.value = title;
       currentArtistId.value = artistId;
       currentArtist.value = artist;
@@ -99,6 +117,7 @@ class AudioService {
 
     // Aggiorna i metadati
     currentSongId.value = songId;
+    currentUrl.value = url;
     currentTitle.value = title;
     currentArtistId.value = artistId;
     currentArtist.value = artist;
@@ -110,6 +129,7 @@ class AudioService {
       Uri.parse(url),
       tag: {
         'songId': songId,
+        'audioUrl': url,
         'title': title,
         'artist': artist,
         'artistId': artistId,
@@ -136,13 +156,14 @@ class AudioService {
   }
 
   // Per riprodurre una lista di URL (playlist vera)
-    Future<void> setPlaylist(List<Map<String, dynamic>> tracks, {int initialIndex = 0}) async {
+  Future<void> setPlaylist(List<Map<String, dynamic>> tracks, {int initialIndex = 0}) async {
       _queue.clear();
       for (final track in tracks) {
         await _queue.add(AudioSource.uri(
           Uri.parse(track['url'] ?? ''),
           tag: {
             'songId': track['songId'] ?? '',
+            'audioUrl': track['audioUrl'] ?? '',
             'title': track['title'] ?? '',
             'artist': track['artist'] ?? '',
             'artistId': track['artistId'] ?? [],
@@ -181,4 +202,32 @@ class AudioService {
       _player.setShuffleModeEnabled(!_player.shuffleModeEnabled);
   Future<void> toggleLoop() =>
       _player.setLoopMode(isLoop ? LoopMode.off : LoopMode.one);
+
+  // Funzione per salvare la canzone recentemente riprodotta
+  Future<void> saveRecentlyPlayed(
+    String userId,
+    String songId,
+    String url,
+    String titolo,
+    String artista,
+    List<String> artistId,
+    String cover,
+  ) async {
+    final docRef = FirebaseFirestore.instance
+        .collection('utenti')
+        .doc(userId)
+        .collection('recentlyPlayed')
+        .doc(songId); // Mettendo songId come ID univoco del documento evito le ripetizioni
+
+    // Aggiorna il doc se esiste già, altrimenti crea se non esiste
+    await docRef.set({
+      'cid': songId,
+      'audioUrl': url,
+      'titolo': titolo,
+      'artista': artista,
+      'artistId': artistId,
+      'cover': cover,
+      'timestamp': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
 }
