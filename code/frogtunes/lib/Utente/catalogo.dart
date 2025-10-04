@@ -6,6 +6,7 @@ import 'package:frogtunes/AME/Artista/artist_screen.dart';
 import 'package:frogtunes/aggiungi_pc.dart';
 import 'package:frogtunes/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:frogtunes/mini_player.dart';
 
 class LibraryView extends StatelessWidget {
   const LibraryView({super.key});
@@ -363,6 +364,10 @@ class LikedSongsScreen extends StatelessWidget {
         );
       },
       ),
+       const Align(
+                alignment: Alignment.bottomCenter,
+                child: MiniPlayer(),
+          ),
         ],
       )
     );
@@ -383,59 +388,67 @@ class FollowedArtistsScreen extends StatelessWidget {
         title: const Text("Artisti seguiti"),
         backgroundColor: Colors.black,
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        // Recupera gli artisti seguiti dall'utente dal Firestore
-        stream: FirebaseFirestore.instance
-            .collection('utenti')
-            .doc(uid)
-            .collection('followedArtists')
-            .orderBy('addedAt', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Stack(
+      children: [
+        StreamBuilder<QuerySnapshot>(
+          // Recupera gli artisti seguiti dall'utente dal Firestore
+          stream: FirebaseFirestore.instance
+              .collection('utenti')
+              .doc(uid)
+              .collection('followedArtists')
+              .orderBy('addedAt', descending: true)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          // Se non ci sono artisti seguiti, mostra un messaggio
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(
-              child: Text("Non segui ancora nessun artista",
-                  style: TextStyle(color: Colors.white)),
-            );
-          }
-
-          final artists = snapshot.data!.docs;
-
-          // Costruisce la lista degli artisti seguiti
-          return ListView.builder(
-            itemCount: artists.length,
-            itemBuilder: (context, index) {
-              final artist = artists[index];
-              final cover = artist['cover'] ?? 'https://via.placeholder.com/150';
-              final nome = artist['nome'] ?? 'Artista sconosciuto';
-
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: NetworkImage(cover),
-                ),
-                title: Text(nome, style: const TextStyle(color: Colors.white)),
-                // Bottone per accedere alla schermata dell'artista
-                onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ArtistScreen(
-                                artistId: artist['uid'],
-                                nomeArtista: nome,
-                              ),
-                            ),
-                          );
-                        },
+            // Se non ci sono artisti seguiti, mostra un messaggio
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const Center(
+                child: Text("Non segui ancora nessun artista",
+                    style: TextStyle(color: Colors.white)),
               );
-            },
-          );
-        },
-      ),
+            }
+
+            final artists = snapshot.data!.docs;
+
+            // Costruisce la lista degli artisti seguiti
+            return ListView.builder(
+              itemCount: artists.length,
+              itemBuilder: (context, index) {
+                final artist = artists[index];
+                final cover = artist['cover'] ?? 'https://via.placeholder.com/150';
+                final nome = artist['nome'] ?? 'Artista sconosciuto';
+
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: NetworkImage(cover),
+                  ),
+                  title: Text(nome, style: const TextStyle(color: Colors.white)),
+                  // Bottone per accedere alla schermata dell'artista
+                  onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ArtistScreen(
+                                  artistId: artist['uid'],
+                                  nomeArtista: nome,
+                                ),
+                              ),
+                            );
+                          },
+                );
+              },
+            );
+          },
+        ),
+          const Align(
+                  alignment: Alignment.bottomCenter,
+                  child: MiniPlayer(),
+            ),
+        ],
+      ) 
     );
   }
 }
