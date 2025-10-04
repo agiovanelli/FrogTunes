@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:frogtunes/player_screen.dart';
 import 'package:frogtunes/AME/Artista/artist_screen.dart';
 import 'package:frogtunes/aggiungi_pc.dart';
+import 'package:frogtunes/audio_service.dart';
+import 'package:just_audio/just_audio.dart';
 
 class LibraryView extends StatelessWidget {
   const LibraryView({super.key});
@@ -133,6 +135,9 @@ class LikedSongsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final audio = AudioService();
+    final likedSongRef = FirebaseFirestore.instance.collection('utenti').doc(FirebaseAuth.instance.currentUser!.uid);
+
     return Scaffold(
       backgroundColor: const Color(0xFF041F0F),
       appBar: AppBar(
@@ -140,6 +145,75 @@ class LikedSongsScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.play_arrow, color: Colors.white),
+            // Bottone per far partire tutte le canzoni presenti nella playlist
+            onPressed: () async {
+              final likedSongsSnapshot = await likedSongRef.collection('likedSongs').get();
+              if (context.mounted) {
+                if (likedSongsSnapshot.docs.isNotEmpty) {
+                  // Recupera i nomi degli artisti per ogni canzone
+                  final songsUrls = <Map<String, dynamic>>[];
+                  for (final doc in likedSongsSnapshot.docs) {
+                    final artistIds = List<String>.from(doc['artistId'] ?? []);
+                    final artistNames = await fetchArtistName(artistIds);
+                    songsUrls.add({
+                      'songId': doc['cid'] ?? '',
+                      'url': doc['audioUrl'] ?? '',
+                      'title': doc['titolo'] ?? '',
+                      'artistId': artistIds,
+                      'artist': artistNames.join(', '),
+                      'cover': doc['cover'] ?? '',
+                    });
+                  }
+                  final filteredUrls = songsUrls.where((track) => (track['url'] as String).isNotEmpty).toList();
+                  if (filteredUrls.isNotEmpty) {
+                    await audio.setPlaylist(filteredUrls);
+                    await audio.play();
+                  } else {
+                    // Altrimenti comunica che è vuota
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("La playlist è vuota")),
+                    );
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("La playlist è vuota")),
+                  );
+                }
+              }
+            },
+          ),
+          ValueListenableBuilder<LoopMode>(
+            valueListenable: audio.loopModeNotifier,
+            builder: (context, loopMode, _) {
+              final isLoopActive = loopMode == LoopMode.all;
+              return IconButton(
+                icon: Icon(
+                  isLoopActive ? Icons.repeat_one : Icons.repeat,
+                  color: Colors.white,
+                ),
+                tooltip: isLoopActive ? 'Loop playlist attivo' : 'Loop playlist',
+                onPressed: () async {
+                  await audio.player.setLoopMode(
+                    isLoopActive ? LoopMode.off : LoopMode.all
+                  );
+                  // Mostra un messaggio di conferma in fase di testing si tiene 
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        isLoopActive
+                          ? "Loop playlist disattivato"
+                          : "Loop playlist attivo: la playlist si ripete all'infinito"
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -149,7 +223,7 @@ class LikedSongsScreen extends StatelessWidget {
             .collection('utenti')
             .doc(FirebaseAuth.instance.currentUser!.uid)
             .collection('likedSongs')
-            .orderBy('addedAt', descending: true)
+            .orderBy('addedAt', descending: false)
             .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
@@ -202,12 +276,10 @@ class LikedSongsScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => PlayerScreen(
-                                songId: song.id,
-                                titolo: song['titolo'],
-                                artistId: artistIds,
-                                cover: song['cover'],
-                              ),
+                              builder: (context) => ArtistScreen(
+                                  artistId: artistIds[index],
+                                  nomeArtista: nome,
+                                ),
                             ),
                           );
                         },
@@ -225,16 +297,54 @@ class LikedSongsScreen extends StatelessWidget {
                       );
                     }),
                   ),
-                        onTap: ()async {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ArtistScreen(
-                                artistId: artistIds[index],
-                                nomeArtista: artistNames[index],),
-                            ),
-                          );
-                        },
+                  onTap: () async {
+                      final likedSongsSnapshot = await likedSongRef.collection('likedSongs').get();
+
+                      if (context.mounted) {
+                        if (likedSongsSnapshot.docs.isNotEmpty) {
+                          // Recupera i dati per ogni canzone
+                          final playlistUrls = <Map<String, dynamic>>[];
+                          for (final doc in likedSongsSnapshot.docs) {
+                            final artistIds = List<String>.from(doc['artistId'] ?? []);
+                            final artistNames = await fetchArtistName(artistIds);
+                            playlistUrls.add({
+                              'songId': doc['cid'] ?? '',
+                              'url': doc['audioUrl'] ?? '',
+                              'title': doc['titolo'] ?? '',
+                              'artistId': artistIds,
+                              'artist': artistNames.join(', '),
+                              'cover': doc['cover'] ?? '',
+                            });
+                          }
+                          final filteredUrls = playlistUrls.where((track) => (track['url'] as String).isNotEmpty).toList();
+                          if (filteredUrls.isNotEmpty) {
+                            // Trova l'indice della canzone selezionata nella lista filtrata
+                            final selectedSongId = song['cid'] ?? '';
+                            final selectedIndex = filteredUrls.indexWhere((track) => track['songId'] == selectedSongId);
+                            int indexToPlay = 0;
+                            if (selectedIndex != -1) {
+                              indexToPlay = selectedIndex;
+                            }
+                            // Apri subito il PlayerScreen, poi avvia la riproduzione
+                            if (context.mounted) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PlayerScreen(
+                                    songId: filteredUrls[indexToPlay]['songId'],
+                                    titolo: filteredUrls[indexToPlay]['title'],
+                                    artistId: List<String>.from(filteredUrls[indexToPlay]['artistId']),
+                                    cover: filteredUrls[indexToPlay]['cover'],
+                                  ),
+                                ),
+                              );
+                            }
+                            await audio.setPlaylist(filteredUrls, initialIndex: indexToPlay);
+                            await audio.play();
+                          }
+                        }
+                      }
+                  },
                         onLongPress: () {
                           showSongOptionsBottomSheet(
                             context: context,
