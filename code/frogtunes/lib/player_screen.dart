@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 import 'package:just_audio/just_audio.dart';
+import 'package:frogtunes/recensioni.dart';
 
 import 'package:frogtunes/AME/Artista/artist_screen.dart';
 import 'audio_service.dart';
@@ -337,6 +338,22 @@ class _PlayerScreenState extends State<PlayerScreen> {
             icon: const Icon(Icons.queue_music, color: Colors.white),
             // Bottone per mostrare la coda di riproduzione
             onPressed: () => _mostraCoda(context, audio),
+          ),
+          IconButton(
+            icon: const Icon(Icons.reviews, color: Colors.white),
+            // Bottone per mostrare le recensioni
+            onPressed: () async{
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => RecensioniPage(
+                    songId: widget.songId,
+                    titolo: widget.titolo,
+                  ),
+                ),
+              );
+            }
           ),
         ],
       ),

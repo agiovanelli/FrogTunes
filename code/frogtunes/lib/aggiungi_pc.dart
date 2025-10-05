@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:frogtunes/Utente/playlist.dart';
 import 'package:frogtunes/audio_service.dart';
+import 'package:frogtunes/recensioni.dart';
 
 // Funzione per mostrare il bottom sheet con le opzioni della canzone
 Future<void> showSongOptionsBottomSheet({
@@ -171,8 +172,27 @@ Future<void> showSongOptionsBottomSheet({
                 );
 
                 },
-              )
-
+              ),
+              Divider(color: Colors.white24),
+              ListTile(
+                leading: const Icon(Icons.queue_music, color: Colors.white),
+                title: const Text(
+                  "Aggiungi una recensione",
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () async {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RecensioniPage(
+                        songId: songId,
+                        titolo: titolo,
+                      ),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         );

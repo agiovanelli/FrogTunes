@@ -479,7 +479,8 @@ class PlaylistDetailsView extends StatelessWidget {
           ),
         ],
       ),
-      body: Stack(
+      body: SafeArea(
+      child: Stack(
         children: [
           StreamBuilder<QuerySnapshot>(
             stream: playlistRef.collection('canzoni').snapshots(),
@@ -620,6 +621,7 @@ class PlaylistDetailsView extends StatelessWidget {
           ),
         ]
       ), 
+      ),
       backgroundColor: const Color.fromARGB(255, 4, 35, 5),
     );
   }

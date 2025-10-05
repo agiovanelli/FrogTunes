@@ -216,7 +216,8 @@ class LikedSongsScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Stack(
+      body: SafeArea( 
+      child: Stack(
         children: [
       StreamBuilder<QuerySnapshot>(
         // Recupera le canzoni preferite dell'utente dal Firestore
@@ -369,7 +370,8 @@ class LikedSongsScreen extends StatelessWidget {
                 child: MiniPlayer(),
           ),
         ],
-      )
+      ),
+      ),
     );
   }
 }
@@ -388,12 +390,13 @@ class FollowedArtistsScreen extends StatelessWidget {
         title: const Text("Artisti seguiti"),
         backgroundColor: Colors.black,
       ),
-      body: Stack(
-      children: [
-        StreamBuilder<QuerySnapshot>(
-          // Recupera gli artisti seguiti dall'utente dal Firestore
-          stream: FirebaseFirestore.instance
-              .collection('utenti')
+      body: SafeArea(
+        child: Stack(
+          children: [
+            StreamBuilder<QuerySnapshot>(
+              // Recupera gli artisti seguiti dall'utente dal Firestore
+              stream: FirebaseFirestore.instance
+                  .collection('utenti')
               .doc(uid)
               .collection('followedArtists')
               .orderBy('addedAt', descending: true)
@@ -448,7 +451,8 @@ class FollowedArtistsScreen extends StatelessWidget {
                   child: MiniPlayer(),
             ),
         ],
-      ) 
+      ),
+      ),
     );
   }
 }
