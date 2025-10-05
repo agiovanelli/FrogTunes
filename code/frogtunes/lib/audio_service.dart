@@ -147,6 +147,7 @@ class AudioService {
       Uri.parse(song['url'] ?? ''),
       tag: {
         'songId': song['songId'] ?? '',
+        'audioUrl': song['url'] ?? '',
         'title': song['title'] ?? '',
         'artist': song['artist'] ?? '',
         'artistId': song['artistId'] ?? [],
@@ -163,7 +164,7 @@ class AudioService {
           Uri.parse(track['url'] ?? ''),
           tag: {
             'songId': track['songId'] ?? '',
-            'audioUrl': track['audioUrl'] ?? '',
+            'audioUrl': track['url'] ?? '',
             'title': track['title'] ?? '',
             'artist': track['artist'] ?? '',
             'artistId': track['artistId'] ?? [],

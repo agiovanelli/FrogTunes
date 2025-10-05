@@ -53,9 +53,6 @@ class _RecensioniPageState extends State<RecensioniPage> {
     await FirebaseFirestore.instance.collection('recensioni').doc(widget.songId).collection('recUtenti').doc(uid).delete();
   }
 
-  // sistemare bug riproduzione nella home
-  // risolvere problema che quando torna indietro salta player screen
-
   @override
   Widget build(BuildContext context) {
 

@@ -343,7 +343,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
             icon: const Icon(Icons.reviews, color: Colors.white),
             // Bottone per mostrare le recensioni
             onPressed: () async{
-              Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(
