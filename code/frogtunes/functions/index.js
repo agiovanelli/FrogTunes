@@ -22,7 +22,7 @@ exports.searchCanzoni = onCall(async (request) => {
       searchParams: {
         query,
         hitsPerPage: 10,
-        attributesToHighlight: ['titolo', 'artista'],
+        attributesToHighlight: ['title', 'artista'],
         typoTolerance: true,
         highlightPreTag: '<mark>',
         highlightPostTag: '</mark>',
@@ -30,7 +30,7 @@ exports.searchCanzoni = onCall(async (request) => {
     });
 
     return results.hits.map((hit) => ({
-      titolo: hit.titolo,
+      title: hit.title,
       artista: hit.artista,
       album: hit.album,
       cover: hit.cover,
@@ -45,10 +45,35 @@ exports.searchCanzoni = onCall(async (request) => {
 
 // Funzione per indicizzare un oggetto
 async function saveToAlgolia(data, objectID) {
-  await client.saveObjects({
-    indexName: ALGOLIA_INDEX_NAME,
-    objects: [{ objectID, ...data }],
-  });
+  try{
+    const artistIds = data.artistId || [];
+    let artistNames = [];
+
+    if(artistIds.length > 0){
+      const artistSnapshot = await db
+      .collection('artisti')
+      .where(admin.firestore.FieldPath.documentId(), 'in', artistIds)
+      .get();
+
+      artistNames = artistSnapshot.docs.map(doc => doc.data().nome);
+    }
+
+    const record = {
+      objectID,
+      ...data,
+      // artistIds,
+      artista: artistNames,
+    };
+
+    await client.saveObjects({
+      indexName: ALGOLIA_INDEX_NAME,
+      objects: [{ objectID, ...record }],
+    });
+
+    console.log(`Canzone ${objectID} indicizzata con successo.`);
+  } catch (error) {
+    console.error("Errore in saveToAlgolia:", error);
+  }
 }
 
 // Funzione per rimuovere da Algolia
@@ -91,10 +116,31 @@ exports.syncAllSongsToAlgolia = onRequest(async (req, res) => {
       return res.status(200).send("Nessun documento da sincronizzare.");
     }
 
-    const objects = snapshot.docs.map((doc) => ({
-      objectID: doc.id,
-      ...doc.data(),
-    }));
+    let objects = [];
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      const objectID = doc.id;
+
+      const artistIds = data.artistId || [];
+      let artistNames = [];
+
+      if (artistIds.length > 0) {
+        const artistSnapshots = await db
+          .collection("artisti")
+          .where(admin.firestore.FieldPath.documentId(), "in", artistIds)
+          .get();
+
+        artistNames = artistSnapshots.docs.map((artistDoc) => artistDoc.data().nome);
+      }
+
+      objects.push({
+        objectID,
+        ...data,
+        // artistIds,
+        artista: artistNames, // array di nomi leggibili
+      });
+    }
 
     console.log("Sto sincronizzando i seguenti oggetti su Algolia:", objects);
 

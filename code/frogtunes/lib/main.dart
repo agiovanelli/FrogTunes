@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:frogtunes/Utente/login.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'firebase_options.dart';
+import 'package:frogtunes/root.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,7 +12,7 @@ void main() async{
   );
 
   await FirebaseAppCheck.instance.activate(
-    androidProvider: AndroidProvider.debug, // per sviluppo
+    androidProvider: AndroidProvider.debug, // Per sviluppo
     appleProvider: AppleProvider.debug,
   );
 
@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.green,
         brightness: Brightness.dark,
       ),
-      home: LoginView(),
+      home: RootPage(), // Punto alla root page per decide se mostrare login o home
     );
   }
 }

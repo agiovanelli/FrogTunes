@@ -6,8 +6,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
 
-import 'package:frogtunes/AME/settingsAME.dart';
-import 'package:frogtunes/AME/loginAME.dart';
+import 'package:frogtunes/AME/settings_ame.dart';
+import 'package:frogtunes/AME/login_ame.dart';
 import 'package:frogtunes/AME/Artista/analytic.dart';
 import 'package:frogtunes/AME/Artista/contentA.dart';
 import 'package:frogtunes/AME/Artista/profile.dart';
@@ -29,11 +29,13 @@ class HomeAMEView extends StatefulWidget {
 class _HomeAMEViewState extends State<HomeAMEView> {
   int _selectedIndex = 1; // Home di default
   Map<String, dynamic>? userData;
+  late String role;
 
   // Pagine associate ai BottomNavigationBarItem
     @override
   void initState() {
     super.initState();
+    role = widget.selectedRole;
     _checkAndShowProfileDialog();
   }
 
@@ -41,9 +43,12 @@ class _HomeAMEViewState extends State<HomeAMEView> {
   final user = FirebaseAuth.instance.currentUser;
 
   if (user != null) {
-    final doc = await FirebaseFirestore.instance.collection('utenti_ame').doc(user.uid).get();
-    final data = doc.data();
+    final doc = await FirebaseFirestore.instance.collection(role.toLowerCase()).doc(user.uid).get();
+    if (!doc.exists){ 
+      throw FirebaseAuthException(code: 'user-data-not-found', message: 'Dati utente non trovati.');
+    }
 
+    final data = doc.data();
     final hasName = data?['username'] != null && data?['username'] != '';
     final hasPhoto = data?['profileImageUrl'] != null && data?['profileImageUrl'] != '';
 
@@ -182,7 +187,7 @@ void _showProfileDialog(BuildContext context, String uid) {
                 onPressed: () async {
                   final String name = nameController.text.trim();
 
-                  final docRef = FirebaseFirestore.instance.collection('utenti_ame').doc(uid);
+                  final docRef = FirebaseFirestore.instance.collection(role.toLowerCase()).doc(uid);
                   final doc = await docRef.get();
                   final currentData = doc.data();
                   final currentPhoto = currentData?['profileImageUrl'];
@@ -192,7 +197,7 @@ void _showProfileDialog(BuildContext context, String uid) {
                                               (currentPhoto != null && currentPhoto.isNotEmpty ? currentPhoto : defaultPhotoURL);
 
                   // Se nessun aggiornamento ma l'utente ha già dati validi, chiudi comunque il dialog
-                  if (name.isEmpty && (finalPhotoURL == null || finalPhotoURL.isEmpty)) {
+                  if (name.isEmpty && (finalPhotoURL.isEmpty)) {
                     if(mounted) Navigator.of(context).pop(); // chiudi senza fare update
                     return;
                   }
@@ -204,7 +209,7 @@ void _showProfileDialog(BuildContext context, String uid) {
                     updates['username'] = name;
                     await FirebaseAuth.instance.currentUser?.updateDisplayName(name);
                   }
-                  if (finalPhotoURL != null && finalPhotoURL.isNotEmpty) {
+                  if (finalPhotoURL.isNotEmpty) {
                     updates['profileImageUrl'] = finalPhotoURL;
                     await FirebaseAuth.instance.currentUser?.updatePhotoURL(finalPhotoURL);
                   }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:frogtunes/Utente/home.dart';
-import 'package:frogtunes/AME/loginAME.dart';
+import 'package:frogtunes/AME/login_ame.dart';
 import 'package:frogtunes/Utente/reg.dart';
 
 class LoginView extends StatelessWidget {
@@ -18,26 +18,30 @@ class LoginView extends StatelessWidget {
         password: passwordController.text.trim(),
       );
 
-      // Se login riuscito, vai alla Home
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeView()),
-      );
+      if (context.mounted) {
+        // Se login riuscito, vai alla Home
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeView()),
+        );
+      }
     } on FirebaseAuthException catch (e) {
-      // Mostra un messaggio di errore
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Errore di login'),
-          content: Text(e.message ?? 'Errore sconosciuto'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
+      if (context.mounted){
+        // Mostra un messaggio di errore
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Errore di login'),
+            content: Text(e.message ?? 'Errore sconosciuto'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
     }
   }
 
@@ -59,6 +63,7 @@ class LoginView extends StatelessWidget {
           style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold, color: Colors.white),
         ),
         const SizedBox(height: 80),
+        // Input email
         TextField(
           controller: emailController,
           cursorColor: Colors.green,
@@ -81,6 +86,7 @@ class LoginView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
+        // Input password
         TextField(
           controller: passwordController,
           cursorColor: Colors.green,
@@ -127,6 +133,7 @@ class LoginView extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 60),
+        // Cambio tipologia di account per addetti ai lavori
         const Text(
           'Sei un artista, un manager o un\'etichetta?',
           textAlign: TextAlign.center,

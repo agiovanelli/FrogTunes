@@ -14,6 +14,7 @@ class _RegistrazioneViewState extends State<RegistrazioneView> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  // Funzione per registrare un nuovo utente
   Future<void> registraUtente() async {
     try {
       UserCredential userCredential =
@@ -31,24 +32,30 @@ class _RegistrazioneViewState extends State<RegistrazioneView> {
         });
       }
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginView()),
-      );
+      if(mounted){  
+        // Naviga alla schermata di login dopo la registrazione
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginView()),
+        );
+      }
     } on FirebaseAuthException catch (e) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Errore di registrazione'),
-          content: Text(e.message ?? 'Errore sconosciuto'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
+      if(mounted){
+        // Mostra un dialogo di errore se la registrazione fallisce
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Errore di registrazione'),
+            content: Text(e.message ?? 'Errore sconosciuto'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
     }
   }
 
@@ -69,6 +76,7 @@ class _RegistrazioneViewState extends State<RegistrazioneView> {
                 style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               const SizedBox(height: 80),
+              // Input per email
               TextField(
                 controller: emailController,
                 cursorColor: Colors.green,
@@ -90,6 +98,7 @@ class _RegistrazioneViewState extends State<RegistrazioneView> {
                 ),
               ),
               const SizedBox(height: 20),
+              // Input per password
               TextField(
                 controller: passwordController,
                 cursorColor: Colors.green,
@@ -120,6 +129,7 @@ class _RegistrazioneViewState extends State<RegistrazioneView> {
                 ),
               ),
               const SizedBox(height: 20),
+              // Se l'utente ha già un account, naviga alla schermata di login
               ElevatedButton(
                 onPressed: () {
                   Navigator.pushReplacement(
