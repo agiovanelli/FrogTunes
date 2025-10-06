@@ -8,10 +8,10 @@ class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
 
   @override
-  _ProfileViewState createState() => _ProfileViewState();
+  ProfileViewState createState() => ProfileViewState();
 }
 
-class _ProfileViewState extends State<ProfileView> {
+class ProfileViewState extends State<ProfileView> {
   Map<String, dynamic>? userData;
 
   String userName = '';
@@ -28,21 +28,21 @@ class _ProfileViewState extends State<ProfileView> {
   final user = FirebaseAuth.instance.currentUser;
 
   if (user != null) {
-    final doc = await FirebaseFirestore.instance.collection('utenti_ame').doc(user.uid).get();
+    final doc = await FirebaseFirestore.instance.collection('artisti').doc(user.uid).get();
     final data = doc.data();
 
     if (data != null && mounted) {
       setState(() {
-        userName = data['username']?.toString().trim().isNotEmpty == true
-            ? data['username']
+        userName = data['nome']?.toString().trim().isNotEmpty == true
+            ? data['nome']
             : 'Artista';
 
         bio = data['bio']?.toString().trim().isNotEmpty == true
             ? data['bio']
             : 'Questa è una breve biografia dell\'artista. Qui puoi scrivere qualcosa su di te!';
 
-        profileImage = data['profileImageUrl']?.toString().trim().isNotEmpty == true
-            ? data['profileImageUrl']
+        profileImage = data['cover']?.toString().trim().isNotEmpty == true
+            ? data['cover']
             : 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f';
       });
     }
@@ -82,7 +82,7 @@ class _ProfileViewState extends State<ProfileView> {
                   ],
                 ),
                 const SizedBox(width: 40),
-                // Nome Utente con bottone per modificarlo
+                // Nome utente con bottone per modificarlo
                 Expanded(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -156,31 +156,51 @@ class _ProfileViewState extends State<ProfileView> {
 
   // Funzione per cambiare la foto profilo
   Future<void> _changeProfileImage() async {
-  final user = FirebaseAuth.instance.currentUser;
-  final picker = ImagePicker();
-  final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final user = FirebaseAuth.instance.currentUser;
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
-  if (pickedFile == null || user == null) return;
+    // Conferma prima di salvare
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.green[900],
+        title: const Text('Conferma modifica foto', style: TextStyle(color: Colors.white)),
+        content: const Text('Vuoi davvero salvare la nuova foto profilo?', style: TextStyle(color: Colors.white)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Conferma', style: TextStyle(color: Colors.white)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annulla', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
 
-  final file = pickedFile.readAsBytes();
-  final ref = FirebaseStorage.instance
-      .ref()
-      .child('profile_pictures')
-      .child('${user.uid}.jpg');
+    if (pickedFile == null || user == null) return;
 
-  final uploadTask = await ref.putData(await file);
-  final url = await uploadTask.ref.getDownloadURL();
+    final file = await pickedFile.readAsBytes();
+    final ref = FirebaseStorage.instance
+        .ref()
+        .child('profile_pictures')
+        .child('${user.uid}.jpg');
 
-  await FirebaseFirestore.instance
-      .collection('utenti_ame')
-      .doc(user.uid)
-      .update({'profileImageUrl': url});
+    final uploadTask = await ref.putData(file);
+    final url = await uploadTask.ref.getDownloadURL();
 
-  setState(() {
-    profileImage = url;
-  });
-}
-
+    if (confirm == true) {
+      await FirebaseFirestore.instance
+          .collection('artisti')
+          .doc(user.uid)
+          .update({'cover': url});
+      setState(() {
+        profileImage = url;
+      });
+    }
+  }
 
   // Funzione per cambiare il nome utente
   void _changeUserName() {
@@ -192,11 +212,11 @@ class _ProfileViewState extends State<ProfileView> {
     builder: (context) {
       return AlertDialog(
         backgroundColor: Colors.green[900],
-        title: const Text('Modifica Nome', style: TextStyle(color: Colors.white)),
+        title: const Text('Modifica nome d\'arte', style: TextStyle(color: Colors.white)),
         content: TextField(
           controller: nameController,
           decoration: const InputDecoration(
-            labelText: 'Nome Utente',
+            labelText: 'Nome d\'arte',
             labelStyle: TextStyle(color: Colors.white),
             filled: true,
             fillColor: Colors.green,
@@ -209,15 +229,37 @@ class _ProfileViewState extends State<ProfileView> {
             onPressed: () async {
               final newName = nameController.text.trim();
               if (user != null && newName.isNotEmpty) {
-                await FirebaseFirestore.instance
-                    .collection('utenti_ame')
-                    .doc(user.uid)
-                    .update({'username': newName});
-                setState(() {
-                  userName = newName;
-                });
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    backgroundColor: Colors.green[900],
+                    title: const Text('Conferma modifica nome', style: TextStyle(color: Colors.white)),
+                    content: const Text('Vuoi davvero salvare il nuovo nome?', style: TextStyle(color: Colors.white)),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Conferma', style: TextStyle(color: Colors.white)),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Annulla', style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirm == true) {
+                  await FirebaseFirestore.instance
+                      .collection('artisti')
+                      .doc(user.uid)
+                      .update({'nome': newName});
+                  setState(() {
+                    userName = newName;
+                  });
+                }
               }
-              Navigator.pop(context);
+              if(context.mounted){
+                Navigator.pop(context);
+              }
             },
             child: const Text('Salva', style: TextStyle(color: Colors.white)),
           ),
@@ -258,15 +300,37 @@ class _ProfileViewState extends State<ProfileView> {
             onPressed: () async {
               final newBio = bioController.text.trim();
               if (user != null) {
-                await FirebaseFirestore.instance
-                    .collection('utenti_ame')
-                    .doc(user.uid)
-                    .update({'bio': newBio});
-                setState(() {
-                  bio = newBio;
-                });
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    backgroundColor: Colors.green[900],
+                    title: const Text('Conferma modifica biografia', style: TextStyle(color: Colors.white)),
+                    content: const Text('Vuoi davvero salvare la nuova biografia?', style: TextStyle(color: Colors.white)),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Conferma', style: TextStyle(color: Colors.white)),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Annulla', style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirm == true) {
+                  await FirebaseFirestore.instance
+                      .collection('artisti')
+                      .doc(user.uid)
+                      .update({'bio': newBio});
+                  setState(() {
+                    bio = newBio;
+                  });
+                }
               }
-              Navigator.pop(context);
+              if(context.mounted){
+                Navigator.pop(context);
+              }
             },
             child: const Text('Salva', style: TextStyle(color: Colors.white)),
           ),
