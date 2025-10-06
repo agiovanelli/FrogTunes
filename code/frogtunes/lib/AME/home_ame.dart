@@ -44,8 +44,20 @@ class _HomeAMEViewState extends State<HomeAMEView> {
 
   if (user != null) {
     final doc = await FirebaseFirestore.instance.collection(role.toLowerCase()).doc(user.uid).get();
-    if (!doc.exists){ 
-      throw FirebaseAuthException(code: 'user-data-not-found', message: 'Dati utente non trovati.');
+    if (!doc.exists) {
+      // Crea un documento vuoto con i campi base
+      await FirebaseFirestore.instance.collection(role.toLowerCase()).doc(user.uid).set({
+        'username': user.displayName ?? '',
+        'profileImageUrl': user.photoURL ?? '',
+      // altri campi base se servono
+    });
+
+    final newDoc = await FirebaseFirestore.instance.collection(role.toLowerCase()).doc(user.uid).get();
+    if (newDoc.exists) {
+      setState(() {
+        userData = newDoc.data();
+      });
+    }
     }
 
     final data = doc.data();
@@ -251,17 +263,17 @@ void _showProfileDialog(BuildContext context, String uid) {
     final user = FirebaseAuth.instance.currentUser;
 
     final List<Widget> pages = [
-      if (widget.selectedRole == 'Artista') ...[
+      if (widget.selectedRole == "Artista") ...[
         const AnalyticView(),
         const HomeAContent(),
         const ProfileView(),
       ],
-      if (widget.selectedRole == 'Manager') ...[
+      if (widget.selectedRole == "Manager") ...[
         const AnalyticMView(),
         const HomeMContent(),
         const ProfileMView(),
       ],
-      if (widget.selectedRole == 'Etichetta') ...[
+      if (widget.selectedRole == "Etichetta") ...[
         const AnalyticEView(),
         const HomeEContent(),
         const ProfileEView(),
