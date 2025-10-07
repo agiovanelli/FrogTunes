@@ -3,6 +3,7 @@ import 'package:frogtunes/audio_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:frogtunes/algolia_service.dart';
 import 'package:algolia/algolia.dart';
+import 'package:frogtunes/AME/insight.dart';
 
 
 class AnalyticView extends StatefulWidget {
@@ -139,17 +140,14 @@ class AnalyticViewState extends State<AnalyticView> {
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   // Bottone per aprire il player e riprodurre la canzone
                   onTap: () async {
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (context) => PlayerScreen(
-                    //       songId: songId,
-                    //       titolo: titolo,
-                    //       artistId: item['artistId'] ?? [],
-                    //       cover: cover,
-                    //     ),
-                    //   ),
-                    // );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SongInsightPage(
+                          songId: songId,
+                        ),
+                      ),
+                    );
                   },
                   
                   leading: ClipRRect(

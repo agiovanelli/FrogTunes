@@ -66,6 +66,9 @@ class AudioService {
       final audioUrl = tag['audioUrl'] ?? '';
       if (userId != null && songId != null && songId != '' && songId != lastSavedSongId) {
         await saveRecentlyPlayed(userId, songId, audioUrl, tag['title'] ?? '', tag['artist'] ?? '', List<String>.from(tag['artistId'] ?? []), tag['cover'] ?? '');
+
+        // Salva l'evento di ascolto
+        await registerStream(songId);
         lastSavedSongId = songId;
       }
     });
@@ -175,6 +178,26 @@ class AudioService {
       Coda.loadPlaylist(tracks);
       await _player.stop();
       await _player.setAudioSource(_queue, initialIndex: initialIndex);
+  }
+
+  // Salva un evento di ascolto su Firestore
+  Future<void> registerStream(String cid) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      final paese = "IT"; // TODO: rileva paese reale (es. tramite IP API)
+      await FirebaseFirestore.instance.collection('eventiAscolto').add({
+        'cid': cid,
+        'uid': user.uid,
+        'paese': paese,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('Errore nel registrare stream: $e');
+      }
+    }
   }
 
   // Pulizia
