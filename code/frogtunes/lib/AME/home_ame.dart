@@ -26,7 +26,7 @@ class HomeAMEViewState extends State<HomeAMEView> {
   late String role;
 
   // Pagine associate ai BottomNavigationBarItem
-    @override
+  @override
   void initState() {
     super.initState();
   role = widget.selectedRole;
@@ -48,18 +48,19 @@ class HomeAMEViewState extends State<HomeAMEView> {
         const AnalyticView(),
         const HomeAContent(),
         const ProfileView(),
-      ],
-      if (widget.selectedRole == "Manager") ...[
+      ] else if (widget.selectedRole == "Manager") ...[
         const AnalyticMView(),
         const HomeMContent(),
         const ProfileMView(),
-      ],
-      if (widget.selectedRole == "Etichetta") ...[
+      ] else if (widget.selectedRole == "Etichetta") ...[
         const AnalyticEView(),
         const HomeEContent(),
         const ProfileEView(),
-      ],
+      ] else ...[
+        const Center(child: Text('Ruolo non riconosciuto', style: TextStyle(color: Colors.white))),
+      ]
     ];
+    final int safeIndex = pages.isNotEmpty && _selectedIndex < pages.length ? _selectedIndex : 0;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 4, 35, 5),
@@ -96,13 +97,13 @@ class HomeAMEViewState extends State<HomeAMEView> {
           ),
         ],
       ),
-      body: pages[_selectedIndex], // Mostra la pagina selezionata
+      body: pages[safeIndex], // Mostra la pagina selezionata
       backgroundColor: const Color.fromARGB(255, 4, 35, 5),
       bottomNavigationBar: BottomNavigationBar(
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white70,
         backgroundColor: Colors.green[700],
-        currentIndex: _selectedIndex, // Evidenzia l'elemento selezionato
+        currentIndex: safeIndex, // Evidenzia l'elemento selezionato
         onTap: _onItemTapped, // Cambia pagina quando un elemento viene toccato
         items: const [
           BottomNavigationBarItem(
