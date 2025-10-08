@@ -146,7 +146,7 @@ class HomeAContent extends StatelessWidget {
                   );
                 },
               ),
-              const SizedBox(height: 50),
+              const SizedBox(height: 25),
               Container(
                 height: 50,
                 decoration: BoxDecoration(

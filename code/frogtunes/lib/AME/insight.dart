@@ -12,6 +12,45 @@ class SongInsightPage extends StatefulWidget {
   State<SongInsightPage> createState() => _SongInsightPageState();
 }
 
+class SongDetails {
+  final String title;
+  final List<String> artistId;
+  final List<Credits> credits;
+  final int totalPlays;
+  final int playsLast24h;
+  final List<CountryPlays> topCountries;
+  final String cover;
+  final String audioUrl;
+  final List<String> artistNames;
+
+  SongDetails({
+    required this.title,
+    required this.artistId,
+    required this.artistNames,
+    required this.credits,
+    required this.totalPlays,
+    required this.playsLast24h,
+    required this.topCountries,
+    required this.cover,
+    required this.audioUrl,
+  });
+}
+
+class CountryPlays {
+  final String name;
+  final int plays;
+
+  CountryPlays({required this.name, required this.plays});
+}
+
+class Credits {
+  final List<String> autore;
+  final List<String> compositore;
+  final List<String> producer;
+
+  Credits({required this.autore, required this.compositore, required this.producer});
+}
+
 class _SongInsightPageState extends State<SongInsightPage> {
   final audio = AudioService();
   
@@ -56,27 +95,27 @@ class _SongInsightPageState extends State<SongInsightPage> {
     // Mostra solo i primi 5 paesi (puoi cambiare il numero)
     final top5 = topCountries.take(5).toList();
 
-    // Parsing crediti: gestisce il caso di una singola mappa con 3 campi stringa
+    // Parsing crediti: ora tutti i campi sono List<String>
     List<Credits> credits = [];
     final rawCrediti = songData['crediti'];
     if (rawCrediti is Map<String, dynamic>) {
       credits = [
         Credits(
-          autore: rawCrediti['Autore']?.toString() ?? '',
-          compositore: rawCrediti['Compositore']?.toString() ?? '',
-          producer: rawCrediti['Producer']?.toString() ?? '',
+          autore: (rawCrediti['Autore'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+          compositore: (rawCrediti['Compositore'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+          producer: (rawCrediti['Producer'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
         )
       ];
     } else if (rawCrediti is List) {
       credits = rawCrediti.map((value) {
         if (value is Map<String, dynamic>) {
           return Credits(
-            autore: value['autore']?.toString() ?? '',
-            compositore: value['compositore']?.toString() ?? '',
-            producer: value['producer']?.toString() ?? '',
+            autore: (value['autore'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+            compositore: (value['compositore'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+            producer: (value['producer'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
           );
         } else {
-          return Credits(autore: '', compositore: '', producer: '');
+          return Credits(autore: [], compositore: [], producer: []);
         }
       }).toList();
     }
@@ -163,17 +202,29 @@ class _SongInsightPageState extends State<SongInsightPage> {
                   ListTile(
                     leading: const Icon(Icons.person),
                     title: const Text('Autore'),
-                    trailing: Text(song.credits.map((c) => c.autore.trim().isNotEmpty ? c.autore : 'Non disponibile').join(', ')),
+                    trailing: Text(
+                      song.credits.expand((c) => c.autore).where((a) => a.trim().isNotEmpty).isNotEmpty
+                        ? song.credits.expand((c) => c.autore).where((a) => a.trim().isNotEmpty).join(', ')
+                        : 'Non disponibile'
+                    ),
                   ),
                   ListTile(
                     leading: const Icon(Icons.music_note),
                     title: const Text('Compositore'),
-                    trailing: Text(song.credits.map((c) => c.compositore.trim().isNotEmpty ? c.compositore : 'Non disponibile').join(', ')),
+                    trailing: Text(
+                      song.credits.expand((c) => c.compositore).where((a) => a.trim().isNotEmpty).isNotEmpty
+                        ? song.credits.expand((c) => c.compositore).where((a) => a.trim().isNotEmpty).join(', ')
+                        : 'Non disponibile'
+                    ),
                   ),
                   ListTile(
                     leading: const Icon(Icons.settings),
                     title: const Text('Producer'),
-                    trailing: Text(song.credits.map((c) => c.producer.trim().isNotEmpty ? c.producer : 'Non disponibile').join(', ')),
+                    trailing: Text(
+                      song.credits.expand((c) => c.producer).where((a) => a.trim().isNotEmpty).isNotEmpty
+                        ? song.credits.expand((c) => c.producer).where((a) => a.trim().isNotEmpty).join(', ')
+                        : 'Non disponibile'
+                    ),
                   ),
                 ],
                 const SizedBox(height: 32),
@@ -197,6 +248,7 @@ class _SongInsightPageState extends State<SongInsightPage> {
                           titolo: song.title,
                           artistId: song.artistId,
                           cover: song.cover,
+                          minimal: true,
                         ),
                       ),
                     );
@@ -225,42 +277,4 @@ class _SongInsightPageState extends State<SongInsightPage> {
       ),
     );
   }
-}
-
-class SongDetails {
-  final String title;
-  final List<String> artistId;
-  final List<Credits> credits;
-  final int totalPlays;
-  final int playsLast24h;
-  final List<CountryPlays> topCountries;
-  final String cover;
-  final String audioUrl;
-  final List<String> artistNames;
-  SongDetails({
-    required this.title,
-    required this.artistId,
-    required this.artistNames,
-    required this.credits,
-    required this.totalPlays,
-    required this.playsLast24h,
-    required this.topCountries,
-    required this.cover,
-    required this.audioUrl,
-  });
-}
-
-class CountryPlays {
-  final String name;
-  final int plays;
-
-  CountryPlays({required this.name, required this.plays});
-}
-
-class Credits {
-  final String autore;
-  final String compositore;
-  final String producer;
-
-  Credits({required this.autore, required this.compositore, required this.producer});
 }

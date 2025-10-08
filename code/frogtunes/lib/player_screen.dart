@@ -13,6 +13,7 @@ class PlayerScreen extends StatefulWidget {
   final String titolo;
   final List<String> artistId;
   final String cover;
+  final bool minimal;
 
   const PlayerScreen({
     super.key,
@@ -20,6 +21,7 @@ class PlayerScreen extends StatefulWidget {
     required this.titolo,
     required this.artistId,
     required this.cover,
+    this.minimal = false,
   });
 
   @override
@@ -333,15 +335,15 @@ class _PlayerScreenState extends State<PlayerScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
         actions: [
-          audio.currentSongId.value.isEmpty ? _likeButton(widget.songId) : _likeButton(audio.currentSongId.value),
-          IconButton(
-            icon: const Icon(Icons.queue_music, color: Colors.white),
-            // Bottone per mostrare la coda di riproduzione
-            onPressed: () => _mostraCoda(context, audio),
-          ),
+          if (!widget.minimal)
+            audio.currentSongId.value.isEmpty ? _likeButton(widget.songId) : _likeButton(audio.currentSongId.value),
+          if (!widget.minimal)
+            IconButton(
+              icon: const Icon(Icons.queue_music, color: Colors.white),
+              onPressed: () => _mostraCoda(context, audio),
+            ),
           IconButton(
             icon: const Icon(Icons.reviews, color: Colors.white),
-            // Bottone per mostrare le recensioni
             onPressed: () async{
               Navigator.push(
                 context,
@@ -437,58 +439,55 @@ class _PlayerScreenState extends State<PlayerScreen> {
             ),
             const SizedBox(height: 20),
             // Bottoni di controllo della riproduzione
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Bottone per attivare/disattivare la riproduzione casuale
-                IconButton(
-                  icon: const Icon(Icons.shuffle, size: 30),
-                  color: audio.isShuffle ? Colors.green : Colors.white,
-                  onPressed: () async {
-                    await audio.toggleShuffle();
-                  },
-                ),
-                const SizedBox(width: 10),
-                // Bottone per riprodurre la canzone precedente
-                IconButton(
-                  icon: const Icon(Icons.skip_previous, size: 40),
-                  onPressed: () => audio.previous(), //non funziona
-                  color: Colors.white,
-                ),
-                const SizedBox(width: 15),
-                // Bottone per play/pause
-                IconButton(
-                  icon: Icon(
-                    audio.isPlaying
-                        ? Icons.pause_circle_filled
-                        : Icons.play_circle_fill,
-                    size: 60,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (!widget.minimal)
+                  IconButton(
+                    icon: const Icon(Icons.shuffle, size: 30),
+                    color: audio.isShuffle ? Colors.green : Colors.white,
+                    onPressed: () async {
+                      await audio.toggleShuffle();
+                    },
                   ),
-                  onPressed: () =>
-                      audio.isPlaying ? audio.pause() : audio.play(),
-                  color: Colors.white,
-                ),
-                const SizedBox(width: 15),
-                // Bottone per riprodurre la canzone successiva
-                IconButton(
-                  icon: const Icon(Icons.skip_next, size: 40),
-                  onPressed: () => audio.next(), //non funziona se non c'è la coda
-                  color: Colors.white,
-                ),
-                const SizedBox(width: 10),
-                // Bottone per attivare/disattivare la ripetizione loop
-                IconButton(
-                  icon: Icon(
-                    audio.isLoop ? Icons.repeat_one : Icons.repeat,
-                    size: 30,
+                  const SizedBox(width: 10),
+                  IconButton(
+                    icon: const Icon(Icons.skip_previous, size: 40),
+                    onPressed: () => audio.previous(),
+                    color: Colors.white,
                   ),
-                  color: audio.isLoop ? Colors.green : Colors.white,
-                  onPressed: () async {
-                    await audio.toggleLoop();
-                  },
-                ),
-              ],
-            ),
+                  const SizedBox(width: 15),
+                  IconButton(
+                    icon: Icon(
+                      audio.isPlaying
+                          ? Icons.pause_circle_filled
+                          : Icons.play_circle_fill,
+                      size: 60,
+                    ),
+                    onPressed: () =>
+                        audio.isPlaying ? audio.pause() : audio.play(),
+                    color: Colors.white,
+                  ),
+                  const SizedBox(width: 15),
+                  IconButton(
+                    icon: const Icon(Icons.skip_next, size: 40),
+                    onPressed: () => audio.next(),
+                    color: Colors.white,
+                  ),
+                  const SizedBox(width: 10),
+                  if (!widget.minimal)
+                  IconButton(
+                    icon: Icon(
+                      audio.isLoop ? Icons.repeat_one : Icons.repeat,
+                      size: 30,
+                    ),
+                    color: audio.isLoop ? Colors.green : Colors.white,
+                    onPressed: () async {
+                      await audio.toggleLoop();
+                    },
+                  ),
+                ],
+              ),
             const SizedBox(height: 40),
           ],
         ),
