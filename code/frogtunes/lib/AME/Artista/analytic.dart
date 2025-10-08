@@ -127,7 +127,6 @@ class AnalyticViewState extends State<AnalyticView> {
               final titolo = item['titolo'] ?? 'Titolo sconosciuto';
               final artista = item['artista'] ?? 'Artista sconosciuto';
               final cover = item['cover'] ?? 'https://via.placeholder.com/150';
-              final audioUrl = item['audioUrl'] ?? '';
 
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),

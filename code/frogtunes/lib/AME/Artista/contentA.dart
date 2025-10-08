@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class HomeAContent extends StatelessWidget {
-  Future<List<String>> _fetchArtistNames(List<dynamic> artistIds) async {
+  Future<List<String>> fetchArtistNames(List<dynamic> artistIds) async {
     if (artistIds.isEmpty) return [];
     final firestore = FirebaseFirestore.instance;
     final futures = artistIds.map((id) async {
@@ -175,7 +175,7 @@ class HomeAContent extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final canzone = canzoni[index];
                       return FutureBuilder<List<String>>(
-                        future: _fetchArtistNames(canzone['artistId']),
+                        future: fetchArtistNames(canzone['artistId']),
                         builder: (context, artistSnapshot) {
                           final artistNames = artistSnapshot.data ?? [];
                           return ListTile(
