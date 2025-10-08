@@ -351,6 +351,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   builder: (context) => RecensioniPage(
                     songId: widget.songId,
                     titolo: widget.titolo,
+                    editable: widget.minimal ? true : false,
                   ),
                 ),
               );

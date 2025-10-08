@@ -5,18 +5,22 @@ import 'package:firebase_auth/firebase_auth.dart';
 class RecensioniPage extends StatefulWidget {
   final String songId;
   final String titolo;
+  final bool editable;
 
   const RecensioniPage({
     super.key,
     required this.songId,
     required this.titolo,
-    });
+    this.editable = false,
+  });
 
   @override
   State<RecensioniPage> createState() => _RecensioniPageState();
 }
 
 class _RecensioniPageState extends State<RecensioniPage> {
+  // Controller per la risposta
+  final Map<String, TextEditingController> _replyControllers = {};
   final TextEditingController _controller = TextEditingController();
   final user = FirebaseAuth.instance.currentUser;
 
@@ -46,7 +50,6 @@ class _RecensioniPageState extends State<RecensioniPage> {
 
     _controller.clear();
   }
-
 
   // Funzione per eliminare una recensione dal database
   Future<void> _eliminaRecensione(String uid) async {
@@ -93,47 +96,215 @@ class _RecensioniPageState extends State<RecensioniPage> {
                       final testo = doc['testo'] ?? '';
                       final autore = doc['autore'] ?? '';
                       final isMine = user != null && doc['uid'] == user!.uid;
+                      final recensioneId = doc.id;
+                      _replyControllers.putIfAbsent(recensioneId, () => TextEditingController());
                       return Card(
                         color: const Color.fromARGB(255, 52, 146, 68),
                         elevation: 3,
                         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        child: ListTile(
-                          title: Text(
-                            testo,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          subtitle: Text(
-                            'di $autore',
-                            style: const TextStyle(fontSize: 12, color: Colors.black),
-                          ),
-                          trailing: isMine
-                              ? IconButton(
-                                  icon: Icon(Icons.delete, color: const Color.fromARGB(255, 170, 73, 66)),
-                                  onPressed: () async{
-                                    final conferma = await showDialog<bool>(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text('Elimina recensione'),
-                                      content: const Text('Sei sicuro di voler eliminare questa recensione?'),
-                                      actions: [
-                                        TextButton(
-                                          child: const Text('Annulla'),
-                                          onPressed: () => Navigator.of(context).pop(false),
-                                        ),
-                                        ElevatedButton(
-                                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                          child: const Text('Elimina'),
-                                          onPressed: () => Navigator.of(context).pop(true),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ListTile(
+                                title: Text(
+                                  testo,
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                                subtitle: Text(
+                                  'di $autore',
+                                  style: const TextStyle(fontSize: 12, color: Colors.black),
+                                ),
+                                trailing: isMine
+                                    ? IconButton(
+                                        icon: Icon(Icons.delete, color: const Color.fromARGB(255, 170, 73, 66)),
+                                        onPressed: () async{
+                                          final conferma = await showDialog<bool>(
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                              title: const Text('Elimina recensione'),
+                                              content: const Text('Sei sicuro di voler eliminare questa recensione?'),
+                                              actions: [
+                                                TextButton(
+                                                  child: const Text('Annulla'),
+                                                  onPressed: () => Navigator.of(context).pop(false),
+                                                ),
+                                                ElevatedButton(
+                                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                                  child: const Text('Elimina'),
+                                                  onPressed: () => Navigator.of(context).pop(true),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                          if (conferma == true) {
+                                            await _eliminaRecensione(doc.id);
+                                          }
+                                        },
+                                      )
+                                    : null,
+                              ),
+                              // Risposta artista: solo una per recensione, può modificare o eliminare
+                              StreamBuilder<QuerySnapshot>(
+                                stream: FirebaseFirestore.instance
+                                  .collection('recensioni')
+                                  .doc(widget.songId)
+                                  .collection('recUtenti')
+                                  .doc(recensioneId)
+                                  .collection('risposte')
+                                  .where('uid', isEqualTo: user?.uid)
+                                  .limit(1)
+                                  .snapshots(),
+                                builder: (context, replySnapshot) {
+                                  if (replySnapshot.hasError) {
+                                    return const Text('Errore nel caricamento risposta');
+                                  }
+                                  if (!replySnapshot.hasData) {
+                                    return const SizedBox();
+                                  }
+                                  final replyDocs = replySnapshot.data!.docs;
+                                  final hasReply = replyDocs.isNotEmpty;
+                                  if (hasReply) {
+                                    final replyDoc = replyDocs.first;
+                                    final replyText = replyDoc['testo'] ?? '';
+                                    return Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('La tua risposta:', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                        Text(replyText, style: const TextStyle(fontSize: 15)),
+                                      if (widget.editable)
+                                        Row(
+                                          children: [
+                                            Expanded(                                              
+                                              child: TextField(
+                                                controller: _replyControllers[recensioneId],
+                                                cursorColor: Colors.green,
+                                                maxLength: 300,
+                                                decoration: const InputDecoration(
+                                                  labelText: 'Modifica risposta',
+                                                  labelStyle: TextStyle(color: Colors.green),
+                                                  border: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                                                    borderSide: BorderSide(color: Colors.green),
+                                                  ),
+                                                  enabledBorder: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                                                    borderSide: BorderSide(color: Colors.green),
+                                                  ),
+                                                  focusedBorder: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                                                    borderSide: BorderSide(color: Colors.green, width: 2),
+                                                  ),
+                                                  counterStyle: TextStyle(color: Colors.white, fontSize: 12),
+                                                ),
+                                                style: const TextStyle(fontSize: 15),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.green,
+                                                foregroundColor: Colors.white,
+                                              ),
+                                              onPressed: () async {
+                                                final newText = _replyControllers[recensioneId]?.text.trim() ?? '';
+                                                if (newText.isEmpty) return;
+                                                await FirebaseFirestore.instance
+                                                  .collection('recensioni')
+                                                  .doc(widget.songId)
+                                                  .collection('recUtenti')
+                                                  .doc(recensioneId)
+                                                  .collection('risposte')
+                                                  .doc(replyDoc.id)
+                                                  .update({
+                                                    'testo': newText,
+                                                    'timestamp': FieldValue.serverTimestamp(),
+                                                  });
+                                                _replyControllers[recensioneId]?.clear();
+                                              },
+                                              child: const Text('Modifica'),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            IconButton(
+                                              icon: const Icon(Icons.delete, color: Colors.red),
+                                              onPressed: () async {
+                                                await FirebaseFirestore.instance
+                                                  .collection('recensioni')
+                                                  .doc(widget.songId)
+                                                  .collection('recUtenti')
+                                                  .doc(recensioneId)
+                                                  .collection('risposte')
+                                                  .doc(replyDoc.id)
+                                                  .delete();
+                                              },
+                                            ),
+                                          ],
                                         ),
                                       ],
-                                    ),
-                                  );
-                                  if (conferma == true) {
-                                    await _eliminaRecensione(doc.id);
+                                    );
+                                  } else {
+                                    return Row(
+                                      children: [
+                                        if (widget.editable)
+                                        Expanded(
+                                          child: TextField(
+                                            controller: _replyControllers[recensioneId],
+                                            cursorColor: Colors.green,
+                                            maxLength: 300,
+                                            decoration: const InputDecoration(
+                                              labelText: 'Rispondi',
+                                              labelStyle: TextStyle(color: Colors.green),
+                                              border: OutlineInputBorder(
+                                                borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                                                borderSide: BorderSide(color: Colors.green),
+                                              ),
+                                              enabledBorder: OutlineInputBorder(
+                                                borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                                                borderSide: BorderSide(color: Colors.green),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                                                borderSide: BorderSide(color: Colors.green, width: 2),
+                                              ),
+                                              counterStyle: TextStyle(color: Colors.white, fontSize: 12),
+                                            ),
+                                            style: const TextStyle(fontSize: 15),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        if (widget.editable)
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.green,
+                                            foregroundColor: Colors.white,
+                                          ),
+                                          onPressed: () async {
+                                            final replyText = _replyControllers[recensioneId]?.text.trim() ?? '';
+                                            if (replyText.isEmpty || user == null) return;
+                                            await FirebaseFirestore.instance
+                                              .collection('recensioni')
+                                              .doc(widget.songId)
+                                              .collection('recUtenti')
+                                              .doc(recensioneId)
+                                              .collection('risposte')
+                                              .add({
+                                                'uid': user!.uid,
+                                                'autore': user!.displayName ?? user!.email,
+                                                'testo': replyText,
+                                                'timestamp': FieldValue.serverTimestamp(),
+                                              });
+                                            _replyControllers[recensioneId]?.clear();
+                                          },
+                                          child: const Text('Invia'),
+                                        ),
+                                      ],
+                                    );
                                   }
-                                  },
-                                )
-                              : null,
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -141,47 +312,48 @@ class _RecensioniPageState extends State<RecensioniPage> {
                 },
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      cursorColor: Colors.green,
-                      maxLength: 300,
-                      decoration: InputDecoration(
-                        labelText: 'Scrivi una recensione',
-                        labelStyle: TextStyle(color: Colors.green),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(20.0)),
-                          borderSide: BorderSide(color: Colors.green),
+            if (!widget.editable)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _controller,
+                        cursorColor: Colors.green,
+                        maxLength: 300,
+                        decoration: InputDecoration(
+                          labelText: 'Scrivi una recensione',
+                          labelStyle: TextStyle(color: Colors.green),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                            borderSide: BorderSide(color: Colors.green),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                            borderSide: BorderSide(color: Colors.green),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                            borderSide: BorderSide(color: Colors.green, width: 2),
+                          ),
+                          counterStyle: const TextStyle(color: Colors.white, fontSize: 12),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(20.0)),
-                          borderSide: BorderSide(color: Colors.green),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(20.0)),
-                          borderSide: BorderSide(color: Colors.green, width: 2),
-                        ),
-                        counterStyle: const TextStyle(color: Colors.white, fontSize: 12),
+                        style: const TextStyle(fontSize: 16),
                       ),
-                      style: const TextStyle(fontSize: 16),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: _aggiungiRecensione,
+                      child: const Text('Invia'),
                     ),
-                    onPressed: _aggiungiRecensione,
-                    child: const Text('Invia'),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),
