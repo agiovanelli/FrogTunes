@@ -11,6 +11,7 @@ import 'package:frogtunes/AME/Manager/profileM.dart';
 import 'package:frogtunes/AME/Etichetta/contentE.dart';
 import 'package:frogtunes/AME/Etichetta/analyticE.dart';
 import 'package:frogtunes/AME/Etichetta/profileE.dart';
+import 'package:frogtunes/audio_service.dart';
 
 class HomeAMEView extends StatefulWidget {
   const HomeAMEView({super.key, required this.selectedRole});
@@ -88,11 +89,15 @@ class HomeAMEViewState extends State<HomeAMEView> {
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginAMEView()),
-              );
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              await AudioService().resetPlayerState();
+              if(context.mounted){
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginAMEView()),
+                );
+              }
             },
           ),
         ],

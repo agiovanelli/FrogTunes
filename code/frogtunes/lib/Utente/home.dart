@@ -12,6 +12,7 @@ import 'package:frogtunes/Utente/search.dart';
 import 'package:frogtunes/Utente/settings.dart';
 import 'package:frogtunes/Utente/catalogo.dart';
 import '../mini_player.dart';
+import 'package:frogtunes/audio_service.dart';
 
 class HomeView extends StatefulWidget {
   final int initialIndex;
@@ -335,6 +336,7 @@ class HomeViewState extends State<HomeView> {
                 icon: const Icon(Icons.logout, color: Colors.white),
                 onPressed: () async {
                   await FirebaseAuth.instance.signOut();
+                  await AudioService().resetPlayerState();
                   if (context.mounted){
                     Navigator.pushReplacement(
                       context,

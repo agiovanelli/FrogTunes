@@ -6,6 +6,20 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'coda.dart';
 
 class AudioService {
+  // Funzione per resettare completamente lo stato del player e dei notifier
+  Future<void> resetPlayerState() async {
+    await _player.stop();
+    await _player.seek(Duration.zero);
+    await _player.setAudioSource(ConcatenatingAudioSource(children: []));
+    currentSongId.value = '';
+    currentUrl.value = '';
+    currentTitle.value = '';
+    currentArtistId.value = [];
+    currentArtist.value = '';
+    currentCover.value = '';
+    loopModeNotifier.value = LoopMode.off;
+    isPlayingNotifier.value = false;
+  }
   // Notifier per loopMode
   final ValueNotifier<LoopMode> loopModeNotifier = ValueNotifier(LoopMode.off);
 
