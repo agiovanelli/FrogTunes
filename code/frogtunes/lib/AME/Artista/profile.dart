@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:frogtunes/AME/add_release.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -17,6 +18,7 @@ class ProfileViewState extends State<ProfileView> {
   String userName = '';
   String bio = '';
   String profileImage = '';
+  List<String> userId = [];
 
   @override
   void initState() {
@@ -44,6 +46,10 @@ class ProfileViewState extends State<ProfileView> {
         profileImage = data['cover']?.toString().trim().isNotEmpty == true
             ? data['cover']
             : 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f';
+
+        userId = data['artistId']?.toString().trim().isNotEmpty == true
+            ? List<String>.from(data['artistId'])
+            : [];
       });
     }
   }
@@ -133,8 +139,38 @@ class ProfileViewState extends State<ProfileView> {
             // Bottone per aggiungere un nuovo brano
             Center(
               child: ElevatedButton.icon(
-                onPressed: () {
-                  // Azione per aggiungere un nuovo brano
+                onPressed: () async {
+                  final result = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      backgroundColor: Colors.green[900],
+                      title: const Text('Tipo di release', style: TextStyle(color: Colors.white)),
+                      content: const Text('Questa è una release singola o fa parte di un album?', style: TextStyle(color: Colors.white)),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('Singola', style: TextStyle(color: Colors.white)),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Album', style: TextStyle(color: Colors.white)),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (result != null) {
+                    if(context.mounted){
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddReleasePage(
+                            artistIds: userId,
+                            isSingle: result, // true = singola, false = album
+                          ),
+                        ),
+                      );
+                    }
+                  }
                 },
                 icon: const Icon(Icons.add),
                 label: const Text('Aggiungi un nuovo brano'),

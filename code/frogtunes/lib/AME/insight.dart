@@ -6,7 +6,10 @@ import 'package:frogtunes/player_screen.dart';
 class SongInsightPage extends StatefulWidget {
   final String songId;
 
-  const SongInsightPage({super.key, required this.songId});
+  const SongInsightPage({
+    super.key,
+    required this.songId
+  });
 
   @override
   State<SongInsightPage> createState() => _SongInsightPageState();
