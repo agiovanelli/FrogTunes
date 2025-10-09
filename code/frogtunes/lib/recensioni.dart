@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 
 class RecensioniPage extends StatefulWidget {
   final String songId;
@@ -86,6 +87,7 @@ class _RecensioniPageState extends State<RecensioniPage> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   final docs = snapshot.data!.docs;
+
                   if (docs.isEmpty) {
                     return const Center(child: Text('Nessuna recensione.'));
                   }
@@ -153,7 +155,6 @@ class _RecensioniPageState extends State<RecensioniPage> {
                                   .collection('recUtenti')
                                   .doc(recensioneId)
                                   .collection('risposte')
-                                  .where('uid', isEqualTo: user?.uid)
                                   .limit(1)
                                   .snapshots(),
                                 builder: (context, replySnapshot) {
@@ -171,8 +172,13 @@ class _RecensioniPageState extends State<RecensioniPage> {
                                     return Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text('La tua risposta:', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                        Text(replyText, style: const TextStyle(fontSize: 15)),
+                                        if (widget.editable) ...[
+                                          Text('La tua risposta:', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                          Text(replyText, style: const TextStyle(fontSize: 15)),
+                                        ] else ...[
+                                          Text('Risposta di ${replyDoc['autore']}:', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                          Text(replyText, style: const TextStyle(fontSize: 15)),
+                                        ],
                                       if (widget.editable)
                                         Row(
                                           children: [
@@ -311,9 +317,18 @@ class _RecensioniPageState extends State<RecensioniPage> {
                   );
                 },
               ),
-            ),
+            ),  
             if (!widget.editable)
-              Padding(
+            StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('recensioni')
+                  .doc(widget.songId)
+                  .collection('recUtenti')
+                  .doc(user!.uid)
+                  .snapshots(),
+              builder: (context, snap) {
+                final esiste = snap.data?.exists ?? false;
+              return Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
                   children: [
@@ -323,7 +338,7 @@ class _RecensioniPageState extends State<RecensioniPage> {
                         cursorColor: Colors.green,
                         maxLength: 300,
                         decoration: InputDecoration(
-                          labelText: 'Scrivi una recensione',
+                          labelText: esiste ? 'Modifica la tua recensione' : 'Scrivi una recensione',
                           labelStyle: TextStyle(color: Colors.green),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.all(Radius.circular(20.0)),
@@ -341,19 +356,20 @@ class _RecensioniPageState extends State<RecensioniPage> {
                         ),
                         style: const TextStyle(fontSize: 16),
                       ),
-                    ),
-                    const SizedBox(width: 8),
+                    ),                    const SizedBox(width: 8),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
                       ),
                       onPressed: _aggiungiRecensione,
-                      child: const Text('Invia'),
+                      child: Text(esiste ? 'Modifica' : 'Invia'),
                     ),
                   ],
                 ),
-              ),
+              );
+              },
+            ),
           ],
         ),
       ),
