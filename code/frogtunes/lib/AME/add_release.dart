@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -30,6 +31,12 @@ class _AddReleasePageState extends State<AddReleasePage> {
   // Per la modalità album
   List<Map<String, dynamic>> albumTracks = [];
 
+  // Gestione più artisti
+  bool _altriArtistiSingolo = false;
+  String _tipoArtistaSingolo = 'featuring';
+  final TextEditingController _altriArtistiControllerSingolo = TextEditingController();
+
+  // Funzione per aggiungere un brano alla lista dell'album
   void _addTrack() async {
   List<String> trackGeneri = [];
     final titleController = TextEditingController();
@@ -37,88 +44,229 @@ class _AddReleasePageState extends State<AddReleasePage> {
     String? coverUrl;
 
   await showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              backgroundColor: Colors.green[900],
-              title: const Text('Aggiungi brano', style: TextStyle(color: Colors.white)),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: titleController,
-                      decoration: const InputDecoration(labelText: 'Titolo brano'),
-                      style: const TextStyle(color: Colors.white),
+    context: context,
+    builder: (context) {
+      bool altriArtistiSingolo = false;
+      String tipoArtistaSingolo = 'featuring';
+      final TextEditingController altriArtistiControllerSingolo = TextEditingController();
+      return StatefulBuilder(
+        builder: (context, setStateDialog) {
+          return AlertDialog(
+            backgroundColor: Colors.green[900],
+            title: const Text('Aggiungi brano', style: TextStyle(color: Colors.white)),
+            content: SizedBox(
+              width: 600,
+              child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: titleController,
+                    cursorColor: Color(0xFF00FF00),
+                    decoration: const InputDecoration(
+                      labelText: 'Titolo',
+                      labelStyle: TextStyle(color: Colors.white),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF00FF00)),
+                      ),
+                    ),
+                    validator: (v) => v == null || v.isEmpty ? 'Campo obbligatorio' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const Text('Altri artisti?', style: TextStyle(color: Colors.white)),
+                      Radio<bool>(
+                        activeColor: Color(0xFF00FF00),
+                        value: true,
+                        groupValue: altriArtistiSingolo,
+                        onChanged: (val) {
+                          setStateDialog(() {
+                            altriArtistiSingolo = val!;
+                          });
+                        },
+                      ),
+                      const Text('Sì', style: TextStyle(color: Colors.white)),
+                      Radio<bool>(
+                        activeColor: Color(0xFF00FF00),
+                        value: false,
+                        groupValue: altriArtistiSingolo,
+                        onChanged: (val) {
+                          setStateDialog(() {
+                            altriArtistiSingolo = val!;
+                          });
+                        },
+                      ),
+                      const Text('No', style: TextStyle(color: Colors.white)),
+                    ],
+                  ),
+                  if (altriArtistiSingolo)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Radio<String>(
+                              activeColor: Color(0xFF00FF00),
+                              value: 'main',
+                              groupValue: tipoArtistaSingolo,
+                              onChanged: (val) {
+                                setStateDialog(() {
+                                  tipoArtistaSingolo = val!;
+                                });
+                              },
+                            ),
+                            const Text('Main artist', style: TextStyle(color: Colors.white)),
+                            Radio<String>(
+                              activeColor: Color(0xFF00FF00),
+                              value: 'featuring',
+                              groupValue: tipoArtistaSingolo,
+                              onChanged: (val) {
+                                setStateDialog(() {
+                                  tipoArtistaSingolo = val!;
+                                });
+                              },
+                            ),
+                            const Text('Featuring', style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
+                        TextField(
+                          controller: altriArtistiControllerSingolo,
+                          cursorColor: Color(0xFF00FF00),
+                          decoration: const InputDecoration(
+                            labelText: 'Nomi altri artisti (separati da virgola)',
+                            labelStyle: TextStyle(color: Colors.white),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Color(0xFF00FF00)),
+                            ),
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      value: trackGeneri.isNotEmpty ? trackGeneri[0] : null,
-                      items: generiDisponibili.map((genere) {
-                        return DropdownMenuItem(
-                          value: genere,
-                          child: Text(genere),
-                        );
-                      }).toList(),
-                      decoration: const InputDecoration(labelText: 'Genere principale'),
-                      onChanged: (value) {
-                        setStateDialog(() {
-                          if (value != null) {
-                            if (trackGeneri.isEmpty) {
-                              trackGeneri.add(value);
-                            } else {
-                              trackGeneri[0] = value;
-                            }
-                          }
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      value: trackGeneri.length > 1 ? trackGeneri[1] : null,
-                      items: generiDisponibili.map((genere) {
-                        return DropdownMenuItem(
-                          value: genere,
-                          child: Text(genere),
-                        );
-                      }).toList(),
-                      decoration: const InputDecoration(labelText: 'Genere secondario (opzionale)'),
-                      onChanged: (value) {
-                        setStateDialog(() {
-                          if (value != null) {
-                            if (trackGeneri.length < 2) {
-                              trackGeneri.add(value);
-                            } else {
-                              trackGeneri[1] = value;
-                            }
-                          } else {
-                            if (trackGeneri.length == 2) trackGeneri.removeAt(1);
-                          }
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: () async {
-                        _pickAudio();
-                        setStateDialog(() {
-                          audioUrl = _audioUrl;
-                        });
-                      },
-                      child: Text(audioUrl == null ? 'Carica la release' : 'Audio caricato'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () async {
-                        _pickCover();
-                        setStateDialog(() {
-                          coverUrl = _coverUrl;
-                        });
-                      },
-                      child: Text(coverUrl == null ? 'Carica la cover' : 'Cover caricata'),
-                    ),
+                    DropdownButtonFormField2<String>(
+                          isExpanded: true,
+                          value: generiSelezionati.isNotEmpty ? generiSelezionati[0] : null,
+                          items: generiDisponibili.map((genere) {
+                            return DropdownMenuItem(
+                              value: genere,
+                              child: Text(genere),
+                            );
+                          }).toList(),
+                          decoration: const InputDecoration(
+                            labelText: 'Genere principale',
+                            labelStyle: TextStyle(color: Colors.white),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Color(0xFF00FF00)),
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              if (value != null) {
+                                if (generiSelezionati.isEmpty) {
+                                  generiSelezionati.add(value);
+                                } else {
+                                  generiSelezionati[0] = value;
+                                }
+                              }
+                            });
+                          },
+                          buttonStyleData: const ButtonStyleData(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            height: 40,
+                            width: 50,
+                          ),
+                          menuItemStyleData: const MenuItemStyleData(
+                            height: 40,
+                          ),
+                          dropdownStyleData: DropdownStyleData(
+                            maxHeight: 400, 
+                            width: 200,     
+                            offset: const Offset(0, 0), // Il menu parte dalla riga del pulsante
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField2<String>(
+                          value: generiSelezionati.length > 1 ? generiSelezionati[1] : null,
+                          items: generiDisponibili.map((genere) {
+                            return DropdownMenuItem(
+                              value: genere,
+                              child: Text(genere),
+                            );
+                          }).toList(),
+                          decoration: const InputDecoration(
+                            labelText: 'Genere secondario (opzionale)',
+                            labelStyle: TextStyle(color: Colors.white),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Color(0xFF00FF00)),
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              if (value != null) {
+                                if (generiSelezionati.length < 2) {
+                                  generiSelezionati.add(value);
+                                } else {
+                                  generiSelezionati[1] = value;
+                                }
+                              } else {
+                                if (generiSelezionati.length == 2) generiSelezionati.removeAt(1);
+                              }
+                            });
+                          },
+                          buttonStyleData: const ButtonStyleData(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            height: 40,
+                            width: 50,
+                          ),
+                          menuItemStyleData: const MenuItemStyleData(
+                            height: 40,
+                          ),
+                          dropdownStyleData: DropdownStyleData(
+                            maxHeight: 400, 
+                            width: 200,     
+                            offset: const Offset(0, 0), // Il menu parte dalla riga del pulsante
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                  backgroundColor: Colors.green[700],
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
+                                ), 
+                          onPressed: _pickAudio,
+                          label: Text(_audioUrl == null ? 'Carica la release' : 'Release caricata'),
+                        ),
+                        ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                  backgroundColor: Colors.green[700],
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 30.0),
+                                ),
+                          onPressed: _pickCover,
+                          label: Text(_coverUrl == null ? 'Carica la cover' : 'Cover caricata'),
+                        ),
+                        ..._crediti.keys.map((key) => TextFormField(
+                              cursorColor: Color(0xFF00FF00),
+                              decoration: InputDecoration(
+                                labelText: '$key (separati da virgola)',
+                                labelStyle: TextStyle(color: Colors.white),
+                                focusedBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(color: Color(0xFF00FF00)),
+                                ),
+                              ),
+                              onChanged: (v) => _crediti[key] = v.split(',').map((e) => e.trim()).toList(),
+                            )),
                   ],
+                ),
               ),
             ),
               actions: [
@@ -208,26 +356,42 @@ class _AddReleasePageState extends State<AddReleasePage> {
   }
 
   void _submit() async {
+    List<String> artistIdSingolo = [...widget.artistIds];
+    if (isSingle && _altriArtistiSingolo && _altriArtistiControllerSingolo.text.isNotEmpty) {
+      final nomi = _altriArtistiControllerSingolo.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+      for (final nome in nomi) {
+        final query = await FirebaseFirestore.instance.collection('artisti').where('nome', isEqualTo: nome).get();
+        if (query.docs.isNotEmpty) {
+          artistIdSingolo.add(query.docs.first.id);
+        } else {
+          final nuovoArtista = await FirebaseFirestore.instance.collection('artisti').add({'nome': nome});
+          artistIdSingolo.add(nuovoArtista.id);
+        }
+      }
+    }
+
     if (!_formKey.currentState!.validate() || _audioUrl == null || _coverUrl == null) return;
     setState(() => _loading = true);
 
+
+    final cid = Uuid().v4();
     final release = {
-      'addedAt': DateTime.now().millisecondsSinceEpoch,
+      'addedAt': FieldValue.serverTimestamp(),
       'album': _albumController.text,
-      'artistId': widget.artistIds,
+      'artistId': isSingle ? artistIdSingolo : widget.artistIds,
       'isSingle': isSingle,
       'ascoltiTotali': 0,
       'audioUrl': _audioUrl,
-      'cid': Uuid().v4(),
+      'cid': cid,
       'cover': _coverUrl,
       'crediti': _crediti,
-      'statPaese': 0,
+      'statPaese': {'IT': 0},
       'titolo': _titleController.text,
       'generi': generiSelezionati,
       'tracks': isSingle ? null : albumTracks,
     };
 
-    FirebaseFirestore.instance.collection('canzoni').add(release);
+    await FirebaseFirestore.instance.collection('canzoni').doc(cid).set(release);
 
     setState(() => _loading = false);
     Navigator.pop(context);
@@ -235,8 +399,19 @@ class _AddReleasePageState extends State<AddReleasePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Se è un singolo, aggiorna il nome album in automatico
+    if (isSingle) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_albumController.text != _titleController.text) {
+          _albumController.text = _titleController.text;
+        }
+      });
+    }
     return Scaffold(
-      appBar: AppBar(title: const Text('Aggiungi una nuova release')),
+      appBar: AppBar(
+        title: const Text('Aggiungi una nuova release'),
+        backgroundColor: const Color.fromARGB(255, 24, 96, 26),
+        ),
       body: Padding(
         padding: const EdgeInsets.all(16),
             child: isSingle
@@ -246,16 +421,104 @@ class _AddReleasePageState extends State<AddReleasePage> {
                       children: [
                         TextFormField(
                           controller: _titleController,
-                          decoration: const InputDecoration(labelText: 'Titolo'),
+                          cursorColor: Color(0xFF00FF00),
+                          decoration: const InputDecoration(
+                            labelText: 'Titolo',
+                            labelStyle: TextStyle(color: Colors.white),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Color(0xFF00FF00)),
+                            ),
+                          ),
                           validator: (v) => v == null || v.isEmpty ? 'Campo obbligatorio' : null,
                         ),
                         TextFormField(
-                          controller: _albumController,
-                          decoration: const InputDecoration(labelText: 'Nome album'),
+                          controller: _titleController,
+                          cursorColor: Color(0xFF00FF00),
+                          decoration: const InputDecoration(
+                            labelText: 'Nome album',
+                            labelStyle: TextStyle(color: Colors.white),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Color(0xFF00FF00)),
+                            ),
+                          ),
                           validator: (v) => v == null || v.isEmpty ? 'Campo obbligatorio' : null,
+                          enabled: !isSingle,
                         ),
                         const SizedBox(height: 16),
-                        DropdownButtonFormField<String>(
+                        Row(
+                          children: [
+                            const Text('Altri artisti?', style: TextStyle(color: Colors.white)),
+                            Radio<bool>(
+                              activeColor: Color(0xFF00FF00),
+                              value: true,
+                              groupValue: _altriArtistiSingolo,
+                              onChanged: (val) {
+                                setState(() {
+                                  _altriArtistiSingolo = val!;
+                                });
+                              },
+                            ),
+                            const Text('Sì', style: TextStyle(color: Colors.white)),
+                            Radio<bool>(
+                              activeColor: Color(0xFF00FF00),
+                              value: false,
+                              groupValue: _altriArtistiSingolo,
+                              onChanged: (val) {
+                                setState(() {
+                                  _altriArtistiSingolo = val!;
+                                });
+                              },
+                            ),
+                            const Text('No', style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
+                        if (_altriArtistiSingolo)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Radio<String>(
+                                    activeColor: Color(0xFF00FF00),
+                                    value: 'main',
+                                    groupValue: _tipoArtistaSingolo,
+                                    onChanged: (val) {
+                                      setState(() {
+                                        _tipoArtistaSingolo = val!;
+                                      });
+                                    },
+                                  ),
+                                  const Text('Main artist', style: TextStyle(color: Colors.white)),
+                                  Radio<String>(
+                                    activeColor: Color(0xFF00FF00),
+                                    value: 'featuring',
+                                    groupValue: _tipoArtistaSingolo,
+                                    onChanged: (val) {
+                                      setState(() {
+                                        _tipoArtistaSingolo = val!;
+                                      });
+                                    },
+                                  ),
+                                  const Text('Featuring', style: TextStyle(color: Colors.white)),
+                                ],
+                              ),
+                              TextField(
+                                controller: _altriArtistiControllerSingolo,
+                                cursorColor: Color(0xFF00FF00),
+                                decoration: const InputDecoration(
+                                  labelText: 'Nomi altri artisti (separati da virgola)',
+                                  labelStyle: TextStyle(color: Colors.white),
+                                  focusedBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(color: Color(0xFF00FF00)),
+                                  ),
+                                  ),
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField2<String>(
+                          isExpanded: true,
                           value: generiSelezionati.isNotEmpty ? generiSelezionati[0] : null,
                           items: generiDisponibili.map((genere) {
                             return DropdownMenuItem(
@@ -263,7 +526,13 @@ class _AddReleasePageState extends State<AddReleasePage> {
                               child: Text(genere),
                             );
                           }).toList(),
-                          decoration: const InputDecoration(labelText: 'Genere principale'),
+                          decoration: const InputDecoration(
+                            labelText: 'Genere principale',
+                            labelStyle: TextStyle(color: Colors.white),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Color(0xFF00FF00)),
+                            ),
+                          ),
                           onChanged: (value) {
                             setState(() {
                               if (value != null) {
@@ -275,9 +544,22 @@ class _AddReleasePageState extends State<AddReleasePage> {
                               }
                             });
                           },
+                          buttonStyleData: const ButtonStyleData(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            height: 40,
+                            width: 50,
+                          ),
+                          menuItemStyleData: const MenuItemStyleData(
+                            height: 40,
+                          ),
+                          dropdownStyleData: DropdownStyleData(
+                            maxHeight: 400, 
+                            width: 200,     
+                            offset: const Offset(0, 0), // Il menu parte dalla riga del pulsante
+                          ),
                         ),
                         const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
+                        DropdownButtonFormField2<String>(
                           value: generiSelezionati.length > 1 ? generiSelezionati[1] : null,
                           items: generiDisponibili.map((genere) {
                             return DropdownMenuItem(
@@ -285,7 +567,13 @@ class _AddReleasePageState extends State<AddReleasePage> {
                               child: Text(genere),
                             );
                           }).toList(),
-                          decoration: const InputDecoration(labelText: 'Genere secondario (opzionale)'),
+                          decoration: const InputDecoration(
+                            labelText: 'Genere secondario (opzionale)',
+                            labelStyle: TextStyle(color: Colors.white),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Color(0xFF00FF00)),
+                            ),
+                          ),
                           onChanged: (value) {
                             setState(() {
                               if (value != null) {
@@ -299,27 +587,71 @@ class _AddReleasePageState extends State<AddReleasePage> {
                               }
                             });
                           },
+                          buttonStyleData: const ButtonStyleData(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            height: 40,
+                            width: 50,
+                          ),
+                          menuItemStyleData: const MenuItemStyleData(
+                            height: 40,
+                          ),
+                          dropdownStyleData: DropdownStyleData(
+                            maxHeight: 400, 
+                            width: 200,     
+                            offset: const Offset(0, 0), // Il menu parte dalla riga del pulsante
+                          ),
                         ),
                         const SizedBox(height: 16),
-                        ElevatedButton(
+                        ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                  backgroundColor: Colors.green[700],
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 5.0),
+                                ), 
                           onPressed: _pickAudio,
-                          child: Text(_audioUrl == null ? 'Carica la release' : 'Release caricata'),
+                          label: Text(_audioUrl == null ? 'Carica la release' : 'Release caricata'),
                         ),
-                        ElevatedButton(
+                        ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                  backgroundColor: Colors.green[700],
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 5.0),
+                                ),
                           onPressed: _pickCover,
-                          child: Text(_coverUrl == null ? 'Carica la cover' : 'Cover caricata'),
+                          label: Text(_coverUrl == null ? 'Carica la cover' : 'Cover caricata'),
                         ),
                         const SizedBox(height: 16),
                         ..._crediti.keys.map((key) => TextFormField(
-                              decoration: InputDecoration(labelText: '$key (separati da virgola)'),
+                              cursorColor: Color(0xFF00FF00),
+                              decoration: InputDecoration(
+                                labelText: '$key (separati da virgola)',
+                                labelStyle: TextStyle(color: Colors.white),
+                                focusedBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(color: Color(0xFF00FF00)),
+                                ),
+                              ),
                               onChanged: (v) => _crediti[key] = v.split(',').map((e) => e.trim()).toList(),
                             )),
                         const SizedBox(height: 24),
                         _loading
                             ? const Center(child: CircularProgressIndicator())
-                            : ElevatedButton(
+                            : ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                  backgroundColor: Colors.green[700],
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 5.0),
+                                ), 
                                 onPressed: _submit,
-                                child: const Text('Invia'),
+                                label: const Text('Invia'),
                               ),
                       ],
                     ),
@@ -375,6 +707,7 @@ class _AddReleasePageState extends State<AddReleasePage> {
                 ),
               ),
           ),
+          backgroundColor: const Color.fromARGB(255, 4, 35, 5),
         );
     }
   }

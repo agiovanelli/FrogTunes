@@ -53,6 +53,9 @@ dependencies:
   audio_session: ^0.2.2
   file_picker: ^10.3.3
 
+  # per poter modificare il menù a tendina
+  dropdown_button2: ^2.3.8
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
