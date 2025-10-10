@@ -240,19 +240,7 @@ class _AddReleasePageState extends State<AddReleasePage> {
                                   padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
                                 ), 
                           onPressed: _pickAudio,
-                          label: Text(_audioUrl == null ? 'Carica la release' : 'Release caricata'),
-                        ),
-                        ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                  ),
-                                  backgroundColor: Colors.green[700],
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 30.0),
-                                ),
-                          onPressed: _pickCover,
-                          label: Text(_coverUrl == null ? 'Carica la cover' : 'Cover caricata'),
+                          label: Text(_audioUrl == null ? 'Carica la traccia audio' : 'Traccia audio caricata'),
                         ),
                         ..._crediti.keys.map((key) => TextFormField(
                               cursorColor: Color(0xFF00FF00),
@@ -412,7 +400,8 @@ class _AddReleasePageState extends State<AddReleasePage> {
         title: const Text('Aggiungi una nuova release'),
         backgroundColor: const Color.fromARGB(255, 24, 96, 26),
         ),
-      body: Padding(
+      body: SafeArea(
+        child: Padding(
         padding: const EdgeInsets.all(16),
             child: isSingle
                 ? Form(
@@ -656,16 +645,133 @@ class _AddReleasePageState extends State<AddReleasePage> {
                       ],
                     ),
                   ) : Center(
-                    child: SizedBox(
-                      width: 500,
-                      child: Column(
+                child: SizedBox(
+                  width: 500,
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Icon(Icons.album, size: 80, color: Colors.green),
-                      const SizedBox(height: 24),
                       const Text(
-                        'Carica i brani che compongono il tuo album:',
+                        'Aggiungi informazioni dell\'album',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 20, color: Colors.white),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _albumController,
+                        cursorColor: Color(0xFF00FF00),
+                        decoration: const InputDecoration(
+                          labelText: 'Nome album',
+                          labelStyle: TextStyle(color: Colors.white),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF00FF00)),
+                          ),
+                        ),
+                        validator: (v) => v == null || v.isEmpty ? 'Campo obbligatorio' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField2<String>(
+                        isExpanded: true,
+                        value: generiSelezionati.isNotEmpty ? generiSelezionati[0] : null,
+                        items: generiDisponibili.map((genere) {
+                          return DropdownMenuItem(
+                            value: genere,
+                            child: Text(genere),
+                          );
+                        }).toList(),
+                        decoration: const InputDecoration(
+                          labelText: 'Genere principale',
+                          labelStyle: TextStyle(color: Colors.white),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF00FF00)),
+                          ),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            if (value != null) {
+                              if (generiSelezionati.isEmpty) {
+                                generiSelezionati.add(value);
+                              } else {
+                                generiSelezionati[0] = value;
+                              }
+                            }
+                          });
+                        },
+                        buttonStyleData: const ButtonStyleData(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          height: 40,
+                          width: 50,
+                        ),
+                        menuItemStyleData: const MenuItemStyleData(
+                          height: 40,
+                        ),
+                        dropdownStyleData: DropdownStyleData(
+                          maxHeight: 400, 
+                          width: 200,     
+                          offset: const Offset(0, 0),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField2<String>(
+                        value: generiSelezionati.length > 1 ? generiSelezionati[1] : null,
+                        items: generiDisponibili.map((genere) {
+                          return DropdownMenuItem(
+                            value: genere,
+                            child: Text(genere),
+                          );
+                        }).toList(),
+                        decoration: const InputDecoration(
+                          labelText: 'Genere secondario (opzionale)',
+                          labelStyle: TextStyle(color: Colors.white),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF00FF00)),
+                          ),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            if (value != null) {
+                              if (generiSelezionati.length < 2) {
+                                generiSelezionati.add(value);
+                              } else {
+                                generiSelezionati[1] = value;
+                              }
+                            } else {
+                              if (generiSelezionati.length == 2) generiSelezionati.removeAt(1);
+                            }
+                          });
+                        },
+                        buttonStyleData: const ButtonStyleData(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          height: 40,
+                          width: 50,
+                        ),
+                        menuItemStyleData: const MenuItemStyleData(
+                          height: 40,
+                        ),
+                        dropdownStyleData: DropdownStyleData(
+                          maxHeight: 400, 
+                          width: 200,     
+                          offset: const Offset(0, 0),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          backgroundColor: Colors.green[700],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 5.0),
+                        ),
+                        onPressed: _pickCover,
+                        label: Text(_coverUrl == null ? 'Carica la cover' : 'Cover caricata'),
+                      ),
+                      const SizedBox(height: 12),
+                      const Divider(color: Colors.white),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Carica i brani',
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 20, color: Colors.white),
                       ),
@@ -673,7 +779,7 @@ class _AddReleasePageState extends State<AddReleasePage> {
                       ElevatedButton.icon(
                         onPressed: _addTrack,
                         icon: const Icon(Icons.add),
-                        label: const Text('Aggiungi brano'),
+                        label: const Text('Aggiungi'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green[700],
                           foregroundColor: Colors.white,
@@ -697,15 +803,279 @@ class _AddReleasePageState extends State<AddReleasePage> {
                                         'Audio: ${track['audioUrl'] ?? 'Non caricato'}\nCover: ${track['cover'] ?? 'Non caricata'}',
                                         style: const TextStyle(color: Colors.white70),
                                       ),
+                                      trailing: ElevatedButton.icon(
+                                        icon: const Icon(Icons.edit),
+                                        label: const Text('Modifica'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.green[700],
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                        ),
+                                        onPressed: () async {
+                                          await showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              final titleController = TextEditingController(text: track['titolo'] ?? '');
+                                              String? audioUrl = track['audioUrl'];
+                                              String? coverUrl = track['cover'];
+                                              List<String> trackGeneri = List<String>.from(track['generi'] ?? []);
+                                              // Crediti
+                                              Map<String, List<String>> crediti = {
+                                                'Autore': List<String>.from(track['Autore'] ?? []),
+                                                'Compositore': List<String>.from(track['Compositore'] ?? []),
+                                                'Producer': List<String>.from(track['Producer'] ?? []),
+                                              };
+                                              // Altri artisti
+                                              bool altriArtisti = track['altriArtisti'] ?? false;
+                                              String tipoArtista = track['tipoArtista'] ?? 'featuring';
+                                              final TextEditingController altriArtistiController = TextEditingController(text: (track['nomiAltriArtisti'] ?? '').toString());
+                                              return StatefulBuilder(
+                                                builder: (context, setStateDialog) {
+                                                  return AlertDialog(
+                                                    backgroundColor: Colors.green[900],
+                                                    title: const Text('Modifica brano', style: TextStyle(color: Colors.white)),
+                                                    content: SizedBox(
+                                                      width: 600,
+                                                      child: SingleChildScrollView(
+                                                        child: Column(
+                                                          mainAxisSize: MainAxisSize.min,
+                                                          children: [
+                                                            TextFormField(
+                                                              controller: titleController,
+                                                              cursorColor: Color(0xFF00FF00),
+                                                              decoration: const InputDecoration(
+                                                                labelText: 'Titolo',
+                                                                labelStyle: TextStyle(color: Colors.white),
+                                                                focusedBorder: UnderlineInputBorder(
+                                                                  borderSide: BorderSide(color: Color(0xFF00FF00)),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            const SizedBox(height: 12),
+                                                            Row(
+                                                              children: [
+                                                                const Text('Altri artisti?', style: TextStyle(color: Colors.white)),
+                                                                Radio<bool>(
+                                                                  activeColor: Color(0xFF00FF00),
+                                                                  value: true,
+                                                                  groupValue: altriArtisti,
+                                                                  onChanged: (val) {
+                                                                    setStateDialog(() {
+                                                                      altriArtisti = val!;
+                                                                    });
+                                                                  },
+                                                                ),
+                                                                const Text('Sì', style: TextStyle(color: Colors.white)),
+                                                                Radio<bool>(
+                                                                  activeColor: Color(0xFF00FF00),
+                                                                  value: false,
+                                                                  groupValue: altriArtisti,
+                                                                  onChanged: (val) {
+                                                                    setStateDialog(() {
+                                                                      altriArtisti = val!;
+                                                                    });
+                                                                  },
+                                                                ),
+                                                                const Text('No', style: TextStyle(color: Colors.white)),
+                                                              ],
+                                                            ),
+                                                            if (altriArtisti)
+                                                              Column(
+                                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                                children: [
+                                                                  Row(
+                                                                    children: [
+                                                                      Radio<String>(
+                                                                        activeColor: Color(0xFF00FF00),
+                                                                        value: 'main',
+                                                                        groupValue: tipoArtista,
+                                                                        onChanged: (val) {
+                                                                          setStateDialog(() {
+                                                                            tipoArtista = val!;
+                                                                          });
+                                                                        },
+                                                                      ),
+                                                                      const Text('Main artist', style: TextStyle(color: Colors.white)),
+                                                                      Radio<String>(
+                                                                        activeColor: Color(0xFF00FF00),
+                                                                        value: 'featuring',
+                                                                        groupValue: tipoArtista,
+                                                                        onChanged: (val) {
+                                                                          setStateDialog(() {
+                                                                            tipoArtista = val!;
+                                                                          });
+                                                                        },
+                                                                      ),
+                                                                      const Text('Featuring', style: TextStyle(color: Colors.white)),
+                                                                    ],
+                                                                  ),
+                                                                  TextField(
+                                                                    controller: altriArtistiController,
+                                                                    cursorColor: Color(0xFF00FF00),
+                                                                    decoration: const InputDecoration(
+                                                                      labelText: 'Nomi altri artisti (separati da virgola)',
+                                                                      labelStyle: TextStyle(color: Colors.white),
+                                                                      focusedBorder: UnderlineInputBorder(
+                                                                        borderSide: BorderSide(color: Color(0xFF00FF00)),
+                                                                      ),
+                                                                    ),
+                                                                    style: const TextStyle(color: Colors.white),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            const SizedBox(height: 12),
+                                                            DropdownButtonFormField2<String>(
+                                                              isExpanded: true,
+                                                              value: trackGeneri.isNotEmpty ? trackGeneri[0] : null,
+                                                              items: generiDisponibili.map((genere) {
+                                                                return DropdownMenuItem(
+                                                                  value: genere,
+                                                                  child: Text(genere),
+                                                                );
+                                                              }).toList(),
+                                                              decoration: const InputDecoration(
+                                                                labelText: 'Genere principale',
+                                                                labelStyle: TextStyle(color: Colors.white),
+                                                                focusedBorder: UnderlineInputBorder(
+                                                                  borderSide: BorderSide(color: Color(0xFF00FF00)),
+                                                                ),
+                                                              ),
+                                                              onChanged: (value) {
+                                                                setStateDialog(() {
+                                                                  if (value != null) {
+                                                                    if (trackGeneri.isEmpty) {
+                                                                      trackGeneri.add(value);
+                                                                    } else {
+                                                                      trackGeneri[0] = value;
+                                                                    }
+                                                                  }
+                                                                });
+                                                              },
+                                                            ),
+                                                            const SizedBox(height: 12),
+                                                            DropdownButtonFormField2<String>(
+                                                              value: trackGeneri.length > 1 ? trackGeneri[1] : null,
+                                                              items: generiDisponibili.map((genere) {
+                                                                return DropdownMenuItem(
+                                                                  value: genere,
+                                                                  child: Text(genere),
+                                                                );
+                                                              }).toList(),
+                                                              decoration: const InputDecoration(
+                                                                labelText: 'Genere secondario (opzionale)',
+                                                                labelStyle: TextStyle(color: Colors.white),
+                                                                focusedBorder: UnderlineInputBorder(
+                                                                  borderSide: BorderSide(color: Color(0xFF00FF00)),
+                                                                ),
+                                                              ),
+                                                              onChanged: (value) {
+                                                                setStateDialog(() {
+                                                                  if (value != null) {
+                                                                    if (trackGeneri.length < 2) {
+                                                                      trackGeneri.add(value);
+                                                                    } else {
+                                                                      trackGeneri[1] = value;
+                                                                    }
+                                                                  } else {
+                                                                    if (trackGeneri.length == 2) trackGeneri.removeAt(1);
+                                                                  }
+                                                                });
+                                                              },
+                                                            ),
+                                                            const SizedBox(height: 12),
+                                                            ElevatedButton.icon(
+                                                              style: ElevatedButton.styleFrom(
+                                                                backgroundColor: Colors.green[700],
+                                                                foregroundColor: Colors.white,
+                                                                padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
+                                                              ),
+                                                              onPressed: () async {
+                                                                final result = await FilePicker.platform.pickFiles(
+                                                                  type: FileType.custom,
+                                                                  allowedExtensions: ['mp3', 'wav'],
+                                                                );
+                                                                if (result != null && result.files.single.path != null) {
+                                                                  final filePath = result.files.single.path!;
+                                                                  final url = await _uploadFile(filePath, 'music');
+                                                                  setStateDialog(() {
+                                                                    audioUrl = url;
+                                                                  });
+                                                                }
+                                                              },
+                                                              label: Text(audioUrl == null ? 'Carica traccia audio' : 'Traccia audio caricata'),
+                                                            ),
+                                                            const SizedBox(height: 12),
+                                                            ...crediti.keys.map((key) => TextFormField(
+                                                                  cursorColor: Color(0xFF00FF00),
+                                                                  decoration: InputDecoration(
+                                                                    labelText: '$key (separati da virgola)',
+                                                                    labelStyle: TextStyle(color: Colors.white),
+                                                                    focusedBorder: UnderlineInputBorder(
+                                                                      borderSide: BorderSide(color: Color(0xFF00FF00)),
+                                                                    ),
+                                                                  ),
+                                                                  initialValue: crediti[key]?.join(', '),
+                                                                  onChanged: (v) => crediti[key] = v.split(',').map((e) => e.trim()).toList(),
+                                                                )),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          albumTracks[index] = {
+                                                            'titolo': titleController.text,
+                                                            'audioUrl': audioUrl,
+                                                            'cover': coverUrl,
+                                                            'generi': List<String>.from(trackGeneri),
+                                                            'Autore': crediti['Autore'],
+                                                            'Compositore': crediti['Compositore'],
+                                                            'Producer': crediti['Producer'],
+                                                            'altriArtisti': altriArtisti,
+                                                            'tipoArtista': tipoArtista,
+                                                            'nomiAltriArtisti': altriArtistiController.text,
+                                                          };
+                                                          setState(() {});
+                                                          Navigator.pop(context);
+                                                        },
+                                                        child: const Text('Salva', style: TextStyle(color: Colors.white)),
+                                                      ),
+                                                      TextButton(
+                                                        onPressed: () => Navigator.pop(context),
+                                                        child: const Text('Annulla', style: TextStyle(color: Colors.white)),
+                                                      ),
+                                                    ],
+                                                  );
+                                                },
+                                              );
+                                            },
+                                          );
+                                        },
+                                      ),
                                     ),
                                   );
                                 },
                               ),
                       ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          backgroundColor: Colors.green[700],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 5.0),
+                        ),
+                        onPressed: _submit,
+                        label: const Text('Carica album'),
+                      ),
                     ],
                   ),
                 ),
               ),
+            ),
           ),
           backgroundColor: const Color.fromARGB(255, 4, 35, 5),
         );
