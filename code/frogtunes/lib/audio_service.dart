@@ -4,8 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'coda.dart';
+import 'dart:async';
 
 class AudioService {
+  Timer? _streamTimer;
+  String? _pendingStreamSongId;
   // Funzione per resettare completamente lo stato del player e dei notifier
   Future<void> resetPlayerState() async {
     await _player.stop();
@@ -81,8 +84,14 @@ class AudioService {
       if (userId != null && songId != null && songId != '' && songId != lastSavedSongId) {
         await saveRecentlyPlayed(userId, songId, audioUrl, tag['title'] ?? '', tag['artist'] ?? '', List<String>.from(tag['artistId'] ?? []), tag['cover'] ?? '');
 
-        // Salva l'evento di ascolto
-        await registerStream(songId);
+        // Timer per registrare lo stream solo dopo 15 secondi di ascolto
+        _streamTimer?.cancel();
+        _pendingStreamSongId = songId;
+        _streamTimer = Timer(const Duration(seconds: 15), () async {
+          if (_pendingStreamSongId == songId) {
+            await registerStream(songId);
+          }
+        });
         lastSavedSongId = songId;
       }
     });
@@ -207,9 +216,15 @@ class AudioService {
         'paese': paese,
         'timestamp': FieldValue.serverTimestamp(),
       });
+
+      // Incrementa ascoltiTotali della canzone
+      final songRef = FirebaseFirestore.instance.collection('canzoni').doc(cid);
+      await songRef.update({
+        'ascoltiTotali': FieldValue.increment(1),
+      });
     } catch (e) {
       if (kDebugMode) {
-        print('Errore nel registrare stream: $e');
+        print('Errore nel registrare stream o incrementare ascoltiTotali: $e');
       }
     }
   }
