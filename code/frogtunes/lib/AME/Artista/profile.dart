@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:frogtunes/AME/Artista/artist_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:frogtunes/AME/add_release.dart';
@@ -14,6 +15,7 @@ class ProfileView extends StatefulWidget {
 
 class ProfileViewState extends State<ProfileView> {
   Map<String, dynamic>? userData;
+  final user = FirebaseAuth.instance.currentUser;
 
   String userName = '';
   String bio = '';
@@ -179,6 +181,34 @@ class ProfileViewState extends State<ProfileView> {
                   foregroundColor: Colors.white,
                   padding:
                       const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                  textStyle: const TextStyle(fontSize: 18),
+                ),
+              ),
+            ),
+            const SizedBox(height: 50),
+            // Bottone per aggiungere un nuovo brano
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  if(context.mounted){
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ArtistScreen(
+                            artistId: user!.uid,
+                            nomeArtista: user!.displayName ?? 'Artista',
+                            type: true,
+                          ),
+                        ),
+                      );
+                    }
+                },
+                label: const Text('Vai alla tua pagina artista'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green[700],
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
                   textStyle: const TextStyle(fontSize: 18),
                 ),
               ),

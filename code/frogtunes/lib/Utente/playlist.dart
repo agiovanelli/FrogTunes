@@ -527,6 +527,7 @@ class PlaylistDetailsView extends StatelessWidget {
                                 builder: (context) => ArtistScreen(
                                   artistId: artistIds[i],
                                   nomeArtista: nome,
+                                  type: false,
                                 ),
                               ),
                             );

@@ -400,6 +400,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       builder: (_) => ArtistScreen(
                         artistId: artistId,
                         nomeArtista: nome,
+                        type: false,
                       ),
                     ),
                   );

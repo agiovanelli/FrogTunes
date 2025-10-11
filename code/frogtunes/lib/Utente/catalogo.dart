@@ -281,6 +281,7 @@ class LikedSongsScreen extends StatelessWidget {
                               builder: (context) => ArtistScreen(
                                   artistId: artistIds[index],
                                   nomeArtista: nome,
+                                  type: false,
                                 ),
                             ),
                           );
@@ -421,7 +422,7 @@ class FollowedArtistsScreen extends StatelessWidget {
               itemCount: artists.length,
               itemBuilder: (context, index) {
                 final artist = artists[index];
-                final cover = artist['cover'] ?? 'https://via.placeholder.com/150';
+                final cover = artist['cover'] ?? 'https://firebasestorage.googleapis.com/v0/b/frogtunes-5f9e4.appspot.com/o/cover%2Fdefault_cover.png?alt=media&token=3c6e0b8a-1f7b-4f1d-9e3a-1c4b6e6e6e6e';
                 final nome = artist['nome'] ?? 'Artista sconosciuto';
 
                 return ListTile(
@@ -437,6 +438,7 @@ class FollowedArtistsScreen extends StatelessWidget {
                                 builder: (context) => ArtistScreen(
                                   artistId: artist['uid'],
                                   nomeArtista: nome,
+                                  type: false,
                                 ),
                               ),
                             );
