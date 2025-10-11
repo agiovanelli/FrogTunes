@@ -505,17 +505,72 @@ class _AddReleasePageState extends State<AddReleasePage> {
                                   const Text('Featuring', style: TextStyle(color: Colors.white)),
                                 ],
                               ),
-                              TextField(
-                                controller: _altriArtistiControllerSingolo,
-                                cursorColor: Color(0xFF00FF00),
-                                decoration: const InputDecoration(
-                                  labelText: 'Nomi altri artisti (separati da virgola)',
-                                  labelStyle: TextStyle(color: Colors.white),
-                                  focusedBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(color: Color(0xFF00FF00)),
-                                  ),
-                                  ),
-                                style: const TextStyle(color: Colors.white),
+                              StatefulBuilder(
+                                builder: (context, setStateDropdown) {
+                                  bool showDropdown = true;
+                                  return Stack(
+                                    children: [
+                                      TextField(
+                                          controller: _altriArtistiControllerSingolo,
+                                        cursorColor: Color(0xFF00FF00),
+                                        decoration: const InputDecoration(
+                                          labelText: 'Nomi altri artisti (separati da virgola)',
+                                          labelStyle: TextStyle(color: Colors.white),
+                                          focusedBorder: UnderlineInputBorder(
+                                            borderSide: BorderSide(color: Color(0xFF00FF00)),
+                                          ),
+                                        ),
+                                        style: const TextStyle(color: Colors.white),
+                                        onChanged: (value) {
+                                          setState(() {});
+                                          setStateDropdown(() {
+                                            showDropdown = true;
+                                          });
+                                        },
+                                      ),
+                                      Builder(
+                                        builder: (context) {
+                                          final input = _altriArtistiControllerSingolo.text.split(',').last.trim();
+                                          if (input.isEmpty || !showDropdown) return const SizedBox.shrink();
+                                          return FutureBuilder<QuerySnapshot>(
+                                            future: FirebaseFirestore.instance.collection('artisti').where('nome', isGreaterThanOrEqualTo: input).where('nome', isLessThanOrEqualTo: input + '\uf8ff').limit(5).get(),
+                                            builder: (context, snapshot) {
+                                              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return const SizedBox.shrink();
+                                              final results = snapshot.data!.docs;
+                                              return Container(
+                                                margin: const EdgeInsets.only(top: 48),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.green[800],
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                                                ),
+                                                child: ListView(
+                                                  shrinkWrap: true,
+                                                  children: results.map((doc) {
+                                                    final nome = doc['nome'] ?? '';
+                                                    return ListTile(
+                                                      title: Text(nome, style: const TextStyle(color: Colors.white)),
+                                                      onTap: () {
+                                                        final nomi = _altriArtistiControllerSingolo.text.split(',').map((e) => e.trim()).toList();
+                                                        nomi[nomi.length - 1] = nome;
+                                                        _altriArtistiControllerSingolo.text = nomi.join(', ');
+                                                        _altriArtistiControllerSingolo.selection = TextSelection.fromPosition(TextPosition(offset: _altriArtistiControllerSingolo.text.length));
+                                                        setState(() {});
+                                                        setStateDropdown(() {
+                                                          showDropdown = false;
+                                                        });
+                                                      },
+                                                    );
+                                                  }).toList(),
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                },
                               ),
                             ],
                           ),
@@ -923,17 +978,70 @@ class _AddReleasePageState extends State<AddReleasePage> {
                                                                       const Text('Featuring', style: TextStyle(color: Colors.white)),
                                                                     ],
                                                                   ),
-                                                                  TextField(
-                                                                    controller: altriArtistiController,
-                                                                    cursorColor: Color(0xFF00FF00),
-                                                                    decoration: const InputDecoration(
-                                                                      labelText: 'Nomi altri artisti (separati da virgola)',
-                                                                      labelStyle: TextStyle(color: Colors.white),
-                                                                      focusedBorder: UnderlineInputBorder(
-                                                                        borderSide: BorderSide(color: Color(0xFF00FF00)),
-                                                                      ),
-                                                                    ),
-                                                                    style: const TextStyle(color: Colors.white),
+                                                                  StatefulBuilder(
+                                                                    builder: (context, setStateDropdown) {
+                                                                      bool showDropdown = true;
+                                                                      return Stack(
+                                                                        children: [
+                                                                          TextField(
+                                                                            controller: altriArtistiController,
+                                                                            cursorColor: Color(0xFF00FF00),
+                                                                            decoration: const InputDecoration(
+                                                                              labelText: 'Nomi altri artisti (separati da virgola)',
+                                                                              labelStyle: TextStyle(color: Colors.white),
+                                                                              focusedBorder: UnderlineInputBorder(
+                                                                                borderSide: BorderSide(color: Color(0xFF00FF00)),
+                                                                              ),
+                                                                            ),
+                                                                            style: const TextStyle(color: Colors.white),
+                                                                            onChanged: (value) {
+                                                                              setStateDialog(() {
+                                                                                showDropdown = true;
+                                                                              });
+                                                                            },
+                                                                          ),
+                                                                          Builder(
+                                                                            builder: (context) {
+                                                                              final input = altriArtistiController.text.split(',').last.trim();
+                                                                              if (input.isEmpty || !showDropdown) return const SizedBox.shrink();
+                                                                              return FutureBuilder<QuerySnapshot>(
+                                                                                future: FirebaseFirestore.instance.collection('artisti').where('nome', isGreaterThanOrEqualTo: input).where('nome', isLessThanOrEqualTo: input + '\uf8ff').limit(5).get(),
+                                                                                builder: (context, snapshot) {
+                                                                                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return const SizedBox.shrink();
+                                                                                  final results = snapshot.data!.docs;
+                                                                                  return Container(
+                                                                                    margin: const EdgeInsets.only(top: 48),
+                                                                                    decoration: BoxDecoration(
+                                                                                      color: Colors.green[800],
+                                                                                      borderRadius: BorderRadius.circular(8),
+                                                                                      boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                                                                                    ),
+                                                                                    child: ListView(
+                                                                                      shrinkWrap: true,
+                                                                                      children: results.map((doc) {
+                                                                                        final nome = doc['nome'] ?? '';
+                                                                                        return ListTile(
+                                                                                          title: Text(nome, style: const TextStyle(color: Colors.white)),
+                                                                                          onTap: () {
+                                                                                            final nomi = altriArtistiController.text.split(',').map((e) => e.trim()).toList();
+                                                                                            nomi[nomi.length - 1] = nome;
+                                                                                            altriArtistiController.text = nomi.join(', ');
+                                                                                            altriArtistiController.selection = TextSelection.fromPosition(TextPosition(offset: altriArtistiController.text.length));
+                                                                                            setStateDialog(() {
+                                                                                              showDropdown = false;
+                                                                                            });
+                                                                                          },
+                                                                                        );
+                                                                                      }).toList(),
+                                                                                    ),
+                                                                                  );
+                                                                                },
+                                                                              );
+                                                                            },
+                                                                          ),
+                                                                        ],
+                                                                      );
+                                                                    },
                                                                   ),
                                                                 ],
                                                               ),
@@ -1037,7 +1145,19 @@ class _AddReleasePageState extends State<AddReleasePage> {
                                                     ),
                                                     actions: [
                                                       TextButton(
-                                                        onPressed: () {
+                                                        onPressed: () async {
+                                                          List<dynamic> altriArtistiFinale = [];
+                                                          if (altriArtistiController.text.isNotEmpty) {
+                                                            final nomi = altriArtistiController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+                                                            for (final nome in nomi) {
+                                                              final query = await FirebaseFirestore.instance.collection('artisti').where('nome', isEqualTo: nome).get();
+                                                              if (query.docs.isNotEmpty) {
+                                                                altriArtistiFinale.add({'id': query.docs.first.id, 'nome': nome});
+                                                              } else {
+                                                                altriArtistiFinale.add({'nome': nome});
+                                                              }
+                                                            }
+                                                          }
                                                           albumTracks[index] = {
                                                             'titolo': titleController.text,
                                                             'audioUrl': audioUrl,
@@ -1048,7 +1168,7 @@ class _AddReleasePageState extends State<AddReleasePage> {
                                                             'Producer': crediti['Producer'],
                                                             'altriArtisti': altriArtisti,
                                                             'tipoArtista': tipoArtista,
-                                                            'nomiAltriArtisti': altriArtistiController.text,
+                                                            'nomiAltriArtisti': altriArtistiFinale,
                                                           };
                                                           setState(() {});
                                                           Navigator.pop(context);
