@@ -363,6 +363,7 @@ class _AddReleasePageState extends State<AddReleasePage> {
 
 
     final cid = Uuid().v4();
+
     final release = {
       'addedAt': FieldValue.serverTimestamp(),
       'album': _albumController.text,
@@ -376,13 +377,26 @@ class _AddReleasePageState extends State<AddReleasePage> {
       'statPaese': {'IT': 0},
       'titolo': _titleController.text,
       'generi': generiSelezionati,
-      'tracks': isSingle ? null : albumTracks,
     };
 
-    await FirebaseFirestore.instance.collection('canzoni').doc(cid).set(release);
+    final docRef = FirebaseFirestore.instance.collection('canzoni').doc(cid);
+    await docRef.set(release);
+
+    // Se è un album, salva le tracce come subcollection 'tracks'
+    if (!isSingle) {
+      for (int i = 0; i < albumTracks.length; i++) {
+        final track = albumTracks[i];
+        await docRef.collection('tracks').add({
+          ...track,
+          'order': i,
+        });
+      }
+    }
 
     setState(() => _loading = false);
-    Navigator.pop(context);
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 
   @override
