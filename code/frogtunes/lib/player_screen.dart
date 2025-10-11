@@ -85,6 +85,66 @@ Future<String> fetchUrl(String songId) async {
 }
 
 class _PlayerScreenState extends State<PlayerScreen> {
+
+  // Funzione per recuperare i crediti di una canzone dato il suo ID
+  Future<Map<String, List<String>>> _fetchCrediti(String songId) async {
+    final doc = await FirebaseFirestore.instance.collection('canzoni').doc(songId).get();
+    final data = doc.data();
+    final creditiRaw = data != null ? data['crediti'] : null;
+    Map<String, List<String>> result = {
+      'Autore': [],
+      'Compositore': [],
+      'Producer': [],
+    };
+    if (creditiRaw is Map) {
+      for (final key in result.keys) {
+        final val = creditiRaw[key];
+        if (val is List) {
+          result[key] = val.map((e) => e.toString()).toList();
+        }
+      }
+    }
+    return result;
+  }
+
+  void _showCreditiPopup(BuildContext context) async {
+    final crediti = await _fetchCrediti(widget.songId);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF041F0F),
+          title: const Text('Crediti', style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final key in ['Autore', 'Compositore', 'Producer'])
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(key, style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                      ...crediti[key]!.isNotEmpty
+                        ? crediti[key]!.map((c) => Text(c, style: const TextStyle(color: Colors.white70))).toList()
+                        : [const Text('-', style: TextStyle(color: Colors.white38))],
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Chiudi', style: TextStyle(color: Colors.green)),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   late final AudioService audio;
   List<String> nomiArtisti = [];
 
@@ -356,6 +416,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 ),
               );
             }
+          ),
+          IconButton(
+            icon: const Icon(Icons.info_outline, color: Colors.white),
+            tooltip: 'Crediti',
+            onPressed: () => _showCreditiPopup(context),
           ),
         ],
       ),
