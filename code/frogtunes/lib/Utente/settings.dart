@@ -43,6 +43,35 @@ class SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  // Funzione di dialog per chiedere la password corrente
+Future<String?> _askCurrentPassword() async {
+  String? password;
+  await showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text("Password attuale richiesta"),
+      content: TextField(
+        obscureText: true,
+        onChanged: (val) => password = val,
+        decoration: const InputDecoration(
+          labelText: "Password attuale",
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text("Annulla"),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text("OK"),
+        ),
+      ],
+    ),
+  );
+  return password;
+}
+
   // Funzione per salvare le impostazioni
   Future<void> _saveSettings() async {
     final user = _auth.currentUser;
@@ -54,9 +83,27 @@ class SettingsPageState extends State<SettingsPage> {
     final newPassword = _passwordController.text.trim();
 
     try {
+    // Riautenticazione se vogliamo cambiare email o password
+    if ((newEmail.isNotEmpty && newEmail != user.email) ||
+        newPassword.isNotEmpty) {
+      // Chiedi all'utente di inserire la password attuale
+      final currentPassword = await _askCurrentPassword();
+
+      if (currentPassword != null) {
+        final cred = EmailAuthProvider.credential(
+          email: user.email!,
+          password: currentPassword,
+        );
+        await user.reauthenticateWithCredential(cred);
+      } else {
+        // L'utente ha annullato l'inserimento della password
+        return;
+      }
+    }
+
       // Aggiorna email
       if (newEmail.isNotEmpty && newEmail != user.email) {
-        await user.verifyBeforeUpdateEmail(newEmail);
+        await user.verifyBeforeUpdateEmail(newEmail); // In fase di sviluppo, non invia email di verifica verifyBeforeUpdateEmail
       }
 
       // Aggiorna password
