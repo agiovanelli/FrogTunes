@@ -60,6 +60,10 @@ class HomeViewState extends State<HomeView> {
               ? data['profileImageUrl']
               : 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f';
 
+        userData = {
+          'username': hasName,
+          'profileImageUrl': hasPhoto,
+        };
 
         if (hasName == 'Utente' || hasPhoto == 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f') {
           // Attendi un frame per mostrare il dialog (evita errori di context)
@@ -161,7 +165,17 @@ class HomeViewState extends State<HomeView> {
                     if (updates.isNotEmpty) {
                       await docRef.update(updates);
                     }
-                    if(context.mounted) Navigator.of(context).pop();
+ 
+                    if(context.mounted) {
+                      // Aggiorna userData subito dopo il salvataggio
+                      setState(() {
+                        userData = {
+                          'username': name.isNotEmpty ? name : currentData?['username'] ?? 'Utente',
+                          'profileImageUrl': finalPhotoURL.isNotEmpty ? finalPhotoURL : currentData?['profileImageUrl'] ?? defaultPhotoURL,
+                        };
+                      });
+                      Navigator.of(context).pop();
+                    }
                     // Dopo la chiusura del dialog aggiorna la UI
                     await _checkAndShowProfileDialog();
                   },
@@ -202,7 +216,7 @@ class HomeViewState extends State<HomeView> {
                 const SizedBox(width: 10),
                 Expanded(child:
                   Text(
-                    'Ciao ${userData?['username'] ?? user?.displayName ?? 'Utente'}',
+                    'Ciao ${userData?['username'] ?? 'Utente'}',
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),

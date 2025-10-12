@@ -186,7 +186,7 @@ class LoginAMEViewState extends State<LoginAMEView> {
                   Expanded(
                     child: RadioListTile<String>(
                       title: const Text('A', style: TextStyle(color: Colors.white)),
-                      value: 'Artisti',
+                      value: 'Artista',
                       groupValue: selectedRole,
                       activeColor: Colors.green,
                       onChanged: (value) => setState(() => selectedRole = value),
@@ -204,7 +204,7 @@ class LoginAMEViewState extends State<LoginAMEView> {
                   Expanded(
                     child: RadioListTile<String>(
                       title: const Text('E', style: TextStyle(color: Colors.white)),
-                      value: 'Etichette',
+                      value: 'Etichetta',
                       groupValue: selectedRole,
                       activeColor: Colors.green,
                       onChanged: (value) => setState(() => selectedRole = value),
