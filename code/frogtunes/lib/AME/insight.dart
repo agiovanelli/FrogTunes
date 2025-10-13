@@ -5,10 +5,12 @@ import 'package:frogtunes/player_screen.dart';
 
 class SongInsightPage extends StatefulWidget {
   final String songId;
+  final bool managed;
 
   const SongInsightPage({
     super.key,
-    required this.songId
+    required this.songId,
+    this.managed = false,
   });
 
   @override
@@ -78,7 +80,7 @@ class _SongInsightPageState extends State<SongInsightPage> {
     final last24h = DateTime.now().subtract(const Duration(hours: 24));
     final eventsSnapshot = await FirebaseFirestore.instance
         .collection('eventiAscolto')
-        // .where('cid', isEqualTo: widget.songId) TODO: fixare indici firestore 
+        .where('cid', isEqualTo: widget.songId)
         .where('timestamp', isGreaterThan: Timestamp.fromDate(last24h))
         .get();
 
@@ -252,6 +254,7 @@ class _SongInsightPageState extends State<SongInsightPage> {
                           artistId: song.artistId,
                           cover: song.cover,
                           minimal: true,
+                          managed: widget.managed ? true : false,
                         ),
                       ),
                     );

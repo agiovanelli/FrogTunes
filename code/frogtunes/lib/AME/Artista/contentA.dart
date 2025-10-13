@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class HomeAContent extends StatelessWidget {
+  // Recupera i nomi degli artisti dato una lista di artistIds
   Future<List<String>> fetchArtistNames(List<dynamic> artistIds) async {
     if (artistIds.isEmpty) return [];
     final firestore = FirebaseFirestore.instance;
@@ -18,6 +19,7 @@ class HomeAContent extends StatelessWidget {
   }
   const HomeAContent({super.key});
 
+  // Recupera le ultime canzoni rilasciate dall'artista
   Future<List<Map<String, dynamic>>> _fetchReleaseData() async {
     final userId = FirebaseAuth.instance.currentUser!.uid;
     final query = await FirebaseFirestore.instance

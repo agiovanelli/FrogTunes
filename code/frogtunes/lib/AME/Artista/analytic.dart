@@ -161,7 +161,7 @@ class AnalyticViewState extends State<AnalyticView> {
                       },
                     ),
                   ),
-                  // Rappresentazione del title, artista e bottone di play/pause
+                  // Rappresentazione del title, artista
                   title: Text(
                     titolo,
                     style: const TextStyle(

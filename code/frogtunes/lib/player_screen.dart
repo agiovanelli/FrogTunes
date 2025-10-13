@@ -13,7 +13,8 @@ class PlayerScreen extends StatefulWidget {
   final String titolo;
   final List<String> artistId;
   final String cover;
-  final bool minimal;
+  final bool minimal; 
+  final bool managed; // Indica se l'utente è un manager
 
   const PlayerScreen({
     super.key,
@@ -22,6 +23,7 @@ class PlayerScreen extends StatefulWidget {
     required this.artistId,
     required this.cover,
     this.minimal = false,
+    this.managed = false,
   });
 
   @override
@@ -411,7 +413,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   builder: (context) => RecensioniPage(
                     songId: widget.songId,
                     titolo: widget.titolo,
-                    editable: widget.minimal ? true : false,
+                    editable: widget.minimal ? !widget.managed ? true : false : false,
+                    managed: widget.managed ? true : false,
                   ),
                 ),
               );

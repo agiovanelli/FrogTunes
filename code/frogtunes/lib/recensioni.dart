@@ -7,12 +7,14 @@ class RecensioniPage extends StatefulWidget {
   final String songId;
   final String titolo;
   final bool editable;
+  final bool managed;
 
   const RecensioniPage({
     super.key,
     required this.songId,
     required this.titolo,
     this.editable = false,
+    this.managed = false,
   });
 
   @override
@@ -318,6 +320,7 @@ class _RecensioniPageState extends State<RecensioniPage> {
                 },
               ),
             ),  
+            if (!widget.managed)
             if (!widget.editable)
             StreamBuilder<DocumentSnapshot>(
               stream: FirebaseFirestore.instance
