@@ -4,8 +4,25 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'coda.dart';
+import 'dart:async';
 
 class AudioService {
+  Timer? _streamTimer;
+  String? _pendingStreamSongId;
+  // Funzione per resettare completamente lo stato del player e dei notifier
+  Future<void> resetPlayerState() async {
+    await _player.stop();
+    await _player.seek(Duration.zero);
+    await _player.setAudioSource(ConcatenatingAudioSource(children: []));
+    currentSongId.value = '';
+    currentUrl.value = '';
+    currentTitle.value = '';
+    currentArtistId.value = [];
+    currentArtist.value = '';
+    currentCover.value = '';
+    loopModeNotifier.value = LoopMode.off;
+    isPlayingNotifier.value = false;
+  }
   // Notifier per loopMode
   final ValueNotifier<LoopMode> loopModeNotifier = ValueNotifier(LoopMode.off);
 
@@ -66,6 +83,15 @@ class AudioService {
       final audioUrl = tag['audioUrl'] ?? '';
       if (userId != null && songId != null && songId != '' && songId != lastSavedSongId) {
         await saveRecentlyPlayed(userId, songId, audioUrl, tag['title'] ?? '', tag['artist'] ?? '', List<String>.from(tag['artistId'] ?? []), tag['cover'] ?? '');
+
+        // Timer per registrare lo stream solo dopo 15 secondi di ascolto
+        _streamTimer?.cancel();
+        _pendingStreamSongId = songId;
+        _streamTimer = Timer(const Duration(seconds: 15), () async {
+          if (_pendingStreamSongId == songId) {
+            await registerStream(songId);
+          }
+        });
         lastSavedSongId = songId;
       }
     });
@@ -175,6 +201,32 @@ class AudioService {
       Coda.loadPlaylist(tracks);
       await _player.stop();
       await _player.setAudioSource(_queue, initialIndex: initialIndex);
+  }
+
+  // Salva un evento di ascolto su Firestore
+  Future<void> registerStream(String cid) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      final paese = "IT"; // TODO: rileva paese reale (es. tramite IP API)
+      await FirebaseFirestore.instance.collection('eventiAscolto').add({
+        'cid': cid,
+        'uid': user.uid,
+        'paese': paese,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      // Incrementa ascoltiTotali della canzone
+      final songRef = FirebaseFirestore.instance.collection('canzoni').doc(cid);
+      await songRef.update({
+        'ascoltiTotali': FieldValue.increment(1),
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('Errore nel registrare stream o incrementare ascoltiTotali: $e');
+      }
+    }
   }
 
   // Pulizia

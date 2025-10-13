@@ -45,7 +45,7 @@ class HomeContent extends StatelessWidget {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text("Nessuna canzone nella playlist", style: TextStyle(color: Colors.white)));
+                  return const Center(child: Text("Nessuna canzone ascoltata di recente", style: TextStyle(color: Colors.white)));
                 }
 
               final canzoni = snapshot.data!.docs.map((doc) {
@@ -85,6 +85,7 @@ class HomeContent extends StatelessWidget {
                                   builder: (context) => ArtistScreen(
                                     artistId: artistIds[i],
                                     nomeArtista: nome,
+                                    type: false,
                                   ),
                                 ),
                               );

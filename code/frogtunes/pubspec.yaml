@@ -51,6 +51,13 @@ dependencies:
   # per riprodurre musica
   just_audio: ^0.10.5
   audio_session: ^0.2.2
+  file_picker: ^10.3.3
+
+  # per generare id univoci
+  uuid: ^3.0.7
+
+  # per poter modificare il menù a tendina
+  dropdown_button2: ^2.3.8
 
 dev_dependencies:
   flutter_test:

@@ -155,3 +155,24 @@ exports.syncAllSongsToAlgolia = onRequest(async (req, res) => {
     res.status(500).send("Errore nella sincronizzazione: " + error.message);
   }
 });
+
+exports.onNewStream = onDocumentCreated("eventiAscolto/{eventId}", async (event) => {
+  const data = event.data.data();
+  if (!data || !data.songId || !data.paese) {
+    console.error("Dati evento ascolto mancanti o incompleti:", data);
+    return;
+  }
+
+  const songRef = db.collection("canzoni").doc(data.songId);
+
+  try {
+    await songRef.update({
+      ascoltiTotali: admin.firestore.FieldValue.increment(1),
+      [`statPaese.${data.paese}`]: admin.firestore.FieldValue.increment(1),
+    });
+
+    console.log(`Aggiornati ascolti per canzone ${data.songId} da paese ${data.paese}`);
+  } catch (error) {
+    console.error("Errore durante l'aggiornamento degli ascolti:", error);
+  }
+});
