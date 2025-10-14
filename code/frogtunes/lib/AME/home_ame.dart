@@ -69,7 +69,7 @@ class HomeAMEViewState extends State<HomeAMEView> {
           children:[
             const SizedBox(width: 10),
             Expanded(child:
-              Text('Ciao ${userData?['username'] ?? user?.displayName ?? 'Artista'}',
+              Text('Ciao ${userData?['username'] ?? user?.displayName}',
                   style: const TextStyle(color: Colors.white)
                   ),
             ),
