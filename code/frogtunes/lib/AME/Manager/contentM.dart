@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:frogtunes/AME/Artista/artist_screen.dart';
+import 'package:frogtunes/AME/aggiungi_itv.dart';
 import 'package:flutter/material.dart';
 
 class HomeMContent extends StatefulWidget {
@@ -65,33 +65,6 @@ class _HomeMContentState extends State<HomeMContent> {
     return allSongs.take(10).toList();
   }
 
-  // Recupera gli artisti gestiti dall'utente manager
-  Future<List<Map<String, dynamic>>> _fetchManagedArtists() async {
-    final userId = FirebaseAuth.instance.currentUser!.uid;
-
-    final subcollection = await FirebaseFirestore.instance
-      .collection('manager')
-      .doc(userId)
-      .collection('managedArtists')
-      .orderBy('addedAt', descending: true)
-      .get();
-
-    final artists = <Map<String, dynamic>>[];
-    for (var doc in subcollection.docs) {
-      final artistId = doc.data()['uid'];
-      final artistDoc = await FirebaseFirestore.instance.collection('artisti').doc(artistId).get();
-      if (artistDoc.exists) {
-        final artistData = artistDoc.data() ?? {};
-        artists.add({
-          'nome': artistData['nome'] ?? 'Artista sconosciuto',
-          'addedAt': doc.data()['addedAt'],
-          'uid': artistId,
-        });
-      }
-    }
-    return artists;
-  }
-
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -100,59 +73,6 @@ class _HomeMContentState extends State<HomeMContent> {
           padding: const EdgeInsets.all(8.0),
           child: Column(
             children: [
-              Container(
-                height: 50,
-                decoration: BoxDecoration(
-                  color: Colors.green[700],
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Center(
-                    child: Text('I tuoi artisti',
-                        style: TextStyle(fontSize: 26, color: Colors.white)),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              FutureBuilder<List<Map<String, dynamic>>>(
-                future: _fetchManagedArtists(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('Nessun artista gestito', style: TextStyle(color: Colors.white)));
-                  }
-                  final artists = snapshot.data!;
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: artists.length,
-                    itemBuilder: (context, index) {
-                      final artist = artists[index];
-                      return ListTile(
-                        leading: const Icon(Icons.person_2_sharp, color: Colors.white),
-                        title: Text(artist['nome'], style: const TextStyle(color: Colors.white)),
-                        onTap: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ArtistScreen(
-                                artistId: artist['uid'],
-                                nomeArtista: artist['nome'],
-                                control: true,
-                              ),
-                            ),
-                          );
-                          setState(() {}); // Refresh dopo ritorno
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
-              const SizedBox(height: 50),
               Container(
                 height: 50,
                 decoration: BoxDecoration(
@@ -187,6 +107,40 @@ class _HomeMContentState extends State<HomeMContent> {
                         builder: (context, artistSnapshot) {
                           final artistNames = artistSnapshot.data ?? [];
                           return ListTile(
+                            onLongPress: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Modifica release'),
+                        content: const Text('Vuoi apportare delle modifiche alla release?'),
+                        actions: [
+                          TextButton(
+                            child: const Text('No'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          TextButton(
+                            child: const Text('Sì'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ModificaCanzonePage(
+                                    canzone: canzone,
+                                    canzoneId: canzone['cid']?.toString() ?? '',
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
                             leading: const Icon(Icons.music_note, color: Colors.white),
                             title: Text(canzone['titolo'] ?? '', style: const TextStyle(color: Colors.white)),
                             subtitle: Text(
@@ -203,7 +157,6 @@ class _HomeMContentState extends State<HomeMContent> {
                 },
               ),
               const SizedBox(height: 10),
-  
             ],
           ),
         ),

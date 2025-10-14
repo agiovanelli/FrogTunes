@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:frogtunes/AME/add_release.dart';
+import 'package:frogtunes/AME/Artista/artist_screen.dart';
 
 class ProfileMView extends StatefulWidget {
   const ProfileMView({super.key});
@@ -47,6 +47,33 @@ class ProfileMViewState extends State<ProfileMView> {
     }
   }
 }
+
+// Recupera gli artisti gestiti dall'utente manager
+  Future<List<Map<String, dynamic>>> _fetchManagedArtists() async {
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+
+    final subcollection = await FirebaseFirestore.instance
+      .collection('manager')
+      .doc(userId)
+      .collection('managedArtists')
+      .orderBy('addedAt', descending: true)
+      .get();
+
+    final artists = <Map<String, dynamic>>[];
+    for (var doc in subcollection.docs) {
+      final artistId = doc.data()['uid'];
+      final artistDoc = await FirebaseFirestore.instance.collection('artisti').doc(artistId).get();
+      if (artistDoc.exists) {
+        final artistData = artistDoc.data() ?? {};
+        artists.add({
+          'nome': artistData['nome'] ?? 'Artista sconosciuto',
+          'addedAt': doc.data()['addedAt'],
+          'uid': artistId,
+        });
+      }
+    }
+    return artists;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,101 +130,58 @@ class ProfileMViewState extends State<ProfileMView> {
               ],
             ),
             const SizedBox(height: 50),
-            // Bottone per aggiungere un nuovo brano
-            Center(
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  final result = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      backgroundColor: Colors.green[900],
-                      title: const Text('Tipo di release', style: TextStyle(color: Colors.white)),
-                      content: const Text('Questa è una release singola o fa parte di un album?', style: TextStyle(color: Colors.white)),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Singola', style: TextStyle(color: Colors.white)),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Album', style: TextStyle(color: Colors.white)),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (result != null) {
-                    if(context.mounted){
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AddReleasePage(
-                            artistIds: userId,
-                            isSingle: result, // true = singola, false = album
-                          ),
-                        ),
-                      );
-                    }
-                  }
-                },
-                icon: const Icon(Icons.add),
-                label: const Text('Aggiungi un nuovo brano'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[700],
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                  textStyle: const TextStyle(fontSize: 18),
+            Container(
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.green[700],
+                  borderRadius: BorderRadius.circular(15.0),
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Center(
+                    child: Text('I tuoi artisti',
+                        style: TextStyle(fontSize: 26, color: Colors.white)),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 50),
-            // Bottone per aggiungere un nuovo brano
-            Center(
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  final result = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      backgroundColor: Colors.green[900],
-                      title: const Text('Tipo di release', style: TextStyle(color: Colors.white)),
-                      content: const Text('Questa è una release singola o fa parte di un album?', style: TextStyle(color: Colors.white)),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Singola', style: TextStyle(color: Colors.white)),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Album', style: TextStyle(color: Colors.white)),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (result != null) {
-                    if(context.mounted){
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AddReleasePage(
-                            artistIds: userId,
-                            isSingle: result, // true = singola, false = album
-                          ),
-                        ),
-                      );
-                    }
+              const SizedBox(height: 20),
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: _fetchManagedArtists(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
                   }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text('Nessun artista gestito', style: TextStyle(color: Colors.white)));
+                  }
+                  final artists = snapshot.data!;
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: artists.length,
+                    itemBuilder: (context, index) {
+                      final artist = artists[index];
+                      return ListTile(
+                        leading: const Icon(Icons.person_2_sharp, color: Colors.white),
+                        title: Text(artist['nome'], style: const TextStyle(color: Colors.white)),
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ArtistScreen(
+                                artistId: artist['uid'],
+                                nomeArtista: artist['nome'],
+                                control: true,
+                              ),
+                            ),
+                          );
+                          setState(() {}); // Refresh dopo ritorno
+                        },
+                      );
+                    },
+                  );
                 },
-                icon: const Icon(Icons.add),
-                label: const Text('Aggiungi testo ad un brano'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[700],
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                  textStyle: const TextStyle(fontSize: 18),
-                ),
               ),
-            ),
           ],
         ),
       ),
