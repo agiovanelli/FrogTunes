@@ -9,18 +9,21 @@ class ArtistScreen extends StatefulWidget {
   final String artistId;
   final String nomeArtista;
   final bool type; // true se è il profilo dell'artista loggato, false altrimenti
+  final bool control; // true se l'utente è un manager, false altrimenti
 
   const ArtistScreen({
     super.key,
     required this.artistId,
     required this.nomeArtista,
     this.type = false,
+    this.control = false,
   });
 
   @override
   State<ArtistScreen> createState() => _ArtistScreenState();
 }
 
+// Schermata del profilo artista
 class _ArtistScreenState extends State<ArtistScreen> {
   Future<Map<String, dynamic>?> fetchArtistInfo(String artistId) async {
     final doc = await FirebaseFirestore.instance.collection('artisti').doc(artistId).get();
@@ -37,8 +40,12 @@ class _ArtistScreenState extends State<ArtistScreen> {
   void initState() {
     super.initState();
     _checkFollowing();
+    if (widget.control) {
+      _checkManagedArtists();
+    }
   }
 
+  // Controlla se l'utente loggato segue l'artista
   Future<void> _checkFollowing() async {
     final uid = FirebaseAuth.instance.currentUser!.uid;
     final doc = await FirebaseFirestore.instance
@@ -50,6 +57,7 @@ class _ArtistScreenState extends State<ArtistScreen> {
     setState(() => isFollowing = doc.exists);
   }
 
+  // Aggiunge o rimuove l'artista dalla lista degli artisti seguiti
   Future<void> _toggleFollow() async {
     final uid = FirebaseAuth.instance.currentUser!.uid;
     final artistRef = FirebaseFirestore.instance
@@ -71,6 +79,41 @@ class _ArtistScreenState extends State<ArtistScreen> {
     setState(() => isFollowing = !isFollowing);
   }
 
+  // Controlla se il manager loggato gestisce l'artista
+  Future<void> _checkManagedArtists() async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final doc = await FirebaseFirestore.instance
+        .collection('manager')
+        .doc(uid)
+        .collection('managedArtists')
+        .doc(widget.artistId)
+        .get();
+    setState(() => isFollowing = doc.exists);
+  }
+
+  // Aggiunge o rimuove l'artista dalla lista degli artisti gestiti
+  Future<void> _toggleManage() async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final artistRef = FirebaseFirestore.instance
+        .collection('manager')
+        .doc(uid)
+        .collection('managedArtists')
+        .doc(widget.artistId);
+
+    if (isFollowing) {
+      await artistRef.delete();
+    } else {
+      await artistRef.set({
+        'uid': widget.artistId,
+        'nome': widget.nomeArtista,
+        'cover': await fetchArtistInfo(widget.artistId).then((data) => data?['cover'] ?? ''),
+        'addedAt': FieldValue.serverTimestamp(),
+      });
+    }
+    setState(() => isFollowing = !isFollowing);
+  }
+
+// Recupera i nomi degli artisti dato una lista di artistIds
 Future<List<String>> fetchArtistName(List<String> artistId) async {
   if (artistId.isEmpty) return [];
   final doc = await FirebaseFirestore.instance
@@ -135,6 +178,19 @@ Future<List<String>> fetchArtistName(List<String> artistId) async {
                     children: [
                       Center(
                         child: widget.type ? const SizedBox.shrink() 
+                        : widget.control ? ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          onPressed: _toggleManage,
+                          child: Text(
+                            isFollowing ? 'Gestione attiva' : 'Gestisci artista',
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        )
                         : ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
@@ -198,6 +254,7 @@ Future<List<String>> fetchArtistName(List<String> artistId) async {
           );
         },
       ),
+      if(!widget.control)
       const Align(
                 alignment: Alignment.bottomCenter,
                 child: MiniPlayer(),
@@ -209,7 +266,7 @@ Future<List<String>> fetchArtistName(List<String> artistId) async {
   }
 }
 
-/// Lista dei brani di un artista specifico
+// Lista dei brani dell'artista
 class ArtistSongs extends StatelessWidget {
   final String artistId;
   final bool type;
@@ -311,6 +368,7 @@ class ArtistSongs extends StatelessWidget {
       }
     }
 
+// Lista delle ultime canzoni dell'artista
 class ArtistLastSongs extends StatelessWidget {
   final String artistId;
   final bool type;
@@ -423,6 +481,7 @@ class ArtistLastSongs extends StatelessWidget {
   }
 }
 
+// Lista delle canzoni in cui l'artista è in featuring
 class ArtistFeaturing extends StatelessWidget {
   final String artistId;
   final bool type;

@@ -2,8 +2,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:frogtunes/AME/aggiungi_itv.dart';
 
 class HomeAContent extends StatelessWidget {
+  // Recupera i nomi degli artisti dato una lista di artistIds
   Future<List<String>> fetchArtistNames(List<dynamic> artistIds) async {
     if (artistIds.isEmpty) return [];
     final firestore = FirebaseFirestore.instance;
@@ -18,6 +20,7 @@ class HomeAContent extends StatelessWidget {
   }
   const HomeAContent({super.key});
 
+  // Recupera le ultime canzoni rilasciate dall'artista
   Future<List<Map<String, dynamic>>> _fetchReleaseData() async {
     final userId = FirebaseAuth.instance.currentUser!.uid;
     final query = await FirebaseFirestore.instance
@@ -187,6 +190,40 @@ class HomeAContent extends StatelessWidget {
                                   : 'Artista sconosciuto',
                               style: const TextStyle(color: Colors.grey),
                             ),
+                            onLongPress: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Modifica release'),
+                        content: const Text('Vuoi apportare delle modifiche alla release?'),
+                        actions: [
+                          TextButton(
+                            child: const Text('No'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          TextButton(
+                            child: const Text('Sì'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ModificaCanzonePage(
+                                    canzone: canzone,
+                                    canzoneId: canzone['cid']?.toString() ?? '',
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
                           );
                         },
                       );
