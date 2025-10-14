@@ -11,10 +11,10 @@ class ModificaCanzonePage extends StatefulWidget {
   final String canzoneId; // ID documento Firestore
 
   const ModificaCanzonePage({
-    Key? key,
+    super.key,
     required this.canzone,
     required this.canzoneId,
-  }) : super(key: key);
+  });
 
   @override
   State<ModificaCanzonePage> createState() => _ModificaCanzonePageState();
@@ -26,6 +26,8 @@ class _ModificaCanzonePageState extends State<ModificaCanzonePage> {
   ];
   String? generePrincipale;
   String? genereSecondario;
+
+  // Carica un file su Firebase Storage e restituisce l'URL
   Future<String?> _uploadFile(String filePath, String folder) async {
     final fileName = Uuid().v4();
     final ref = FirebaseStorage.instance.ref('$folder/$fileName');
@@ -37,6 +39,7 @@ class _ModificaCanzonePageState extends State<ModificaCanzonePage> {
     }
   }
 
+  // Carica audio su db
   void _pickAudio() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -44,46 +47,58 @@ class _ModificaCanzonePageState extends State<ModificaCanzonePage> {
     );
     if (result != null && result.files.single.path != null) {
       final filePath = result.files.single.path!;
-      // Se esiste già un audio, lo cancello da Firebase Storage
-      if (audioUrlController.text.isNotEmpty && audioUrlController.text.startsWith('https://')) {
+      // Elimina il file precedente se esiste
+      if (audioUrlController != null && audioUrlController!.isNotEmpty && audioUrlController!.startsWith('https://')) {
         try {
-          final ref = FirebaseStorage.instance.refFromURL(audioUrlController.text);
+          final ref = FirebaseStorage.instance.refFromURL(audioUrlController!);
           await ref.delete();
         } catch (e) {
-          // Ignora errori di delete
+          // Ignora errori di eliminazione
         }
       }
-
       final url = await _uploadFile(filePath, 'music');
+      await FirebaseFirestore.instance
+          .collection('canzoni')
+          .doc(widget.canzoneId)
+          .update({'audioUrl': url});
       setState(() {
-        audioUrlController.text = url ?? '';
+        audioUrlController = url;
       });
     }
   }
 
+  // Carica cover su db
   void _pickCover() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['jpg', 'png', 'jpeg'],
     );
+
     if (result != null && result.files.single.path != null) {
       final filePath = result.files.single.path!;
-      // Se esiste già una cover, la cancello da Firebase Storage
-      if (coverController.text.isNotEmpty && coverController.text.startsWith('https://')) {
+      // Elimina il file precedente se esiste
+      if (coverController != null && coverController!.isNotEmpty && coverController!.startsWith('https://')) {
         try {
-          final ref = FirebaseStorage.instance.refFromURL(coverController.text);
+          final ref = FirebaseStorage.instance.refFromURL(coverController!);
           await ref.delete();
         } catch (e) {
-          // Ignora errori di delete
+          // Ignora errori di eliminazione
         }
       }
+
       final url = await _uploadFile(filePath, 'covers');
+      await FirebaseFirestore.instance
+          .collection('canzoni')
+          .doc(widget.canzoneId)
+          .update({'cover': url});
+
       setState(() {
-        coverController.text = url ?? '';
+        coverController = url;
       });
     }
   }
 
+  // Carica video su db
   void _pickVideo() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -91,18 +106,35 @@ class _ModificaCanzonePageState extends State<ModificaCanzonePage> {
     );
     if (result != null && result.files.single.path != null) {
       final filePath = result.files.single.path!;
+
+      // Elimina il file precedente se esiste
+      if (videoUrl != null && videoUrl!.isNotEmpty && videoUrl!.startsWith('https://')) {
+        try {
+          final ref = FirebaseStorage.instance.refFromURL(videoUrl!);
+          await ref.delete();
+        } catch (e) {
+          // Ignora errori di eliminazione
+        }
+      }
+
       final url = await _uploadFile(filePath, 'videos');
-      setState(() {
-        videoUrl = url;
-      });
+      
+      await FirebaseFirestore.instance
+          .collection('canzoni')
+          .doc(widget.canzoneId)
+          .update({'videoUrl': url});
+
+        setState(() {
+          videoUrl = url;
+        });
     }
   }
 
   late TextEditingController titoloController;
   late TextEditingController artistaController;
   late TextEditingController testoController;
-  late TextEditingController coverController;
-  late TextEditingController audioUrlController;
+  String? coverController;
+  String? audioUrlController;
   late TextEditingController generiController;
   late TextEditingController labelController;
   late TextEditingController autoreController;
@@ -111,30 +143,45 @@ class _ModificaCanzonePageState extends State<ModificaCanzonePage> {
   String? videoUrl;
   bool loading = false;
 
+  // Recupero media fields da Firestore
+  Future<void> _fetchMediaFields() async {
+    final doc = await FirebaseFirestore.instance.collection('canzoni').doc(widget.canzoneId).get();
+    if (doc.exists) {
+      final data = doc.data() ?? {};
+      if (!mounted) return;
+      setState(() {
+        coverController = data['cover'] ?? '';
+        audioUrlController = data['audioUrl'] ?? '';
+        videoUrl = data['videoUrl'] ?? '';
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-  titoloController = TextEditingController(text: widget.canzone['titolo'] ?? '');
-  artistaController = TextEditingController(text: widget.canzone['artista'] ?? '');
-  testoController = TextEditingController(text: widget.canzone['testo'] ?? '');
-  coverController = TextEditingController(text: widget.canzone['cover'] ?? '');
-  audioUrlController = TextEditingController(text: widget.canzone['audioUrl'] ?? '');
-  labelController = TextEditingController(text: widget.canzone['label'] ?? '');
-  String defaultGenere1 = '';
-  String defaultGenere2 = '';
-  if (widget.canzone['generi'] is List && (widget.canzone['generi'] as List).isNotEmpty) {
-    defaultGenere1 = (widget.canzone['generi'] as List).isNotEmpty ? (widget.canzone['generi'] as List)[0] : '';
-    defaultGenere2 = (widget.canzone['generi'] as List).length > 1 ? (widget.canzone['generi'] as List)[1] : '';
-  } else if (widget.canzone['generi'] is String) {
-    defaultGenere1 = widget.canzone['generi'];
-  }
-  generePrincipale = defaultGenere1.isNotEmpty ? defaultGenere1 : generiDisponibili.first;
-  genereSecondario = defaultGenere2.isNotEmpty ? defaultGenere2 : null;
-  generiController = TextEditingController(text: generePrincipale ?? '');
-  autoreController = TextEditingController(text: (widget.canzone['crediti']?['Autore'] ?? []).join(', '));
-  compositoreController = TextEditingController(text: (widget.canzone['crediti']?['Compositore'] ?? []).join(', '));
-  producerController = TextEditingController(text: (widget.canzone['crediti']?['Producer'] ?? []).join(', '));
-  videoUrl = widget.canzone['videoUrl'];
+    titoloController = TextEditingController(text: widget.canzone['titolo'] ?? '');
+    artistaController = TextEditingController(text: widget.canzone['artista'] ?? '');
+    testoController = TextEditingController(text: widget.canzone['testo'] ?? '');
+    coverController =  widget.canzone['cover'] ?? '';
+    audioUrlController = widget.canzone['audioUrl'] ?? '';
+    labelController = TextEditingController(text: widget.canzone['label'] ?? '');
+    String defaultGenere1 = '';
+    String defaultGenere2 = '';
+    if (widget.canzone['generi'] is List && (widget.canzone['generi'] as List).isNotEmpty) {
+      defaultGenere1 = (widget.canzone['generi'] as List).isNotEmpty ? (widget.canzone['generi'] as List)[0] : '';
+      defaultGenere2 = (widget.canzone['generi'] as List).length > 1 ? (widget.canzone['generi'] as List)[1] : '';
+    } else if (widget.canzone['generi'] is String) {
+      defaultGenere1 = widget.canzone['generi'];
+    }
+    generePrincipale = defaultGenere1.isNotEmpty ? defaultGenere1 : generiDisponibili.first;
+    genereSecondario = defaultGenere2.isNotEmpty ? defaultGenere2 : null;
+    generiController = TextEditingController(text: generePrincipale ?? '');
+    autoreController = TextEditingController(text: (widget.canzone['crediti']?['Autore'] ?? []).join(', '));
+    compositoreController = TextEditingController(text: (widget.canzone['crediti']?['Compositore'] ?? []).join(', '));
+    producerController = TextEditingController(text: (widget.canzone['crediti']?['Producer'] ?? []).join(', '));
+    videoUrl = widget.canzone['videoUrl'];
+    _fetchMediaFields();
   }
 
   @override
@@ -142,8 +189,8 @@ class _ModificaCanzonePageState extends State<ModificaCanzonePage> {
   titoloController.dispose();
   artistaController.dispose();
   testoController.dispose();
-  coverController.dispose();
-  audioUrlController.dispose();
+  coverController;
+  audioUrlController;
   labelController.dispose();
   autoreController.dispose();
   compositoreController.dispose();
@@ -162,10 +209,10 @@ class _ModificaCanzonePageState extends State<ModificaCanzonePage> {
         'titolo': titoloController.text,
         'artista': artistaController.text,
         'testo': testoController.text,
-        'cover': coverController.text,
-        'audioUrl': audioUrlController.text,
+        'cover': coverController,
+        'audioUrl': audioUrlController,
         'label': labelController.text,
-  'generi': [generePrincipale ?? '', if (genereSecondario != null && genereSecondario!.isNotEmpty) genereSecondario!],
+        'generi': [generePrincipale ?? '', if (genereSecondario != null && genereSecondario!.isNotEmpty) genereSecondario!],
         'videoUrl': videoUrl,
         'crediti': {
           'Autore': autoreController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
@@ -177,8 +224,8 @@ class _ModificaCanzonePageState extends State<ModificaCanzonePage> {
         'titolo': titoloController.text,
         'artista': artistaController.text,
         'testo': testoController.text,
-        'cover': coverController.text,
-        'audioUrl': audioUrlController.text,
+        'cover': coverController,
+        'audioUrl': audioUrlController,
         'label': labelController.text,
         'generi': generiController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
         'videoUrl': videoUrl,
@@ -245,7 +292,7 @@ class _ModificaCanzonePageState extends State<ModificaCanzonePage> {
                 children: [
                   const Text('Copertina'),
                   const SizedBox(height: 8),
-                  coverController.text.isNotEmpty
+                  coverController.toString().isNotEmpty
                       ? Center(
                           child: Container(
                             width: 80,
@@ -256,7 +303,7 @@ class _ModificaCanzonePageState extends State<ModificaCanzonePage> {
                             ),
                             clipBehavior: Clip.hardEdge,
                             child: Image.network(
-                              coverController.text,
+                              coverController.toString(),
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return const Icon(Icons.music_note, size: 40, color: Colors.white);
@@ -275,7 +322,7 @@ class _ModificaCanzonePageState extends State<ModificaCanzonePage> {
             const SizedBox(height: 12),
             ListTile(
               title: const Text('Audio'),
-              subtitle: audioUrlController.text.isNotEmpty
+              subtitle: audioUrlController.toString().isNotEmpty
                   ? const Text('Cambia traccia audio')
                   : const Text('Nessun audio caricato'),
               trailing: IconButton(
@@ -422,7 +469,7 @@ class _ModificaCanzonePageState extends State<ModificaCanzonePage> {
             ListTile(
               title: const Text('Video della Canzone'),
               subtitle: videoUrl != null
-                  ? Text(videoUrl!)
+                  ? Text('Cambia video musicale')
                   : const Text('Nessun video aggiunto'),
               trailing: IconButton(
                 icon: const Icon(Icons.video_library),
