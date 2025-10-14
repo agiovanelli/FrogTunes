@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:frogtunes/algolia_service.dart';
 import 'package:algolia/algolia.dart';
 import 'package:frogtunes/AME/insight.dart';
+import 'package:frogtunes/AME/aggiungi_itv.dart';
 
 
 class AnalyticView extends StatefulWidget {
@@ -148,7 +149,40 @@ class AnalyticViewState extends State<AnalyticView> {
                       ),
                     );
                   },
-                  
+                  onLongPress: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Modifica release'),
+                        content: const Text('Vuoi apportare delle modifiche alla release?'),
+                        actions: [
+                          TextButton(
+                            child: const Text('No'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          TextButton(
+                            child: const Text('Sì'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ModificaCanzonePage(
+                                    canzone: item,
+                                    canzoneId: songId,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
                   leading: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.network(

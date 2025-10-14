@@ -100,8 +100,6 @@ class _HomeMContentState extends State<HomeMContent> {
                     itemCount: releases.length,
                     itemBuilder: (context, index) {
                       final canzone = releases[index];
-                      // final titolo = canzone['titolo'] ?? '';
-                      // final artisti = canzone['artistId'] is List ? canzone['artistId'] : [canzone['artistId']];
                       return FutureBuilder<List<String>>(
                         future: _fetchArtistNames(canzone['artistId']),
                         builder: (context, artistSnapshot) {
