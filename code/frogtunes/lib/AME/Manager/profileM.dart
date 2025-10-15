@@ -48,7 +48,7 @@ class ProfileMViewState extends State<ProfileMView> {
   }
 }
 
-// Recupera gli artisti gestiti dall'utente manager
+  // Recupera gli artisti gestiti dall'utente manager
   Future<List<Map<String, dynamic>>> _fetchManagedArtists() async {
     final userId = FirebaseAuth.instance.currentUser!.uid;
 
