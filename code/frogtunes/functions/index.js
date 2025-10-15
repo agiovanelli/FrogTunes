@@ -43,6 +43,34 @@ exports.searchCanzoni = onCall(async (request) => {
   }
 });
 
+exports.searchArtisti = onCall(async (request) => {
+  const query = request.data.query || "";
+
+  try {
+    const results = await client.searchSingleIndex({
+      indexName: "artisti",
+      searchParams: {
+        query,
+        hitsPerPage: 10,
+        attributesToHighlight: ['nome'],
+        typoTolerance: true,
+        highlightPreTag: '<mark>',
+        highlightPostTag: '</mark>',
+      },
+    });
+
+    return results.hits.map((hit) => ({
+      nome: hit.nome,
+      cover: hit.cover,
+      objectID: hit.objectID,
+      highlight: hit._highlightResult,
+    }));
+  } catch (error) {
+    console.error("Errore durante la ricerca Algolia:", error);
+    throw new Error("Errore nella ricerca.");
+  }
+});
+
 // Funzione per indicizzare un oggetto
 async function saveToAlgolia(data, objectID) {
   try{
@@ -76,10 +104,37 @@ async function saveToAlgolia(data, objectID) {
   }
 }
 
+// Funzione per indicizzare un artista su Algolia
+async function saveArtistToAlgolia(data, objectID) {
+  try {
+    const record = {
+      objectID,
+      uid: objectID,
+      nome: data.nome || '',
+      cover: data.cover || '',
+    };
+    await client.saveObjects({
+      indexName: 'artisti',
+      objects: [record],
+    });
+    console.log(`Artista ${objectID} indicizzato con successo su Algolia.`);
+  } catch (error) {
+    console.error('Errore in saveArtistToAlgolia:', error);
+  }
+}
+
 // Funzione per rimuovere da Algolia
 async function deleteFromAlgolia(objectID) {
   await client.deleteObjects({
     indexName: ALGOLIA_INDEX_NAME,
+    objectIDs: [objectID],
+  });
+}
+
+// Funzione per rimuovere da Algolia
+async function deleteArtistFromAlgolia(objectID) {
+  await client.deleteObjects({
+    indexName: 'artisti',
     objectIDs: [objectID],
   });
 }
@@ -105,6 +160,29 @@ exports.onSongDeleted = onDocumentDeleted("canzoni/{cid}", async (event) => {
   const objectID = event.params.cid;
 
   await deleteFromAlgolia(objectID);
+});
+
+// CREAZIONE documento Firestore → indicizza su Algolia
+exports.onArtistCreated = onDocumentCreated("artisti/{uid}", async (event) => {
+  const data = event.data.data();
+  const objectID = event.params.uid;
+
+  await saveArtistToAlgolia(data, objectID);
+});
+
+// AGGIORNAMENTO documento Firestore → aggiorna su Algolia
+exports.onArtistUpdated = onDocumentUpdated("artisti/{uid}", async (event) => {
+  const newData = event.data.after.data();
+  const objectID = event.params.uid;
+
+  await saveArtistToAlgolia(newData, objectID);
+});
+
+// ELIMINAZIONE documento Firestore → rimuove da Algolia
+exports.onArtistDeleted = onDocumentDeleted("artisti/{uid}", async (event) => {
+  const objectID = event.params.uid;
+
+  await deleteArtistFromAlgolia(objectID);
 });
 
 exports.syncAllSongsToAlgolia = onRequest(async (req, res) => {
@@ -153,6 +231,36 @@ exports.syncAllSongsToAlgolia = onRequest(async (req, res) => {
   } catch (error) {
     console.error("Errore nella sincronizzazione:", error.message, error);
     res.status(500).send("Errore nella sincronizzazione: " + error.message);
+  }
+});
+
+exports.syncAllArtistsToAlgolia = onRequest(async (req, res) => {
+  try {
+    const snapshot = await db.collection("artisti").get();
+
+    if (snapshot.empty) {
+      console.warn("La collezione 'artisti' è vuota");
+      return res.status(200).send("Nessun documento da sincronizzare.");
+    }
+
+    const objects = snapshot.docs.map(doc => ({
+      objectID: doc.id,
+      uid: doc.id,
+      nome: doc.data().nome || '',
+      cover: doc.data().cover || '',
+    }));
+
+    console.log("Sto sincronizzando i seguenti artisti su Algolia:", objects);
+
+    await client.saveObjects({
+      indexName: "artisti",
+      objects,
+    });
+
+    res.status(200).send("Sincronizzazione artisti completata con successo.");
+  } catch (error) {
+    console.error("Errore nella sincronizzazione artisti:", error.message, error);
+    res.status(500).send("Errore nella sincronizzazione artisti: " + error.message);
   }
 });
 
