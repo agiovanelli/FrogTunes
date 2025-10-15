@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:frogtunes/algolia_service.dart';
 import 'package:algolia/algolia.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:frogtunes/AME/statistics.dart';
 
 class AnalyticEView extends StatefulWidget {
   const AnalyticEView({super.key});
@@ -84,23 +85,40 @@ class AnalyticEViewState extends State<AnalyticEView> {
     setState(() { _analyticResults = results; });
   }
 
-  // Funzione per cercare le canzoni su Algolia filtrando per artisti gestiti
+  // Funzione per cercare le canzoni su Algolia filtrando per artisti gestiti dai manager che gestisci
   Future<void> _searchSongs(String query) async {
     if (query.isEmpty) {
       setState(() { _analyticResults = []; });
       return;
     }
     try {
-      final managerId = FirebaseAuth.instance.currentUser?.uid;
-      if (managerId == null) return;
-      final subcollection = await FirebaseFirestore.instance
-        .collection('manager')
-        .doc(managerId)
-        .collection('managedArtists')
+      final etichettaId = FirebaseAuth.instance.currentUser?.uid;
+      if (etichettaId == null) return;
+      // Prendi manager gestiti da questa etichetta
+      final managerSnap = await FirebaseFirestore.instance
+        .collection('etichette')
+        .doc(etichettaId)
+        .collection('managers')
         .get();
-
-      final artistIds = subcollection.docs.map((doc) => doc.data()['uid']).toList();
-      if (artistIds.isEmpty) {
+      final managerIds = managerSnap.docs.map((doc) => doc.data()['uid']).toList();
+      if (managerIds.isEmpty) {
+        setState(() { _analyticResults = []; });
+        return;
+      }
+      // Prendi tutti gli artisti gestiti da questi manager
+      final artistIdSet = <String>{};
+      for (final managerId in managerIds) {
+        final managedSnap = await FirebaseFirestore.instance
+          .collection('manager')
+          .doc(managerId)
+          .collection('managedArtists')
+          .get();
+        for (final doc in managedSnap.docs) {
+          final artistId = doc.data()['uid'];
+          if (artistId != null) artistIdSet.add(artistId);
+        }
+      }
+      if (artistIdSet.isEmpty) {
         setState(() { _analyticResults = []; });
         return;
       }
@@ -108,7 +126,6 @@ class AnalyticEViewState extends State<AnalyticEView> {
           .index('canzoni')
           .query(query)
           .setHitsPerPage(20);
-
       final AlgoliaQuerySnapshot snapshot = await algoliaQuery.getObjects();
       List<Map<String, dynamic>> results = snapshot.hits.map((hit) {
         final data = hit.data;
@@ -123,9 +140,8 @@ class AnalyticEViewState extends State<AnalyticEView> {
         };
       }).where((song) {
         final songArtistIds = song['artistId'] as List<String>;
-        return songArtistIds.any((id) => artistIds.contains(id));
+        return songArtistIds.any((id) => artistIdSet.contains(id));
       }).toList();
-
       for (var item in results) {
         final List<String> artistId = List<String>.from(item['artistId'] ?? []);
         if (artistId.isEmpty) {
@@ -179,7 +195,7 @@ class AnalyticEViewState extends State<AnalyticEView> {
     final results = snapshot.docs.where((doc) => managerIds.contains(doc.id)).map((doc) {
       final data = doc.data();
       return {
-        'artistId': doc.id,
+        'managerId': doc.id,
         'nome': data['nome'] ?? '',
         'cover': data['cover'] ?? 'https://via.placeholder.com/150',
       };
@@ -286,16 +302,17 @@ class AnalyticEViewState extends State<AnalyticEView> {
                   nome,
                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                 ),
-              // onTap: () {
-              //   Navigator.push(
-              //       context,
-              //       MaterialPageRoute(
-              //         builder: (context) => Statistics(
-              //           //
-              //         ),
-              //       ),
-              //     );
-              // },
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => StatisticsPage(
+                        artistId: item['artistId'] ?? '',
+                        artistName: nome,
+                      ),
+                    ),
+                  );
+              },
               ),
             );
           } else if(_searchType == 'Canzoni') {
@@ -310,16 +327,16 @@ class AnalyticEViewState extends State<AnalyticEView> {
               color: Colors.green[900],
               child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                // onTap: () async {
-                //   Navigator.push(
-                //     context,
-                //     MaterialPageRoute(
-                //       builder: (context) => Statistics(
-                //         //canzoni
-                //       ),
-                //     ),
-                //   );
-                // },
+                onTap: () async {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => StatisticsPage(
+                        songId: songId,
+                      ),
+                    ),
+                  );
+                },
                 leading: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
@@ -368,16 +385,16 @@ class AnalyticEViewState extends State<AnalyticEView> {
                   nome,
                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                 ),
-              // onTap: () {
-              //   Navigator.push(
-              //       context,
-              //       MaterialPageRoute(
-              //         builder: (context) => Statistics(
-              //           //statisticsManager
-              //         ),
-              //       ),
-              //     );
-              // },
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => StatisticsPage(
+                        managerId: item['managerId'] ?? '',
+                      ),
+                    ),
+                  );
+              },
               ),
             );
           }
