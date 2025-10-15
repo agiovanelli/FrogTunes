@@ -283,4 +283,17 @@ class AudioService {
       'timestamp': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
+
+  // Aggiorna la cover in recentlyPlayed per tutti gli utenti
+  Future<void> updateRecentlyPlayedCover(String songId, String newCover) async {
+    final utentiRef = FirebaseFirestore.instance.collection('utenti');
+    final utentiSnapshot = await utentiRef.get();
+    for (final utente in utentiSnapshot.docs) {
+      final recentlyPlayedRef = utentiRef.doc(utente.id).collection('recentlyPlayed').doc(songId);
+      final doc = await recentlyPlayedRef.get();
+      if (doc.exists) {
+        await recentlyPlayedRef.update({'cover': newCover});
+      }
+    }
+  }
 }
