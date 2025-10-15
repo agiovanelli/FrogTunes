@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:frogtunes/AME/statistics.dart';
 
 class ProfileEView extends StatefulWidget {
   const ProfileEView({super.key});
@@ -101,6 +102,9 @@ class ProfileEViewState extends State<ProfileEView> {
                 ),
               ],
             ),
+            const SizedBox(height: 40),
+            // Widget Guadagni
+            WidgetGuadagni(etichettaId: user!.uid),
           ],
         ),
       ),
@@ -227,4 +231,110 @@ class ProfileEViewState extends State<ProfileEView> {
     },
   );
 }
+}
+
+class WidgetGuadagni extends StatefulWidget {
+  final String etichettaId;
+  const WidgetGuadagni({super.key, required this.etichettaId});
+
+  @override
+  State<WidgetGuadagni> createState() => _WidgetGuadagniState();
+}
+
+class _WidgetGuadagniState extends State<WidgetGuadagni> {
+  double totalEarnings = 0;
+  bool loading = false;
+  bool requested = false;
+
+  Future<void> _calculateTotalEarnings() async {
+    setState(() { loading = true; });
+    final managerSnap = await FirebaseFirestore.instance
+      .collection('etichette')
+      .doc(widget.etichettaId)
+      .collection('managers')
+      .get();
+
+    final managerIds = managerSnap.docs.map((doc) => doc.data()['uid'] as String).where((id) => id.isNotEmpty).toList();
+    double sum = 0;
+    for (final managerId in managerIds) {
+      final managedSnap = await FirebaseFirestore.instance
+        .collection('manager')
+        .doc(managerId)
+        .collection('managedArtists')
+        .get();
+
+      final artistIds = managedSnap.docs.map((doc) => doc.data()['uid'] as String).where((id) => id.isNotEmpty).toList();
+      for (final artistId in artistIds) {
+        final songsSnap = await FirebaseFirestore.instance
+          .collection('canzoni')
+          .where('artistId', arrayContains: artistId)
+          .get();
+
+        for (final songDoc in songsSnap.docs) {
+          try {
+            final song = await Song(songId: songDoc.id).fetchSongDetails();
+            sum += song.earnings;
+          } catch (_) {}
+        }
+      }
+    }
+    setState(() {
+      totalEarnings = sum;
+      loading = false;
+    });
+  }
+
+  // Logica per inviare la richiesta a FrogTunes
+  Future<void> _requestPayout() async {
+    setState(() { requested = true; });
+    
+    await FirebaseFirestore.instance.collection('payoutRequests').add({
+      'etichettaId': widget.etichettaId,
+      'amount': totalEarnings,
+      'timestamp': Timestamp.now(),
+    });
+    // Conferma
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Richiesta inviata a FrogTunes!')),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _calculateTotalEarnings();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          ElevatedButton(
+            onPressed: loading || requested ? null : _requestPayout,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green[700],
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Incassa', style: TextStyle(fontSize: 18, color: Colors.white)),
+          ),
+          const SizedBox(height: 16),
+          loading
+            ? const CircularProgressIndicator()
+            : Text('Totale guadagni: €${totalEarnings.toStringAsFixed(2)}', style: const TextStyle(color: Colors.greenAccent, fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+          if (requested)
+            const Padding(
+              padding: EdgeInsets.only(top: 8.0),
+              child: Text('Richiesta inviata! Riceverai il pagamento da FrogTunes.', 
+                style: TextStyle(color: Colors.white),
+                textAlign: TextAlign.center
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }

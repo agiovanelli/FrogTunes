@@ -180,7 +180,11 @@ class _StatisticsPageState extends State<StatisticsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Statistiche')),
+      backgroundColor: const Color.fromARGB(255, 4, 35, 5),
+      appBar: AppBar(
+        title: Text('Statistiche'),
+        backgroundColor: const Color.fromARGB(255, 24, 96, 26),
+      ),
       body: Column(
         children: [
           Expanded(
@@ -233,10 +237,7 @@ class SongListView extends StatelessWidget {
         return ListView(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              child: Card(
-                color: Colors.green[900],
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
                 child: Padding(
                   padding: const EdgeInsets.all(32.0),
                   child: Column(
@@ -256,7 +257,7 @@ class SongListView extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
+            //),
           ],
         );
       },
@@ -288,7 +289,7 @@ class ArtistListView extends StatelessWidget {
           return const Center(child: Text('Nessuna canzone trovata per questo artista'));
         }
         final songs = snapshot.data!;
-        final totalEarnings = songs.fold<double>(0, (sum, song) => sum + song.earnings);
+        final totalEarnings = songs.fold<double>(0, (somma, song) => somma + song.earnings);
         final cover = songs.first.cover;
         return ListView(
           children: [
@@ -321,9 +322,10 @@ class ArtistListView extends StatelessWidget {
                 color: Colors.green[800],
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                   leading: Image.network(song.cover, width: 50, height: 50),
                   title: Text(song.title, style: const TextStyle(color: Colors.white)),
-                  subtitle: Text('Guadagno: €${song.earnings.toStringAsFixed(2)}', style: const TextStyle(color: Colors.greenAccent)),
+                  trailing: Text('€${song.earnings.toStringAsFixed(2)}', style: const TextStyle(color: Colors.greenAccent)),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -392,13 +394,27 @@ class ManagerListView extends StatelessWidget {
               ),
             ),
             ...artists.map((artist) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 5),
               child: Card(
                 color: Colors.green[800],
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                 child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                   leading: Image.network(artist['cover'], width: 50, height: 50),
                   title: Text(artist['nome'], style: const TextStyle(color: Colors.white)),
+                  trailing: FutureBuilder<List<Song>>(
+                    future: Artist(artistId: artist['artistId'], artistName: artist['nome']).fetchArtistSongs(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Text('Calcolo guadagno...', style: TextStyle(color: Colors.white70));
+                      }
+                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Text('€0.00', style: TextStyle(color: Colors.greenAccent));
+                      }
+                      final totalEarnings = snapshot.data!.fold<double>(0, (somma, song) => somma + song.earnings);
+                      return Text('€${totalEarnings.toStringAsFixed(2)}', style: const TextStyle(color: Colors.greenAccent));
+                    },
+                  ),
                   onTap: () {
                     Navigator.push(
                       context,
