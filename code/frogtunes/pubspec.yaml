@@ -53,6 +53,9 @@ dependencies:
   audio_session: ^0.2.2
   file_picker: ^10.3.3
 
+  # riproduzione video
+  video_player: ^2.5.0
+
   # per generare id univoci
   uuid: ^3.0.7
 
