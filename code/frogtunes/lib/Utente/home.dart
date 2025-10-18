@@ -63,6 +63,7 @@ class HomeViewState extends State<HomeView> {
         userData = {
           'username': hasName,
           'profileImageUrl': hasPhoto,
+          'tipologia': data['tipologiaAccount'] ?? 0,
         };
 
         if (hasName == 'Utente' || hasPhoto == 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f') {
