@@ -272,6 +272,8 @@ class AudioService {
         .collection('recentlyPlayed')
         .doc(songId); // Mettendo songId come ID univoco del documento evito le ripetizioni
 
+    if(docRef.id != userId) return;
+
     // Aggiorna il doc se esiste già, altrimenti crea se non esiste
     await docRef.set({
       'cid': songId,
@@ -282,5 +284,18 @@ class AudioService {
       'cover': cover,
       'timestamp': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+  }
+
+  // Aggiorna la cover in recentlyPlayed per tutti gli utenti
+  Future<void> updateRecentlyPlayedCover(String songId, String newCover) async {
+    final utentiRef = FirebaseFirestore.instance.collection('utenti');
+    final utentiSnapshot = await utentiRef.get();
+    for (final utente in utentiSnapshot.docs) {
+      final recentlyPlayedRef = utentiRef.doc(utente.id).collection('recentlyPlayed').doc(songId);
+      final doc = await recentlyPlayedRef.get();
+      if (doc.exists) {
+        await recentlyPlayedRef.update({'cover': newCover});
+      }
+    }
   }
 }

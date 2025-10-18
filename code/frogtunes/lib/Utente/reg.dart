@@ -13,9 +13,21 @@ class RegistrazioneView extends StatefulWidget {
 class _RegistrazioneViewState extends State<RegistrazioneView> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  int? tipologiaAccount;
 
   // Funzione per registrare un nuovo utente
   Future<void> registraUtente() async {
+    if (tipologiaAccount == null) {
+      showDialog(
+        context: context,
+        builder: (context) => const AlertDialog(
+          title: Text('Seleziona un tipo di abbonamento'),
+          content: Text('Devi selezionare una tipologia di abbonamento per continuare.'),
+        ),
+      );
+      return;
+    }
+
     try {
       UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -28,6 +40,7 @@ class _RegistrazioneViewState extends State<RegistrazioneView> {
         await FirebaseFirestore.instance.collection('utenti').doc(user.uid).set({
           'email': user.email,
           'uid': user.uid,
+          'tipologiaAccount': tipologiaAccount,
           'dataRegistrazione': FieldValue.serverTimestamp(),
         });
       }
@@ -120,7 +133,46 @@ class _RegistrazioneViewState extends State<RegistrazioneView> {
                   ),
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
+                  // Selezione ruolo
+                  const Text(
+                    'Seleziona tipologia account:',
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                  RadioListTile<int>(
+                    title: const Text('Gratis', style: TextStyle(color: Colors.white)),
+                    value: 0,
+                    groupValue: tipologiaAccount,
+                    activeColor: Colors.green,
+                    onChanged: (value) {
+                      setState(() {
+                        tipologiaAccount = value;
+                      });
+                    },
+                  ),
+                  RadioListTile<int>(
+                    title: const Text('Base', style: TextStyle(color: Colors.white)),
+                    value: 1,
+                    groupValue: tipologiaAccount,
+                    activeColor: Colors.green,
+                    onChanged: (value) {
+                      setState(() {
+                        tipologiaAccount = value;
+                      });
+                    },
+                  ),
+                  RadioListTile<int>(
+                    title: const Text('Premium', style: TextStyle(color: Colors.white)),
+                    value: 2,
+                    groupValue: tipologiaAccount,
+                    activeColor: Colors.green,
+                    onChanged: (value) {
+                      setState(() {
+                        tipologiaAccount = value;
+                      });
+                    },
+                  ),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: registraUtente,
                 child: const Text(

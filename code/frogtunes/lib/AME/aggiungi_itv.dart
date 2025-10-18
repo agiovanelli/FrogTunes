@@ -1,5 +1,6 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:frogtunes/audio_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
@@ -92,6 +93,15 @@ class _ModificaCanzonePageState extends State<ModificaCanzonePage> {
           .doc(widget.canzoneId)
           .update({'cover': url});
 
+      // Aggiorna la cover anche in recentlyPlayed di tutti gli utenti
+      try {
+        final audioService = AudioService();
+        await audioService.updateRecentlyPlayedCover(widget.canzoneId, url.toString());
+      } catch (e) {
+        debugPrint('Errore aggiornamento cover in recentlyPlayed: $e');
+      }
+
+      if (!mounted) return;
       setState(() {
         coverController = url;
       });

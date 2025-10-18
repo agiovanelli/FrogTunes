@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 import 'package:just_audio/just_audio.dart';
 import 'package:frogtunes/recensioni.dart';
+import 'package:video_player/video_player.dart';
+import 'package:flutter/services.dart';
 
 import 'package:frogtunes/AME/Artista/artist_screen.dart';
 import 'audio_service.dart';
@@ -354,6 +356,121 @@ class _PlayerScreenState extends State<PlayerScreen> {
   String _format(Duration d) =>
       "${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}";
 
+  // Mostra il testo della canzone in un bottom sheet trascinabile
+  Future<void> _mostraTesto(BuildContext context) async {
+    final currentSongId = audio.currentSongId.value.isEmpty ? widget.songId : audio.currentSongId.value;
+    try {
+      final doc = await FirebaseFirestore.instance.collection('canzoni').doc(currentSongId).get();
+      final testo = doc.data()?['testo'] as String? ?? '';
+
+      await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) {
+          return DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.6,
+            minChildSize: 0.3,
+            maxChildSize: 0.95,
+            builder: (context, scrollController) {
+              return Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFF041F0F),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                    Text(
+                      'Testo - ${widget.titolo}',
+                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        controller: scrollController,
+                        child: SelectableText(
+                          testo.isEmpty ? 'Nessun testo disponibile per questa canzone.' : testo,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white70, fontSize: 16, height: 1.4),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Chiudi', style: TextStyle(color: Colors.green)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+    } catch (e) {
+      debugPrint('Errore recupero testo: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Errore nel recupero del testo')));
+    }
+  }
+
+  // Mostra il video musicale della canzone
+  Future<void> _mostraVideo(BuildContext context) async {
+    final currentSongId = audio.currentSongId.value.isEmpty ? widget.songId : audio.currentSongId.value;
+    // salva lo stato corrente della riproduzione audio
+    final bool audioWasPlaying = audio.isPlaying;
+    try {
+      final doc = await FirebaseFirestore.instance.collection('canzoni').doc(currentSongId).get();
+      final videoUrl = doc.data()?['videoUrl'] as String? ?? '';
+      if (videoUrl.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nessun video disponibile per questa canzone')));
+        return;
+      }
+
+      // Metti in pausa l'audio corrente (se sta suonando)
+      try {
+        await audio.pause();
+      } catch (_) {
+        // ignore
+      }
+
+      // Apri il video in una pagina full-screen dedicata
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => FullScreenVideoPage(videoUrl: videoUrl),
+          fullscreenDialog: true,
+        ),
+      );
+
+      // Se l'audio era in riproduzione prima dell'apertura del video, riprendi
+      if (audioWasPlaying) {
+        try {
+          await audio.play();
+        } catch (_) {}
+      }
+    } catch (e) {
+      debugPrint('Errore recupero video: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Errore nel recupero del video')));
+    }
+  }
+
   // Widget per il bottone delle canzoni preferite
   Widget _likeButton(String songId) {
     final user = FirebaseAuth.instance.currentUser;
@@ -399,31 +516,74 @@ class _PlayerScreenState extends State<PlayerScreen> {
         actions: [
           if (!widget.minimal)
             audio.currentSongId.value.isEmpty ? _likeButton(widget.songId) : _likeButton(audio.currentSongId.value),
-          if (!widget.minimal)
-            IconButton(
-              icon: const Icon(Icons.queue_music, color: Colors.white),
-              onPressed: () => _mostraCoda(context, audio),
-            ),
-          IconButton(
-            icon: const Icon(Icons.reviews, color: Colors.white),
-            onPressed: () async{
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => RecensioniPage(
-                    songId: widget.songId,
-                    titolo: widget.titolo,
-                    editable: widget.minimal ? !widget.managed ? true : false : false,
-                    managed: widget.managed ? true : false,
-                  ),
-                ),
-              );
-            }
-          ),
-          IconButton(
-            icon: const Icon(Icons.info_outline, color: Colors.white),
-            tooltip: 'Crediti',
-            onPressed: () => _showCreditiPopup(context),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            color: Colors.green,
+            elevation: 8,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            onSelected: (value) async {
+              final currentSongId = audio.currentSongId.value.isEmpty ? widget.songId : audio.currentSongId.value;
+              switch (value) {
+                case 'queue':
+                  _mostraCoda(context, audio);
+                  break;
+                case 'video':
+                  _mostraVideo(context);
+                  break;
+                case 'lyrics':
+                  _mostraTesto(context);
+                  break;
+                case 'reviews':
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RecensioniPage(
+                        songId: currentSongId,
+                        titolo: widget.titolo,
+                        editable: widget.minimal ? !widget.managed ? true : false : false,
+                        managed: widget.managed ? true : false,
+                      ),
+                    ),
+                  );
+                  break;
+                case 'credits':
+                  _showCreditiPopup(context);
+                  break;
+              }
+            },
+            itemBuilder: (context) {
+              final items = <PopupMenuEntry<String>>[];
+              if (!widget.minimal) {
+                items.add(PopupMenuItem(
+                  value: 'queue',
+                  height: 56,
+                  child: Row(children: const [Icon(Icons.queue_music, color: Colors.white), SizedBox(width: 8), Text('Coda', style: TextStyle(color: Colors.white))]),
+                ));
+              }
+              items.add(PopupMenuItem(
+                value: 'video',
+                height: 56,
+                child: Row(children: const [Icon(Icons.music_video, color: Colors.white), SizedBox(width: 8), Text('Video musicale', style: TextStyle(color: Colors.white))]),
+              ));
+              items.add(PopupMenuItem(
+                value: 'lyrics',
+                height: 56,
+                child: Row(children: const [Icon(Icons.music_note, color: Colors.white), SizedBox(width: 8), Text('Testo', style: TextStyle(color: Colors.white))]),
+              ));
+              items.add(PopupMenuItem(
+                value: 'reviews',
+                height: 56,
+                child: Row(children: const [Icon(Icons.reviews, color: Colors.white), SizedBox(width: 8), Text('Recensioni', style: TextStyle(color: Colors.white))]),
+              ));
+              items.add(PopupMenuItem(
+                value: 'credits',
+                height: 56,
+                child: Row(children: const [Icon(Icons.info_outline, color: Colors.white), SizedBox(width: 8), Text('Crediti', style: TextStyle(color: Colors.white))]),
+              ));
+              return items;
+            },
           ),
         ],
       ),
@@ -570,5 +730,147 @@ class _PlayerScreenState extends State<PlayerScreen> {
     _positionSub.cancel();
     _durationSub.cancel();
     super.dispose();
+  }
+}
+
+// Overlay per controlli video
+class _VideoControlsOverlay extends StatefulWidget {
+  final VideoPlayerController controller;
+  const _VideoControlsOverlay({required this.controller});
+
+  @override
+  State<_VideoControlsOverlay> createState() => _VideoControlsOverlayState();
+}
+
+class _VideoControlsOverlayState extends State<_VideoControlsOverlay> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onChange);
+  }
+
+  void _onChange() => setState(() {});
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onChange);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        GestureDetector(
+          onTap: () {
+            if (widget.controller.value.isPlaying) {
+              widget.controller.pause();
+            } else {
+              widget.controller.play();
+            }
+          },
+          child: Center(
+            child: widget.controller.value.isPlaying
+                ? const SizedBox.shrink()
+                : const Icon(Icons.play_circle_fill, size: 72, color: Colors.white70),
+          ),
+        ),
+        Positioned(
+          top: 8,
+          right: 8,
+          child: IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Pagina full-screen per riprodurre il video
+class FullScreenVideoPage extends StatefulWidget {
+  final String videoUrl;
+  const FullScreenVideoPage({
+    super.key,
+    required this.videoUrl
+    });
+
+  @override
+  State<FullScreenVideoPage> createState() => _FullScreenVideoPageState();
+}
+
+class _FullScreenVideoPageState extends State<FullScreenVideoPage> {
+  late final VideoPlayerController _controller;
+  bool _showOverlay = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.network(widget.videoUrl)
+      ..initialize().then((_) {
+        setState(() {});
+        _controller.play();
+      });
+    // hide system overlays for immersive full-screen
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  }
+
+  @override
+  void dispose() {
+    _controller.pause();
+    _controller.dispose();
+    // restore system overlays
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    super.dispose();
+  }
+
+  void _togglePlay() {
+    if (_controller.value.isPlaying) {
+      _controller.pause();
+    } else {
+      _controller.play();
+    }
+    setState(() {
+      _showOverlay = !_controller.value.isPlaying;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: GestureDetector(
+          onTap: _togglePlay,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              if (_controller.value.isInitialized)
+                Center(
+                  child: AspectRatio(
+                    aspectRatio: _controller.value.aspectRatio > 0 ? _controller.value.aspectRatio : 16/9,
+                    child: VideoPlayer(_controller),
+                  ),
+                )
+              else
+                const Center(child: CircularProgressIndicator()),
+              if (_showOverlay)
+                const Icon(Icons.play_circle_fill, size: 96, color: Colors.white70),
+              Positioned(
+                top: 24,
+                right: 16,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
