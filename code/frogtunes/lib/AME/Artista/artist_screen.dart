@@ -147,7 +147,7 @@ Future<List<String>> fetchArtistName(List<String> artistId) async {
               SliverAppBar(
                 expandedHeight: 300,
                 pinned: true,
-                backgroundColor: Colors.black,
+                backgroundColor: const Color(0xFF041F0F),
                 flexibleSpace: FlexibleSpaceBar(
                   title: Text(widget.nomeArtista),
                   background: Stack(

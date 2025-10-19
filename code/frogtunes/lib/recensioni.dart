@@ -64,7 +64,7 @@ class _RecensioniPageState extends State<RecensioniPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Recensioni di ' + widget.titolo),
+        title: Text('Recensioni di ${widget.titolo}'),
         backgroundColor: Colors.green,
         elevation: 0,
       ),
@@ -122,21 +122,28 @@ class _RecensioniPageState extends State<RecensioniPage> {
                                 ),
                                 trailing: isMine
                                     ? IconButton(
-                                        icon: Icon(Icons.delete, color: const Color.fromARGB(255, 170, 73, 66)),
+                                        icon: Icon(Icons.delete, color: const Color.fromARGB(255, 233, 83, 73)),
                                         onPressed: () async{
                                           final conferma = await showDialog<bool>(
                                             context: context,
                                             builder: (context) => AlertDialog(
-                                              title: const Text('Elimina recensione'),
+                                              backgroundColor: const Color(0xFF041F0F),
+                                              title: const Text('Elimina',
+                                                style: TextStyle(color: Colors.white),
+                                              ),
                                               content: const Text('Sei sicuro di voler eliminare questa recensione?'),
                                               actions: [
                                                 TextButton(
-                                                  child: const Text('Annulla'),
+                                                  child: const Text('Annulla',
+                                                    style: TextStyle(color: Colors.white),
+                                                  ),
                                                   onPressed: () => Navigator.of(context).pop(false),
                                                 ),
                                                 ElevatedButton(
                                                   style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                                  child: const Text('Elimina'),
+                                                  child: const Text('Elimina',
+                                                    style: TextStyle(color: Colors.white),
+                                                  ),
                                                   onPressed: () => Navigator.of(context).pop(true),
                                                 ),
                                               ],

@@ -72,6 +72,7 @@ Future<void> showSongOptionsBottomSheet({
               ),
               const Divider(color: Colors.white24),
               ListTile(
+                tileColor: const Color(0xFF041F0F),
                 leading: const Icon(Icons.playlist_add, color: Colors.white),
                 title: const Text(
                   "Aggiungi alla playlist",
@@ -83,7 +84,7 @@ Future<void> showSongOptionsBottomSheet({
                   context: context,
                   builder: (context) {
                     return AlertDialog(
-                      backgroundColor: Colors.grey[900],
+                      backgroundColor: const Color(0xFF041F0F),
                       title: const Text(
                         "Seleziona playlist",
                         style: TextStyle(color: Colors.white),

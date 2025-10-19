@@ -1,3 +1,4 @@
+// ignore_for_file: file_names
 import 'package:flutter/material.dart';
 import 'package:frogtunes/AME/Artista/artist_screen.dart';
 import 'package:frogtunes/AME/aggiungi_itv.dart';
@@ -131,18 +132,20 @@ class AnalyticMViewState extends State<AnalyticMView> {
           children: [
             Row(
               children: [
-                ChoiceChip(
+                FilterChip(
                   label: const Text('Canzoni', style: TextStyle(color: Colors.white)),
                   selected: _searchType == 'Canzoni',
+                  checkmarkColor: Colors.white,
                   selectedColor: Colors.green[700],
                   onSelected: (selected) {
                     setState(() { _searchType = 'Canzoni'; _analyticResults = []; _analyticController.clear(); });
                   },
                 ),
                 const SizedBox(width: 10),
-                ChoiceChip(
+                FilterChip(
                   label: const Text('Artisti', style: TextStyle(color: Colors.white)),
                   selected: _searchType == 'Artisti',
+                  checkmarkColor: Colors.white,
                   selectedColor: Colors.green[700],
                   onSelected: (selected) {
                     setState(() { _searchType = 'Artisti'; _analyticResults = []; _analyticController.clear(); });
@@ -251,17 +254,22 @@ class AnalyticMViewState extends State<AnalyticMView> {
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                        title: const Text('Modifica release'),
+                        backgroundColor: Colors.green[900],
+                        title: const Text('Modifica release',
+                          style: TextStyle(color: Colors.white)
+                        ),
                         content: const Text('Vuoi apportare delle modifiche alla release?'),
                         actions: [
                           TextButton(
-                            child: const Text('No'),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
+                            child: const Text('No',
+                              style: TextStyle(color: Colors.white)
+                            ),
+                            onPressed: () => Navigator.of(context).pop(),
                           ),
                           TextButton(
-                            child: const Text('Sì'),
+                            child: const Text('Sì',
+                              style: TextStyle(color: Colors.white)
+                            ),
                             onPressed: () {
                               Navigator.of(context).pop();
                               Navigator.push(

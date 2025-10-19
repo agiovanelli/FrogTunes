@@ -1,10 +1,11 @@
+// ignore_for_file: file_names
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:frogtunes/AME/aggiungi_itv.dart';
 import 'package:flutter/material.dart';
 
 class HomeMContent extends StatefulWidget {
-  const HomeMContent({Key? key}) : super(key: key);
+  const HomeMContent({super.key});
 
   @override
   State<HomeMContent> createState() => _HomeMContentState();
@@ -110,17 +111,22 @@ class _HomeMContentState extends State<HomeMContent> {
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                        title: const Text('Modifica release'),
+                        backgroundColor: Colors.green[900],
+                        title: const Text('Modifica release',
+                          style: TextStyle(color: Colors.white)
+                        ),
                         content: const Text('Vuoi apportare delle modifiche alla release?'),
                         actions: [
                           TextButton(
-                            child: const Text('No'),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
+                            child: const Text('No',
+                              style: TextStyle(color: Colors.white)
+                            ),
+                            onPressed: () => Navigator.of(context).pop(),
                           ),
                           TextButton(
-                            child: const Text('Sì'),
+                            child: const Text('Sì',
+                              style: TextStyle(color: Colors.white)
+                            ),
                             onPressed: () {
                               Navigator.of(context).pop();
                               Navigator.push(

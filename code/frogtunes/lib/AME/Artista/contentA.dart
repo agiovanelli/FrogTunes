@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:frogtunes/AME/aggiungi_itv.dart';
 
 class HomeAContent extends StatelessWidget {
+  const HomeAContent({super.key});
+
   // Recupera i nomi degli artisti dato una lista di artistIds
   Future<List<String>> fetchArtistNames(List<dynamic> artistIds) async {
     if (artistIds.isEmpty) return [];
@@ -18,7 +20,6 @@ class HomeAContent extends StatelessWidget {
     });
     return Future.wait(futures);
   }
-  const HomeAContent({super.key});
 
   // Recupera le ultime canzoni rilasciate dall'artista
   Future<List<Map<String, dynamic>>> _fetchReleaseData() async {
@@ -104,7 +105,7 @@ class HomeAContent extends StatelessWidget {
                       albumMap[albumName] = (albumMap[albumName] ?? 0) + 1;
                     }
                   }
-                  int albumCount = albumMap.values.where((count) => count >= 2).length;
+                  int albumCount = albumMap.values.where((counter) => counter >= 2).length;
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Row(
@@ -195,17 +196,22 @@ class HomeAContent extends StatelessWidget {
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                        title: const Text('Modifica release'),
+                        backgroundColor: Colors.green[900],
+                        title: const Text('Modifica release',
+                          style: TextStyle(color: Colors.white)
+                        ),
                         content: const Text('Vuoi apportare delle modifiche alla release?'),
                         actions: [
                           TextButton(
-                            child: const Text('No'),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
+                            child: const Text('No',
+                              style: TextStyle(color: Colors.white)
+                            ),
+                            onPressed: () => Navigator.of(context).pop(),
                           ),
                           TextButton(
-                            child: const Text('Sì'),
+                            child: const Text('Sì',
+                              style: TextStyle(color: Colors.white)
+                            ),
                             onPressed: () {
                               Navigator.of(context).pop();
                               Navigator.push(

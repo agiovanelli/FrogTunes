@@ -28,7 +28,7 @@ class LibraryView extends StatelessWidget {
                     style: TextStyle(fontSize: 26, color: Colors.white))),
           ),
           const SizedBox(
-            height: 10,
+            height: 20,
           ),
           GestureDetector(
             // Bottone per accedere alla schermata delle canzoni preferite
@@ -38,28 +38,39 @@ class LibraryView extends StatelessWidget {
                 MaterialPageRoute(builder: (context) => const LikedSongsScreen()),
               );
             },
-            child: Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                color: Colors.green.withValues(alpha: 0.3),
-                elevation: 3,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.add_circle_outline_sharp, color: Colors.white, size: 50.0),
-                    SizedBox(height: 10),
-                    Text(
-                      "Canzoni preferite",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                      textAlign: TextAlign.center,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final cardSize = constraints.maxWidth * 0.5;
+                return Center(
+                  child: SizedBox(
+                    width: cardSize,
+                    height: cardSize,
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
+                      ),
+                      color: Colors.green.withValues(alpha: 0.3),
+                      elevation: 3,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.favorite, color: Colors.white, size: 50.0),
+                          SizedBox(height: 10),
+                          Text(
+                            "Canzoni preferite",
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
+            ),
           ),
           const SizedBox(
-            height: 10,
+            height: 20,
           ),
           Container(
             height: 50,
@@ -72,7 +83,7 @@ class LibraryView extends StatelessWidget {
                     style: TextStyle(fontSize: 26, color: Colors.white))),
           ),
           const SizedBox(
-            height: 10,
+            height: 20,
           ),
           GestureDetector(
             // Bottone per accedere alla schermata degli artisti preferiti
@@ -82,47 +93,58 @@ class LibraryView extends StatelessWidget {
                 MaterialPageRoute(builder: (context) => const FollowedArtistsScreen()),
               );
             },
-            child: Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                color: Colors.green.withValues(alpha: 0.3),
-                elevation: 3,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.music_note_outlined, color: Colors.white, size: 50.0),
-                    SizedBox(height: 10),
-                    Text(
-                      "Artisti preferiti",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                      textAlign: TextAlign.center,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final cardSize = constraints.maxWidth * 0.5;
+                return Center(
+                  child: SizedBox(
+                    width: cardSize,
+                    height: cardSize,
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
+                      ),
+                      color: Colors.green.withValues(alpha: 0.3),
+                      elevation: 3,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.music_note_outlined, color: Colors.white, size: 50.0),
+                          SizedBox(height: 10),
+                          Text(
+                            "Artisti preferiti",
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
+            ),
           ),
           const SizedBox(
-            height: 10,
+            height: 20,
           ),
-          Container(
-            height: 50,
-            decoration: BoxDecoration(
-              color: Colors.green[700],
-              borderRadius: BorderRadius.circular(15.0),
-            ),
-            child: const Center(
-                child: Text('I tuoi podcast preferiti',
-                    style: TextStyle(fontSize: 26, color: Colors.white))),
-          ),
-          const ListTile(
-            leading: Icon(Icons.contactless, color: Colors.white),
-            title: Text('Daily Cogito', style: TextStyle(color: Colors.white)),
-          ),
-          const ListTile(
-            leading: Icon(Icons.contactless, color: Colors.white),
-            title: Text('Grandi Linee', style: TextStyle(color: Colors.white)),
-          ),
+          // Container(
+          //   height: 50,
+          //   decoration: BoxDecoration(
+          //     color: Colors.green[700],
+          //     borderRadius: BorderRadius.circular(15.0),
+          //   ),
+          //   child: const Center(
+          //       child: Text('I tuoi podcast preferiti',
+          //           style: TextStyle(fontSize: 26, color: Colors.white))),
+          // ),
+          // const ListTile(
+          //   leading: Icon(Icons.contactless, color: Colors.white),
+          //   title: Text('Daily Cogito', style: TextStyle(color: Colors.white)),
+          // ),
+          // const ListTile(
+          //   leading: Icon(Icons.contactless, color: Colors.white),
+          //   title: Text('Grandi Linee', style: TextStyle(color: Colors.white)),
+          // ),
         ],
       ),
       backgroundColor: const Color.fromARGB(255, 4, 35, 5),
@@ -142,7 +164,7 @@ class LikedSongsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF041F0F),
       appBar: AppBar(
-        title: const Text("Brani che ti piacciono", style: TextStyle(color: Colors.white)),
+        title: const Text("Canzoni preferite", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.transparent,
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
@@ -174,9 +196,11 @@ class LikedSongsScreen extends StatelessWidget {
                     await audio.play();
                   } else {
                     // Altrimenti comunica che è vuota
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("La playlist è vuota")),
-                    );
+                    if(context.mounted){
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("La playlist è vuota")),
+                      );
+                    }
                   }
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -201,15 +225,17 @@ class LikedSongsScreen extends StatelessWidget {
                     isLoopActive ? LoopMode.off : LoopMode.all
                   );
                   // Mostra un messaggio di conferma in fase di testing si tiene 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        isLoopActive
-                          ? "Loop playlist disattivato"
-                          : "Loop playlist attivo: la playlist si ripete all'infinito"
+                  if(context.mounted){
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          isLoopActive
+                            ? "Loop playlist disattivato"
+                            : "Loop playlist attivo: la playlist si ripete all'infinito"
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  }
                 },
               );
             },
@@ -386,10 +412,10 @@ class FollowedArtistsScreen extends StatelessWidget {
     final uid = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF041F0F),
       appBar: AppBar(
-        title: const Text("Artisti seguiti"),
-        backgroundColor: Colors.black,
+        title: const Text("Artisti preferiti"),
+        backgroundColor: Colors.transparent,
       ),
       body: SafeArea(
         child: Stack(

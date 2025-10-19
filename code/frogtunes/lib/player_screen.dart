@@ -140,7 +140,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
           ),
           actions: [
             TextButton(
-              child: const Text('Chiudi', style: TextStyle(color: Colors.green)),
+              child: const Text('Chiudi', style: TextStyle(color: Colors.white)),
               onPressed: () => Navigator.of(context).pop(),
             ),
           ],

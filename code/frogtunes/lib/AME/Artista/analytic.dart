@@ -154,17 +154,22 @@ class AnalyticViewState extends State<AnalyticView> {
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                        title: const Text('Modifica release'),
+                        backgroundColor: Colors.green[900],
+                        title: const Text('Modifica release',
+                          style: TextStyle(color: Colors.white)
+                        ),
                         content: const Text('Vuoi apportare delle modifiche alla release?'),
                         actions: [
                           TextButton(
-                            child: const Text('No'),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
+                            child: const Text('No',
+                              style: TextStyle(color: Colors.white)
+                            ),
+                            onPressed: () => Navigator.of(context).pop(),
                           ),
                           TextButton(
-                            child: const Text('Sì'),
+                            child: const Text('Sì',
+                              style: TextStyle(color: Colors.white)
+                            ),
                             onPressed: () {
                               Navigator.of(context).pop();
                               Navigator.push(
