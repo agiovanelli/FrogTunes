@@ -1171,7 +1171,9 @@ class _AddReleasePageState extends State<AddReleasePage> {
                                                             'nomiAltriArtisti': altriArtistiFinale,
                                                           };
                                                           setState(() {});
-                                                          Navigator.pop(context);
+                                                          if(context.mounted){
+                                                            Navigator.pop(context);
+                                                          }
                                                         },
                                                         child: const Text('Salva', style: TextStyle(color: Colors.white)),
                                                       ),

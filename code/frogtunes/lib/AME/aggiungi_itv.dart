@@ -230,25 +230,29 @@ class _ModificaCanzonePageState extends State<ModificaCanzonePage> {
           'Producer': producerController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
         },
       });
-      Navigator.pop(context, {
-        'titolo': titoloController.text,
-        'artista': artistaController.text,
-        'testo': testoController.text,
-        'cover': coverController,
-        'audioUrl': audioUrlController,
-        'label': labelController.text,
-        'generi': generiController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
-        'videoUrl': videoUrl,
-        'crediti': {
-          'Autore': autoreController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
-          'Compositore': compositoreController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
-          'Producer': producerController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
-        },
-      });
+      if(mounted){
+        Navigator.pop(context, {
+          'titolo': titoloController.text,
+          'artista': artistaController.text,
+          'testo': testoController.text,
+          'cover': coverController,
+          'audioUrl': audioUrlController,
+          'label': labelController.text,
+          'generi': generiController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+          'videoUrl': videoUrl,
+          'crediti': {
+            'Autore': autoreController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+            'Compositore': compositoreController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+            'Producer': producerController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+          },
+        });
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Errore nel salvataggio: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Errore nel salvataggio: $e')),
+        );
+      }
     } finally {
       setState(() => loading = false);
     }

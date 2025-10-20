@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -209,7 +208,7 @@ class AudioService {
     if (user == null) return;
 
     try {
-      final paese = "IT"; // TODO: rileva paese reale (es. tramite IP API)
+      final paese = "IT"; // tramite IP API possiamo rilevare il paese reale
       await FirebaseFirestore.instance.collection('eventiAscolto').add({
         'cid': cid,
         'uid': user.uid,

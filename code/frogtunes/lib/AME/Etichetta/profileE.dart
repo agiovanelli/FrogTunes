@@ -1,3 +1,4 @@
+// ignore_for_file: file_names
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -119,45 +120,48 @@ class ProfileEViewState extends State<ProfileEView> {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     // Conferma prima di salvare
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.green[900],
-        title: const Text('Conferma modifica foto', style: TextStyle(color: Colors.white)),
-        content: const Text('Vuoi davvero salvare la nuova foto profilo?', style: TextStyle(color: Colors.white)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Conferma', style: TextStyle(color: Colors.white)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annulla', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
+    if (mounted) {
+      final confirm =
+      await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.green[900],
+          title: const Text('Conferma modifica foto', style: TextStyle(color: Colors.white)),
+          content: const Text('Vuoi davvero salvare la nuova foto profilo?', style: TextStyle(color: Colors.white)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Conferma', style: TextStyle(color: Colors.white)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Annulla', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
 
-    if (pickedFile == null || user == null) return;
+      if (pickedFile == null || user == null) return;
 
-    final file = await pickedFile.readAsBytes();
-    final ref = FirebaseStorage.instance
-        .ref()
-        .child('profile_pictures')
-        .child('${user.uid}.jpg');
+      final file = await pickedFile.readAsBytes();
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('profile_pictures')
+          .child('${user.uid}.jpg');
 
-    final uploadTask = await ref.putData(file);
-    final url = await uploadTask.ref.getDownloadURL();
+      final uploadTask = await ref.putData(file);
+      final url = await uploadTask.ref.getDownloadURL();
 
-    if (confirm == true) {
-      await FirebaseFirestore.instance
-          .collection('etichette')
-          .doc(user.uid)
-          .update({'cover': url});
-      if (!mounted) return;
-      setState(() {
-        profileImage = url;
-      });
+      if (confirm == true) {
+        await FirebaseFirestore.instance
+            .collection('etichette')
+            .doc(user.uid)
+            .update({'cover': url});
+        if (!mounted) return;
+        setState(() {
+          profileImage = url;
+        });
+      }
     }
   }
 
@@ -174,12 +178,24 @@ class ProfileEViewState extends State<ProfileEView> {
         title: const Text('Modifica il tuo nome', style: TextStyle(color: Colors.white)),
         content: TextField(
           controller: nameController,
+          cursorColor: Color(0xFF00FF00),
           decoration: const InputDecoration(
             labelText: 'Nome',
             labelStyle: TextStyle(color: Colors.white),
             filled: true,
             fillColor: Colors.green,
-            border: OutlineInputBorder(),
+            border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                    borderSide: BorderSide(color: Colors.green),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                    borderSide: BorderSide(color: Colors.green),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                    borderSide: BorderSide(color: Colors.green, width: 2),
+                  ),
           ),
           style: const TextStyle(color: Colors.white),
         ),
@@ -294,9 +310,11 @@ class _WidgetGuadagniState extends State<WidgetGuadagni> {
       'timestamp': Timestamp.now(),
     });
     // Conferma
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Richiesta inviata a FrogTunes!')),
-    );
+    if(mounted){
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Richiesta inviata a FrogTunes!')),
+      );
+    }
   }
 
   @override

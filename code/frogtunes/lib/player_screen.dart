@@ -113,40 +113,42 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   void _showCreditiPopup(BuildContext context) async {
     final crediti = await _fetchCrediti(widget.songId);
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF041F0F),
-          title: const Text('Crediti', style: TextStyle(color: Colors.white)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (final key in ['Autore', 'Compositore', 'Producer'])
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(key, style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-                      ...crediti[key]!.isNotEmpty
-                        ? crediti[key]!.map((c) => Text(c, style: const TextStyle(color: Colors.white70))).toList()
-                        : [const Text('-', style: TextStyle(color: Colors.white38))],
-                    ],
+    if(context.mounted){
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF041F0F),
+            title: const Text('Crediti', style: TextStyle(color: Colors.white)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final key in ['Autore', 'Compositore', 'Producer'])
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(key, style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                        ...crediti[key]!.isNotEmpty
+                          ? crediti[key]!.map((c) => Text(c, style: const TextStyle(color: Colors.white70))).toList()
+                          : [const Text('-', style: TextStyle(color: Colors.white38))],
+                      ],
+                    ),
                   ),
-                ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              child: const Text('Chiudi', style: TextStyle(color: Colors.white)),
-              onPressed: () => Navigator.of(context).pop(),
+              ],
             ),
-          ],
-        );
-      },
-    );
+            actions: [
+              TextButton(
+                child: const Text('Chiudi', style: TextStyle(color: Colors.white)),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
   late final AudioService audio;
@@ -242,15 +244,17 @@ class _PlayerScreenState extends State<PlayerScreen> {
                               isLoopActive ? LoopMode.off : LoopMode.all
                             );
                             // Mostra un messaggio di conferma in fase di testing si tiene
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  isLoopActive
-                                    ? "Loop coda disattivato"
-                                    : "Loop coda attivo: la coda si ripete all'infinito"
+                            if(context.mounted){  
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    isLoopActive
+                                      ? "Loop coda disattivato"
+                                      : "Loop coda attivo: la coda si ripete all'infinito"
+                                  ),
                                 ),
-                              ),
-                            );
+                              );
+                            }
                           },
                         );
                       },
@@ -363,71 +367,75 @@ class _PlayerScreenState extends State<PlayerScreen> {
       final doc = await FirebaseFirestore.instance.collection('canzoni').doc(currentSongId).get();
       final testo = doc.data()?['testo'] as String? ?? '';
 
-      await showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) {
-          return DraggableScrollableSheet(
-            expand: false,
-            initialChildSize: 0.6,
-            minChildSize: 0.3,
-            maxChildSize: 0.95,
-            builder: (context, scrollController) {
-              return Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFF041F0F),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        margin: const EdgeInsets.only(bottom: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white24,
-                          borderRadius: BorderRadius.circular(4),
+      if(context.mounted){
+        await showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) {
+            return DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.6,
+              minChildSize: 0.3,
+              maxChildSize: 0.95,
+              builder: (context, scrollController) {
+                return Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF041F0F),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white24,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
                       ),
-                    ),
-                    Text(
-                      'Testo - ${widget.titolo}',
-                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        controller: scrollController,
-                        child: SelectableText(
-                          testo.isEmpty ? 'Nessun testo disponibile per questa canzone.' : testo,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.white70, fontSize: 16, height: 1.4),
+                      Text(
+                        'Testo - ${widget.titolo}',
+                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          controller: scrollController,
+                          child: SelectableText(
+                            testo.isEmpty ? 'Nessun testo disponibile per questa canzone.' : testo,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.white70, fontSize: 16, height: 1.4),
+                          ),
                         ),
                       ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('Chiudi', style: TextStyle(color: Colors.green)),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-      );
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('Chiudi', style: TextStyle(color: Colors.green)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      }
     } catch (e) {
-      debugPrint('Errore recupero testo: $e');
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Errore nel recupero del testo')));
+      if(context.mounted){
+        debugPrint('Errore recupero testo: $e');
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Errore nel recupero del testo')));
+      }
     }
   }
 
@@ -440,7 +448,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
       final doc = await FirebaseFirestore.instance.collection('canzoni').doc(currentSongId).get();
       final videoUrl = doc.data()?['videoUrl'] as String? ?? '';
       if (videoUrl.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nessun video disponibile per questa canzone')));
+        if(context.mounted){
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nessun video disponibile per questa canzone')));
+        }
         return;
       }
 
@@ -452,12 +462,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
       }
 
       // Apri il video in una pagina full-screen dedicata
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => FullScreenVideoPage(videoUrl: videoUrl),
-          fullscreenDialog: true,
-        ),
-      );
+      if(context.mounted){
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => FullScreenVideoPage(videoUrl: videoUrl),
+            fullscreenDialog: true,
+          ),
+        );
+      }
 
       // Se l'audio era in riproduzione prima dell'apertura del video, riprendi
       if (audioWasPlaying) {
@@ -466,8 +478,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
         } catch (_) {}
       }
     } catch (e) {
-      debugPrint('Errore recupero video: $e');
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Errore nel recupero del video')));
+      if(context.mounted){
+        debugPrint('Errore recupero video: $e');
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Errore nel recupero del video')));
+      }
     }
   }
 
