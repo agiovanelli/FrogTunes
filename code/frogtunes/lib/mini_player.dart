@@ -34,8 +34,24 @@ class MiniPlayer extends StatelessWidget {
           },
           child: Container(
             height: 70,
-            color: const Color(0xFF041F0F),
             padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF041F0F),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+              border: const Border(
+                top: BorderSide(
+                  color: Colors.green,
+                  width: 1.2,
+                ),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
             child: Row(
               children: [
                 ClipRRect(

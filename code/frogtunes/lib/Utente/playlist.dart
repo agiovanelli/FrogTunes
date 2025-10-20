@@ -35,9 +35,13 @@ class PlaylistSettings {
           ),
           content: TextField(
             style: const TextStyle(color: Colors.white),
+            cursorColor: Color(0xFF00FF00),
             decoration: const InputDecoration(
               hintText: "Nome playlist",
               hintStyle: TextStyle(color: Colors.white54),
+              focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF00FF00)),
+              ),
             ),
             onChanged: (val) {
               nuovaPlaylist = val;
@@ -82,7 +86,9 @@ class PlaylistSettings {
                   
                 }
               },
-              child: const Text("Crea"),
+              child: const Text("Crea",
+                style: TextStyle(color: Colors.white)
+              ),
             ),
           ],
         );
@@ -150,9 +156,13 @@ class _PlaylistViewState extends State<PlaylistView> {
           ),
           content: TextField(
             style: const TextStyle(color: Colors.white),
+            cursorColor: Color(0xFF00FF00),
             decoration: const InputDecoration(
               hintText: "Nome playlist",
               hintStyle: TextStyle(color: Colors.white54),
+              focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF00FF00)),
+              ),
             ),
             onChanged: (val) {
               nuovaPlaylist = val;
@@ -189,7 +199,9 @@ class _PlaylistViewState extends State<PlaylistView> {
                   }
                 }
               },
-              child: const Text("Crea"),
+              child: const Text("Crea",
+                style: TextStyle(color: Colors.white)
+              ),
             ),
           ],
         );
@@ -258,7 +270,7 @@ class _PlaylistViewState extends State<PlaylistView> {
                   builder: (context) => AlertDialog(
                     backgroundColor: const Color(0xFF041F0F),
                     title: const Text(
-                      "Elimina playlist",
+                      "Eliminazione",
                       style: TextStyle(color: Colors.white),
                     ),
                     content: Text(
@@ -287,7 +299,9 @@ class _PlaylistViewState extends State<PlaylistView> {
                             );
                           }
                         },
-                        child: const Text("Elimina"),
+                        child: const Text("Elimina",
+                          style: TextStyle(color: Colors.white)
+                        ),
                       ),
                     ],
                   ),
@@ -386,9 +400,11 @@ class PlaylistDetailsView extends StatelessWidget {
                     await audio.play();
                   } else {
                     // Altrimenti comunica che è vuota
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("La playlist è vuota")),
-                    );
+                    if(context.mounted){
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("La playlist è vuota")),
+                      );
+                    }
                   }
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -412,16 +428,18 @@ class PlaylistDetailsView extends StatelessWidget {
                   await audio.player.setLoopMode(
                     isLoopActive ? LoopMode.off : LoopMode.all
                   );
-                  // Mostra un messaggio di conferma in fase di testing si tiene 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        isLoopActive
-                          ? "Loop playlist disattivato"
-                          : "Loop playlist attivo: la playlist si ripete all'infinito"
+                  // Mostra un messaggio di conferma in fase di testing si tiene
+                  if(context.mounted){
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          isLoopActive
+                            ? "Loop playlist disattivato"
+                            : "Loop playlist attivo: la playlist si ripete all'infinito"
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  }
                 },
               );
             },
@@ -442,9 +460,13 @@ class PlaylistDetailsView extends StatelessWidget {
                     ),
                     content: TextField(
                       style: const TextStyle(color: Colors.white),
+                      cursorColor: Color(0xFF00FF00),
                       decoration: const InputDecoration(
                         hintText: "Nome playlist",
                         hintStyle: TextStyle(color: Colors.white54),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Color(0xFF00FF00)),
+                        ),
                       ),
                       controller: TextEditingController(text: playlistName),
                       onChanged: (val) {
@@ -469,7 +491,9 @@ class PlaylistDetailsView extends StatelessWidget {
                             }
                           }
                         },
-                        child: const Text("Salva"),
+                        child: const Text("Salva",
+                          style: TextStyle(color: Colors.white)
+                        )
                       ),
                     ],
                   );
@@ -587,9 +611,11 @@ class PlaylistDetailsView extends StatelessWidget {
                             await audio.setPlaylist(filteredUrls, initialIndex: indexToPlay);
                             await audio.play();
                           } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("La playlist è vuota")),
-                            );
+                            if(context.mounted){
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("La playlist è vuota")),
+                              );
+                            }
                           }
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(

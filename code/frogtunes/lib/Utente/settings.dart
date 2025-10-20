@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -18,7 +17,7 @@ class SettingsPageState extends State<SettingsPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _notificationsEnabled = true;
-  File? _selectedImage;
+  String selectedImage = '';
 
   final _auth = FirebaseAuth.instance;
 
@@ -30,16 +29,77 @@ class SettingsPageState extends State<SettingsPage> {
     super.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+  final user = FirebaseAuth.instance.currentUser;
+
+  if (user != null) {
+    final doc = await FirebaseFirestore.instance.collection('utenti').doc(user.uid).get();
+    final data = doc.data();
+
+    if (data != null && mounted) {
+      setState(() {
+        selectedImage = data['profileImageUrl']?.toString().trim().isNotEmpty == true
+            ? data['profileImageUrl']
+            : 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f';
+      });
+    }
+  }
+}
+
   // Funzione per selezionare un'immagine dal dispositivo
   Future<void> _pickImage() async {
+    final user = FirebaseAuth.instance.currentUser;
     final picker = ImagePicker();
-    final pickedImage =
-        await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
-    if (pickedImage != null) {
-      setState(() {
-        _selectedImage = File(pickedImage.path);
-      });
+    // Conferma prima di salvare
+    if(mounted){
+      final confirm = 
+      await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.green[900],
+          title: const Text('Conferma modifica foto', style: TextStyle(color: Colors.white)),
+          content: const Text('Vuoi davvero salvare la nuova foto profilo?', style: TextStyle(color: Colors.white)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Conferma', style: TextStyle(color: Colors.white)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Annulla', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+
+      if (pickedFile == null || user == null) return;
+
+      final file = await pickedFile.readAsBytes();
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('profile_pictures')
+          .child('${user.uid}.jpg');
+
+      final uploadTask = await ref.putData(file);
+      final url = await uploadTask.ref.getDownloadURL();
+
+      if (confirm == true) {
+        await FirebaseFirestore.instance
+            .collection('utenti')
+            .doc(user.uid)
+            .update({'profileImageUrl': url});
+        setState(() {
+          selectedImage = url;
+        });
+      }
     }
   }
 
@@ -118,20 +178,6 @@ Future<String?> _askCurrentPassword() async {
         });
       }
 
-      // Carica immagine profilo se presente
-      if (_selectedImage != null) {
-        final ref = FirebaseStorage.instance
-            .ref()
-            .child('profile_pictures')
-            .child('$uid.jpg');
-        await ref.putFile(_selectedImage!);
-        final imageUrl = await ref.getDownloadURL();
-
-        await FirebaseFirestore.instance.collection('utenti').doc(uid).update({
-          'profileImageUrl': imageUrl,
-        });
-      }
-
       if(mounted){
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Impostazioni aggiornate con successo!")),
@@ -182,14 +228,24 @@ Future<String?> _askCurrentPassword() async {
                 // Cambio di immagine profilo
                 GestureDetector(
                   onTap: _pickImage,
-                  child: CircleAvatar(
-                    radius: 50,
-                    backgroundImage: _selectedImage != null
-                        ? FileImage(_selectedImage!)
-                        : null,
-                    child: _selectedImage == null
-                        ? const Icon(Icons.camera_alt, size: 30)
-                        : null,
+                  child: ClipOval(
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      color: Colors.grey[800],
+            child: selectedImage.isNotEmpty
+              ? (selectedImage.startsWith('http')
+                ? Image.network(
+                  selectedImage,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.person, size: 60, color: Colors.white70),
+                )
+                : Image.asset(selectedImage, fit: BoxFit.cover))
+              : const Center(
+                child: Icon(Icons.person, size: 60, color: Colors.white70),
+              ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -227,6 +283,9 @@ Future<String?> _askCurrentPassword() async {
               title: const Text("Notifiche",
                   style: TextStyle(fontSize: 20, color: Colors.white)),
               iconColor: Colors.white,
+              shape: const RoundedRectangleBorder(
+                side: BorderSide(color: Color.fromARGB(255, 4, 35, 5)),
+              ),
               children: [
                 // Abilitare o meno le notifiche (fittizio)
                 SwitchListTile(
@@ -268,10 +327,13 @@ Future<String?> _askCurrentPassword() async {
             ),
             const SizedBox(height: 20),
             // Sezione informazioni
-            const ExpansionTile(
-              title: Text("Informazioni",
+            ExpansionTile(
+              title: const Text("Informazioni",
                   style: TextStyle(fontSize: 20, color: Colors.white)),
               iconColor: Colors.white,
+              shape: const RoundedRectangleBorder(
+                side: BorderSide(color: Color.fromARGB(255, 4, 35, 5)),
+              ),
               children: [
                 ListTile(title: Text("Versione: 1.0.0")),
                 ListTile(title: Text("Sviluppatore: Alessio Giovanelli")),

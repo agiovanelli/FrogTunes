@@ -12,6 +12,7 @@ import 'package:frogtunes/AME/Etichetta/contentE.dart';
 import 'package:frogtunes/AME/Etichetta/analyticE.dart';
 import 'package:frogtunes/AME/Etichetta/profileE.dart';
 import 'package:frogtunes/audio_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomeAMEView extends StatefulWidget {
   const HomeAMEView({super.key, required this.selectedRole});
@@ -25,14 +26,44 @@ class HomeAMEViewState extends State<HomeAMEView> {
   int _selectedIndex = 1; // Home di default
   Map<String, dynamic>? userData;
   late String role;
+  String? userName;
 
   // Pagine associate ai BottomNavigationBarItem
   @override
   void initState() {
     super.initState();
-  role = widget.selectedRole;
+    role = widget.selectedRole;
+    _loadUserData(role);
   }
 
+  Future<void> _loadUserData(String role) async {
+  final user = FirebaseAuth.instance.currentUser;
+
+  switch (role) {
+    case 'Artista':
+      role = 'artisti';
+      break;
+    case 'Manager':
+      role = 'manager';
+      break;
+    case 'Etichetta':
+      role = 'etichette';
+      break;
+  }
+
+  if (user != null) {
+    final doc = await FirebaseFirestore.instance.collection(role).doc(user.uid).get();
+    final data = doc.data();
+
+    if (data != null && mounted) {
+      setState(() {
+        userName = (data['nome']?.toString().trim().isNotEmpty == true)
+            ? data['nome']
+            : '';
+      });
+    }
+  }
+}
 
   void _onItemTapped(int index) {
     setState(() {
@@ -42,7 +73,6 @@ class HomeAMEViewState extends State<HomeAMEView> {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
 
     final List<Widget> pages = [
       if (widget.selectedRole == "Artista") ...[
@@ -69,7 +99,7 @@ class HomeAMEViewState extends State<HomeAMEView> {
           children:[
             const SizedBox(width: 10),
             Expanded(child:
-              Text('Ciao ${userData?['username'] ?? user?.displayName}',
+              Text('Ciao ${userName ?? ''}',
                   style: const TextStyle(color: Colors.white)
                   ),
             ),

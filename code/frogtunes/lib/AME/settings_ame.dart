@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:frogtunes/AME/home_ame.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SettingsAMEPage extends StatefulWidget {
   const SettingsAMEPage({super.key, required this.selectedRole});
   final String selectedRole; // Accetta il valore passato
 
   @override
-  _SettingsAMEPageState createState() => _SettingsAMEPageState();
+  SettingsAMEPageState createState() => SettingsAMEPageState();
 }
 
-class _SettingsAMEPageState extends State<SettingsAMEPage> {
+class SettingsAMEPageState extends State<SettingsAMEPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _notificationsEnabled = true;
@@ -21,15 +22,84 @@ class _SettingsAMEPageState extends State<SettingsAMEPage> {
     super.dispose();
   }
 
-  void _saveSettings() {
-    // Logica per salvare le impostazioni
-    String email = _emailController.text;
-    String password = _passwordController.text;
+// Funzione di dialog per chiedere la password corrente
+Future<String?> _askCurrentPassword() async {
+  String? password;
+  await showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text("Password attuale richiesta"),
+      content: TextField(
+        obscureText: true,
+        onChanged: (val) => password = val,
+        decoration: const InputDecoration(
+          labelText: "Password attuale",
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text("Annulla"),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text("OK"),
+        ),
+      ],
+    ),
+  );
+  return password;
+}
 
-    print('Salvataggio impostazioni:');
-    print("Email: $email");
-    print("Password: $password");
-    print("Notifiche abilitate: $_notificationsEnabled");
+    // Funzione per salvare le impostazioni
+  Future<void> _saveSettings() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final newEmail = _emailController.text.trim();
+    final newPassword = _passwordController.text.trim();
+
+    try {
+    // Riautenticazione se vogliamo cambiare email o password
+    if ((newEmail.isNotEmpty && newEmail != user.email) ||
+        newPassword.isNotEmpty) {
+      // Chiedi all'utente di inserire la password attuale
+      final currentPassword = await _askCurrentPassword();
+
+      if (currentPassword != null) {
+        final cred = EmailAuthProvider.credential(
+          email: user.email!,
+          password: currentPassword,
+        );
+        await user.reauthenticateWithCredential(cred);
+      } else {
+        // L'utente ha annullato l'inserimento della password
+        return;
+      }
+    }
+
+      // Aggiorna email
+      if (newEmail.isNotEmpty && newEmail != user.email) {
+        await user.verifyBeforeUpdateEmail(newEmail); // In fase di sviluppo, non invia email di verifica verifyBeforeUpdateEmail
+      }
+
+      // Aggiorna password
+      if (newPassword.isNotEmpty) {
+        await user.updatePassword(newPassword);
+      }
+
+      if(mounted){
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Impostazioni aggiornate con successo!")),
+        );
+      }
+    } catch (e) {
+      if(mounted){
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Errore nel salvataggio delle impostazioni: ${e.toString()}")),
+        );
+      }
+    }
   }
 
   @override

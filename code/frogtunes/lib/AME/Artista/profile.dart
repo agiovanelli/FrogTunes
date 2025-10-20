@@ -35,24 +35,33 @@ class ProfileViewState extends State<ProfileView> {
     final doc = await FirebaseFirestore.instance.collection('artisti').doc(user.uid).get();
     final data = doc.data();
 
-    if (data != null && mounted) {
+      if (data != null && mounted) {
+      // fallback su più campi per sicurezza: 'cover', 'profileImageUrl', 'profileImage'
+      final rawCover = data['cover'] ?? data['profileImageUrl'] ?? data['profileImage'];
+      final defaultUrl = 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f';
+
       setState(() {
-        userName = data['nome']?.toString().trim().isNotEmpty == true
+        userName = (data['nome']?.toString().trim().isNotEmpty == true)
             ? data['nome']
             : 'Artista';
 
-        bio = data['bio']?.toString().trim().isNotEmpty == true
+        bio = (data['bio']?.toString().trim().isNotEmpty == true)
             ? data['bio']
-            : 'Questa è una breve biografia dell\'artista. Qui puoi scrivere qualcosa su di te!';
+            : 'Questa \u00e8 una breve biografia dell\'artista. Qui puoi scrivere qualcosa su di te!';
 
-        profileImage = data['cover']?.toString().trim().isNotEmpty == true
-            ? data['cover']
-            : 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f';
+        profileImage = (rawCover != null && rawCover.toString().trim().isNotEmpty)
+            ? rawCover.toString()
+            : defaultUrl;
 
-        userId = data['artistId']?.toString().trim().isNotEmpty == true
-            ? List<String>.from(data['artistId'])
-            : [];
+        try {
+          userId = (data['artistId'] is List) ? List<String>.from(data['artistId']) : [];
+        } catch (_) {
+          userId = [];
+        }
       });
+      // log per debug
+      // ignore: avoid_print
+      print('ProfileView: profileImage URL -> $profileImage');
     }
   }
 }
@@ -227,44 +236,46 @@ class ProfileViewState extends State<ProfileView> {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     // Conferma prima di salvare
+    if(mounted){
     final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.green[900],
-        title: const Text('Conferma modifica foto', style: TextStyle(color: Colors.white)),
-        content: const Text('Vuoi davvero salvare la nuova foto profilo?', style: TextStyle(color: Colors.white)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Conferma', style: TextStyle(color: Colors.white)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annulla', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.green[900],
+          title: const Text('Conferma modifica foto', style: TextStyle(color: Colors.white)),
+          content: const Text('Vuoi davvero salvare la nuova foto profilo?', style: TextStyle(color: Colors.white)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Conferma', style: TextStyle(color: Colors.white)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Annulla', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
 
-    if (pickedFile == null || user == null) return;
+      if (pickedFile == null || user == null) return;
 
-    final file = await pickedFile.readAsBytes();
-    final ref = FirebaseStorage.instance
-        .ref()
-        .child('profile_pictures')
-        .child('${user.uid}.jpg');
+      final file = await pickedFile.readAsBytes();
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('profile_pictures')
+          .child('${user.uid}.jpg');
 
-    final uploadTask = await ref.putData(file);
-    final url = await uploadTask.ref.getDownloadURL();
+      final uploadTask = await ref.putData(file);
+      final url = await uploadTask.ref.getDownloadURL();
 
-    if (confirm == true) {
-      await FirebaseFirestore.instance
-          .collection('artisti')
-          .doc(user.uid)
-          .update({'cover': url});
-      setState(() {
-        profileImage = url;
-      });
+      if (confirm == true) {
+        await FirebaseFirestore.instance
+            .collection('artisti')
+            .doc(user.uid)
+            .update({'cover': url});
+        setState(() {
+          profileImage = url;
+        });
+      }
     }
   }
 
@@ -281,12 +292,24 @@ class ProfileViewState extends State<ProfileView> {
         title: const Text('Modifica nome d\'arte', style: TextStyle(color: Colors.white)),
         content: TextField(
           controller: nameController,
+          cursorColor: Color(0xFF00FF00),
           decoration: const InputDecoration(
             labelText: 'Nome d\'arte',
             labelStyle: TextStyle(color: Colors.white),
             filled: true,
             fillColor: Colors.green,
-            border: OutlineInputBorder(),
+            border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                    borderSide: BorderSide(color: Colors.green),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                    borderSide: BorderSide(color: Colors.green),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                    borderSide: BorderSide(color: Colors.green, width: 2),
+                  ),
           ),
           style: const TextStyle(color: Colors.white),
         ),
@@ -348,16 +371,28 @@ class ProfileViewState extends State<ProfileView> {
     builder: (context) {
       return AlertDialog(
         backgroundColor: Colors.green[900],
-        title: const Text('Modifica Biografia', style: TextStyle(color: Colors.white)),
+        title: const Text('Modifica biografia', style: TextStyle(color: Colors.white)),
         content: TextField(
           controller: bioController,
+          cursorColor: Color(0xFF00FF00),
           maxLines: 3,
           decoration: const InputDecoration(
             labelText: 'Biografia',
             labelStyle: TextStyle(color: Colors.white),
             filled: true,
             fillColor: Colors.green,
-            border: OutlineInputBorder(),
+            border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                    borderSide: BorderSide(color: Colors.green),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                    borderSide: BorderSide(color: Colors.green),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                    borderSide: BorderSide(color: Colors.green, width: 2),
+                  ),
           ),
           style: const TextStyle(color: Colors.white),
         ),
