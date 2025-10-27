@@ -2,7 +2,7 @@
 * **Programma Principale**
 	- Descrizione: Il programma principale gestisce il flusso generale dell'applicazione FrogTunes e coordina l'esecuzione delle subroutine specializzate per fornire le varie funzionalità della piattaforma.
 	- Implementazione: Il programma principale avvia l'applicazione, gestisce l'autenticazione degli utenti, e dirige le richieste agli specifici moduli di subroutine.
-* **Subroutine Principali**:
+* **Subroutine Principali**
 	* *Gestione Utenti:*
 	  - Descrizione: Subroutine responsabile della registrazione, autenticazione e gestione delle informazioni degli utenti.
 	  - Implementazione: Fornisce funzioni per la registrazione, il login, e la gestione del profilo utente.
@@ -22,7 +22,7 @@
 	  - Descrizione: Subroutine dedicata alla gestione di manager e etichette discografiche.
 	  - Implementazione: Fornisce funzioni per l'aggiunta e la modifica di manager, la gestione di roster artisti e la visualizzazione delle attività.
 
-* **Flusso di Esecuzione:**
+* **Flusso di Esecuzione**
 	* *Avvio dell'Applicazione:*
 	Il programma principale avvia l'applicazione FrogTunes.
 	* *Autenticazione Utente:*
