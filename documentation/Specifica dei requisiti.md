@@ -21,27 +21,27 @@ Di seguito sono elencate la varie funzionalità della piattaforma **FrogTunes** 
 
 #### Utente
 * Creazione delle credenziali personali {Must}
-* Scelta del piano di abbonamento {Could};
-* Ricerca file multimediale o artista musicale [canzone/artista non esiste] {Must};
-* Selezione del file multimediale da riprodurre, in caso di raccolta di file vi è possibilità di riprodurre casualmente i file oppure selezionare manualmente (se album, può selezionare l’ascolto casuale altrimenti parte dalla prima canzone) {Must};
-* Mettere in pausa la riproduzione {Must};
-* Fare ricominciare il file da capo {Must};
-* Creazione, eliminazione, modifica e condivisione di playlist {Should};
-* Aggiunta ed eliminazione di file all’interno di una playlist selezionata [utente elimina tutti i brani, la playlist esiste ancora?] {Should};
-* Selezione e visione del video relativo al file selezionato, se presente {Should};
-* Mettere in coda i file multimediali {Should};
-* Recensione del file e/o del relativo video, commento con limitazione di numero di caratteri [utente scrive un commento non concesso] {Should};
-* Aggiunge valutazione alla recensione {Could};
-* Guarda live artista {Won't};
-* Riproduzione offline del file e/o del relativo video, funzionalità concessa solo per uno specifico abbonamento {Won't}.
+* Scelta del piano di abbonamento {Could}
+* Ricerca file multimediale o artista musicale [canzone/artista non esiste] {Must}
+* Selezione del file multimediale da riprodurre, in caso di raccolta di file vi è possibilità di riprodurre casualmente i file oppure selezionare manualmente (se album, può selezionare l’ascolto casuale altrimenti parte dalla prima canzone) {Must}
+* Mettere in pausa la riproduzione {Must}
+* Fare ricominciare il file da capo {Must}
+* Creazione, eliminazione, modifica e condivisione di playlist {Should}
+* Aggiunta ed eliminazione di file all’interno di una playlist selezionata [utente elimina tutti i brani, la playlist esiste ancora?] {Should}
+* Selezione e visione del video relativo al file selezionato, se presente {Should}
+* Mettere in coda i file multimediali {Should}
+* Recensione del file e/o del relativo video, commento con limitazione di numero di caratteri [utente scrive un commento non concesso] {Should}
+* Aggiunge valutazione alla recensione {Could}
+* Guarda live artista {Won't}
+* Riproduzione offline del file e/o del relativo video, funzionalità concessa solo per uno specifico abbonamento {Won't}
 
 #### Artista
-* Upload del / dei file multimediali, inserimento delle relative informazioni (opzionale) {Must};
-* Upload del video, se file multimediale già presente {Must};
-* Riproduzione dei propri file multimediali caricati in precedenza (visto come utente) {Must};
-* Risposta a recensioni relative a canzoni di sua proprietà [artista scrive una risposta non concessa] {Must};
-* Modifica delle informazioni relative al file multimediale {Should};
-* Trasmissione in diretta, selezione di artisti che possono farlo [improvvisa disconnessione da internet] (non tutti gli artisti possono farlo) {Won't}.
+* Upload del / dei file multimediali, inserimento delle relative informazioni (opzionale) {Must}
+* Upload del video, se file multimediale già presente {Must}
+* Riproduzione dei propri file multimediali caricati in precedenza (visto come utente) {Must}
+* Risposta a recensioni relative a canzoni di sua proprietà [artista scrive una risposta non concessa] {Must}
+* Modifica delle informazioni relative al file multimediale {Should}
+* Trasmissione in diretta, selezione di artisti che possono farlo [improvvisa disconnessione da internet] (non tutti gli artisti possono farlo) {Won't}
 
 #### Manager
 * Aggiunta degli artisti che gestisce in un’area dedicata {Must}
