@@ -20,48 +20,44 @@ Di seguito sono elencate la varie funzionalità della piattaforma **FrogTunes** 
 * Accesso alla applicazione (con i diversi casi iniziali) {Must}
 
 #### Utente
-* Utente sceglie il suo piano di abbonamento e crea le proprie credenziali {Must}
-* Utente cerca canzone/artista [canzone/artista non esiste] {Must}
-* Utente seleziona brano/album da ascoltare  {Must}
-(se album, può selezionare l’ascolto casuale altrimenti parte dalla prima canzone)
-* Utente decide se guardare il video musicale {Should}
-(supponendo che ci sia)
-* Utente mette in pausa {Must}
-* Utente fa ripartire la canzone {Must}
-(anche il video se c’è)
-* Utente mette in coda canzoni {Must}
-* Utente crea, modifica, condivide playlist {Should}
-* Utente aggiunge ed elimina brani da playlist selezionata [utente elimina tutti i brani, la playlist esiste ancora?] {Should}
-* Utente scarica musica e/o video musicale [il dispositivo non ha più spazio di archiviazione]
-(a seconda del tipo di abbonamento che dispone) {Could}
-* Utente recensisce un brano o video [utente scrive un commento non concesso]
-(valutazione obbligatoria e commento opzionale con max caratteri) {Could}
+* Creazione delle credenziali personali {Must}
+* Scelta del piano di abbonamento {Could};
+* Ricerca file multimediale o artista musicale [canzone/artista non esiste] {Must};
+* Selezione del file multimediale da riprodurre, in caso di raccolta di file vi è possibilità di riprodurre casualmente i file oppure selezionare manualmente (se album, può selezionare l’ascolto casuale altrimenti parte dalla prima canzone) {Must};
+* Mettere in pausa la riproduzione {Must};
+* Fare ricominciare il file da capo {Must};
+* Creazione, eliminazione, modifica e condivisione di playlist {Should};
+* Aggiunta ed eliminazione di file all’interno di una playlist selezionata [utente elimina tutti i brani, la playlist esiste ancora?] {Should};
+* Selezione e visione del video relativo al file selezionato, se presente {Should};
+* Mettere in coda i file multimediali {Should};
+* Recensione del file e/o del relativo video, commento con limitazione di numero di caratteri [utente scrive un commento non concesso] {Should};
+* Aggiunge valutazione alla recensione {Could};
+* Guarda live artista {Won't};
+* Riproduzione offline del file e/o del relativo video, funzionalità concessa solo per uno specifico abbonamento {Won't}.
 
 #### Artista
-* Artista carica brano, inserisce le varie informazioni base della canzone e carica video musicale del brano {Must}
-(opzionale)
-* Artista può ascoltare solo la propria musica. Se vuole ascoltare altri artisti deve fare un abbonamento {Must}
-(visto come utente)
-* Artista può rispondere ad una recensione di un utente [artista scrive una risposta non concessa] {Must}
-* Artista può trasmettere live [improvvisa disconnessione da internet] {Could}
-(non tutti gli artisti possono farlo)
+* Upload del / dei file multimediali, inserimento delle relative informazioni (opzionale) {Must};
+* Upload del video, se file multimediale già presente {Must};
+* Riproduzione dei propri file multimediali caricati in precedenza (visto come utente) {Must};
+* Risposta a recensioni relative a canzoni di sua proprietà [artista scrive una risposta non concessa] {Must};
+* Modifica delle informazioni relative al file multimediale {Should};
+* Trasmissione in diretta, selezione di artisti che possono farlo [improvvisa disconnessione da internet] (non tutti gli artisti possono farlo) {Won't}.
 
 #### Manager
-* Manager aggiunge i suoi artisti {Must}
-* Manager può modificare roaster artisti, informazioni dei brani degli artisti {Must}
-* Manager aggiunge testi canzoni artisti [Manager e artista aggiungono lo stesso contenuto] {Should}
+* Aggiunta degli artisti che gestisce in un’area dedicata {Must}
+* Modifica di informazioni relative ai file degli artisti che gestisce {Must}
+* Aggiunta dei testi delle canzoni dei propri artisti [Manager e artista aggiungono lo stesso contenuto] {Should}
 
 #### Etichetta
-* Etichetta discografica gestisce manager {Must}
-(ne decide il tipo)
-* Può eliminare o creare i profili degli artisti gestiti dal manager {Must}
-* Etichetta riceve un pagamento dalla piattaforma in base agli ascolti {Won't}
-(varia dalla grandezza dell’etichetta, e quindi dal numero di views di ogni suo artista) 
-* Etichetta decide specifiche di upload di ogni artista (quanti brani/video caricare) in base alle views (lo stato di un’artista è variabile) {Could}
+* Gestisce i propri manager e i relativi artisti (ne decide il tipo) {Must}
+* Elimina e crea i profili degli artisti gestiti dal manager {Could}
+* Analizza i dati relativi alle riproduzioni dei suoi artisti {Must} 
+* Riceve pagamento dalla piattaforma in base agli ascolti dei suoi artisti (varia dalla grandezza dell’etichetta, e quindi dal numero di views di ogni suo artista) {Should} 
+* Decide specifiche di upload di ogni artista (quanti brani/video caricare) in base alle views (lo stato di un’artista è variabile) {Won't}
 
-### Piani abbonamento utente {Must}
-1. Abbonamento gratuito (0 euro) = ascolto gratuito della musica selezionando playlist e album ma con riproduzione casuale e ascolto solo online con pubblicità
+### Piani abbonamento utente {Could}
+1. Gratuito (0 euro / mese) = ascolto gratuito della musica selezionando playlist e album ma con riproduzione casuale e ascolto solo online con pubblicità
 
-2. Abbonamento base (Y euro) = ascolto illimitato con possibilità di creare playlist e scaricare musica
+2. Base (Y euro / mese) = ascolto illimitato con possibilità di creare playlist e scaricare musica
 
-3. Abbonamento avanzato (Z euro) = accesso a contenuti extra per una full experience, video, live session, interviste, podcast
+3. Premium (Z euro / mese) = accesso a contenuti extra per una full experience, video, live session, interviste, podcast
