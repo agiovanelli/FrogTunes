@@ -14,7 +14,6 @@ class SettingsPage extends StatefulWidget {
 
 class SettingsPageState extends State<SettingsPage> {
   final _usernameController = TextEditingController();
-  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _notificationsEnabled = true;
   String selectedImage = '';
@@ -24,7 +23,6 @@ class SettingsPageState extends State<SettingsPage> {
   @override
   void dispose() {
     _usernameController.dispose();
-    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -139,13 +137,12 @@ Future<String?> _askCurrentPassword() async {
 
     String uid = user.uid;
     final username = _usernameController.text.trim();
-    final newEmail = _emailController.text.trim();
     final newPassword = _passwordController.text.trim();
 
     try {
-    // Riautenticazione se vogliamo cambiare email o password
-    if ((newEmail.isNotEmpty && newEmail != user.email) ||
-        newPassword.isNotEmpty) {
+    // Riautenticazione se vogliamo cambiare password
+    if(newPassword.isNotEmpty){
+      
       // Chiedi all'utente di inserire la password attuale
       final currentPassword = await _askCurrentPassword();
 
@@ -160,11 +157,6 @@ Future<String?> _askCurrentPassword() async {
         return;
       }
     }
-
-      // Aggiorna email
-      if (newEmail.isNotEmpty && newEmail != user.email) {
-        await user.verifyBeforeUpdateEmail(newEmail); // In fase di sviluppo, non invia email di verifica verifyBeforeUpdateEmail
-      }
 
       // Aggiorna password
       if (newPassword.isNotEmpty) {
@@ -253,13 +245,6 @@ Future<String?> _askCurrentPassword() async {
                 TextField(
                   controller: _usernameController,
                   decoration: _inputDecoration('Cambia nome utente'),
-                ),
-                const SizedBox(height: 20),
-                // Cambio email
-                TextField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: _inputDecoration('Nuova email'),
                 ),
                 const SizedBox(height: 20),
                 // Cambio password
