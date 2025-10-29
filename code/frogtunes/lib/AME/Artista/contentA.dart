@@ -96,16 +96,8 @@ class HomeAContent extends StatelessWidget {
                     );
                   }
                   final canzoni = snapshot.data!;
-                  final userId = FirebaseAuth.instance.currentUser!.uid;
-                  int singoliCount = canzoni.where((c) => (c['artistId'] as List).contains(userId)).length;
-                  final albumMap = <String, int>{};
-                  for (var c in canzoni) {
-                    final albumName = (c['album'] ?? '').toString().trim();
-                    if (albumName.isNotEmpty) {
-                      albumMap[albumName] = (albumMap[albumName] ?? 0) + 1;
-                    }
-                  }
-                  int albumCount = albumMap.values.where((counter) => counter >= 2).length;
+                  int singoliCount = canzoni.where((c) => (c['isSingle'] == true) || (c['isSingle'] == null)).length;
+                  int albumCount = canzoni.where((c) => c['isSingle'] == false).length;
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Row(

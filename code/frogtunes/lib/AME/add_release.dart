@@ -358,7 +358,18 @@ class _AddReleasePageState extends State<AddReleasePage> {
       }
     }
 
-    if (!_formKey.currentState!.validate() || _audioUrl == null || _coverUrl == null) return;
+    if (isSingle) {
+      if (!_formKey.currentState!.validate() || _audioUrl == null || _coverUrl == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Completa tutti i campi e carica audio e cover')));
+        return;
+      }
+    } else {
+      if (_albumController.text.trim().isEmpty || _coverUrl == null || albumTracks.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Inserisci nome album, carica la cover e aggiungi almeno una traccia')));
+        return;
+      }
+    }
+
     setState(() => _loading = true);
 
 
@@ -370,13 +381,13 @@ class _AddReleasePageState extends State<AddReleasePage> {
       'artistId': isSingle ? artistIdSingolo : widget.artistIds,
       'isSingle': isSingle,
       'ascoltiTotali': 0,
-      'audioUrl': _audioUrl,
       'cid': cid,
       'cover': _coverUrl,
       'crediti': _crediti,
       'statPaese': {'IT': 0},
-      'titolo': _titleController.text,
+      'titolo': isSingle ? _titleController.text : _albumController.text,
       'generi': generiSelezionati,
+      'audioUrl': _audioUrl,
     };
 
     final docRef = FirebaseFirestore.instance.collection('canzoni').doc(cid);
@@ -869,7 +880,7 @@ class _AddReleasePageState extends State<AddReleasePage> {
                                     child: ListTile(
                                       title: Text(track['titolo'] ?? '', style: const TextStyle(color: Colors.white)),
                                       subtitle: Text(
-                                        'Audio: ${track['audioUrl'] ?? 'Non caricato'}\nCover: ${track['cover'] ?? 'Non caricata'}',
+                                        'Audio: ${track['audioUrl'] != null ? 'Caricato' : 'Non caricato'}\nCover: ${_coverUrl != null ? 'Caricata' : 'Non caricata'}',
                                         style: const TextStyle(color: Colors.white70),
                                       ),
                                       trailing: ElevatedButton.icon(
@@ -886,7 +897,6 @@ class _AddReleasePageState extends State<AddReleasePage> {
                                             builder: (context) {
                                               final titleController = TextEditingController(text: track['titolo'] ?? '');
                                               String? audioUrl = track['audioUrl'];
-                                              String? coverUrl = track['cover'];
                                               List<String> trackGeneri = List<String>.from(track['generi'] ?? []);
                                               // Crediti
                                               Map<String, List<String>> crediti = {
@@ -1161,7 +1171,7 @@ class _AddReleasePageState extends State<AddReleasePage> {
                                                           albumTracks[index] = {
                                                             'titolo': titleController.text,
                                                             'audioUrl': audioUrl,
-                                                            'cover': coverUrl,
+                                                            'cover': _coverUrl,
                                                             'generi': List<String>.from(trackGeneri),
                                                             'Autore': crediti['Autore'],
                                                             'Compositore': crediti['Compositore'],

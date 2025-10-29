@@ -52,12 +52,6 @@ class ProfileViewState extends State<ProfileView> {
         profileImage = (rawCover != null && rawCover.toString().trim().isNotEmpty)
             ? rawCover.toString()
             : defaultUrl;
-
-        try {
-          userId = (data['artistId'] is List) ? List<String>.from(data['artistId']) : [];
-        } catch (_) {
-          userId = [];
-        }
       });
       // log per debug
       // ignore: avoid_print
@@ -175,7 +169,7 @@ class ProfileViewState extends State<ProfileView> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => AddReleasePage(
-                            artistIds: userId,
+                            artistIds: [user!.uid],
                             isSingle: result, // true = singola, false = album
                           ),
                         ),
