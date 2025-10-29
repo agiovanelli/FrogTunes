@@ -99,3 +99,9 @@ Le attività di testing verranno eseguite separatamente su queste tutte queste s
   - Obiettivo: controllo generale dell'UI dell'applicazione 
   - Cosa mi aspetto dal test: buona riuscita
   - Risultato del test: positivo
+- Test-16:
+  - Data: 29/10/2025
+  - Argomento: Caricamento release
+  - Obiettivo: controllo corretto funzionamento sezione per caricamento release singole o album
+  - Cosa mi aspetto dal test: buona riuscita o bug relativo al caricamento generale
+  - Risultato del test: positivo per release singole ma errori riscontrati nel caricamento album, mancano informazioni
