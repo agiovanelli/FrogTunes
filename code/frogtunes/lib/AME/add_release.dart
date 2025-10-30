@@ -374,29 +374,45 @@ class _AddReleasePageState extends State<AddReleasePage> {
 
 
     final cid = Uuid().v4();
-
-    final release = {
-      'addedAt': FieldValue.serverTimestamp(),
-      'album': _albumController.text,
-      'artistId': isSingle ? artistIdSingolo : widget.artistIds,
-      'isSingle': isSingle,
-      'ascoltiTotali': 0,
-      'cid': cid,
-      'cover': _coverUrl,
-      'crediti': _crediti,
-      'statPaese': {'IT': 0},
-      'titolo': isSingle ? _titleController.text : _albumController.text,
-      'generi': generiSelezionati,
-      'audioUrl': _audioUrl,
-    };
-
+    
     final docRef = FirebaseFirestore.instance.collection('canzoni').doc(cid);
-    await docRef.set(release);
 
-    // Se è un album, salva le tracce come subcollection 'tracks'
-    if (!isSingle) {
+    if(isSingle){
+      final release = {
+        'addedAt': FieldValue.serverTimestamp(),
+        'album': _albumController.text,
+        'artistId': isSingle ? artistIdSingolo : widget.artistIds,
+        'isSingle': isSingle,
+        'ascoltiTotali': 0,
+        'cid': cid,
+        'cover': _coverUrl,
+        'crediti': _crediti,
+        'statPaese': {'IT': 0},
+        'titolo': isSingle ? _titleController.text : _albumController.text,
+        'generi': generiSelezionati,
+        'audioUrl': _audioUrl,
+      };
+
+      await docRef.set(release);
+    }else{
+        final release = {
+        'addedAt': FieldValue.serverTimestamp(),
+        'album': _albumController.text,
+        'artistId': widget.artistIds,
+        'isSingle': isSingle,
+        'ascoltiTotali': 0,
+        'cid': cid,
+        'cover': _coverUrl,
+        'statPaese': {'IT': 0},
+        'titolo': isSingle ? _titleController.text : _albumController.text,
+        'generi': generiSelezionati,
+      };
+
+      await docRef.set(release);
+
       for (int i = 0; i < albumTracks.length; i++) {
         final track = albumTracks[i];
+
         await docRef.collection('tracks').add({
           ...track,
           'order': i,
@@ -1173,11 +1189,8 @@ class _AddReleasePageState extends State<AddReleasePage> {
                                                             'audioUrl': audioUrl,
                                                             'cover': _coverUrl,
                                                             'generi': List<String>.from(trackGeneri),
-                                                            'Autore': crediti['Autore'],
-                                                            'Compositore': crediti['Compositore'],
-                                                            'Producer': crediti['Producer'],
+                                                            'crediti': crediti,
                                                             'altriArtisti': altriArtisti,
-                                                            'tipoArtista': tipoArtista,
                                                             'nomiAltriArtisti': altriArtistiFinale,
                                                           };
                                                           setState(() {});
