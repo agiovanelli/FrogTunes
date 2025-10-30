@@ -105,3 +105,9 @@ Le attività di testing verranno eseguite separatamente su queste tutte queste s
   - Obiettivo: controllo corretto funzionamento sezione per caricamento release singole o album
   - Cosa mi aspetto dal test: buona riuscita o bug relativo al caricamento generale
   - Risultato del test: positivo per release singole ma errori riscontrati nel caricamento album, mancano informazioni
+- Test-17:
+  - Data: 30/10/2025
+  - Argomento: Caricamento album
+  - Obiettivo: controllo corretto funzionamento sezione per caricamento album
+  - Cosa mi aspetto dal test: buona riuscita
+  - Risultato del test: positivo
