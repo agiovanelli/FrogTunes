@@ -1,0 +1,1 @@
+C:\Users\ALEGI\Documents\GitHub\FrogTunes\code\frogtunes\build\app\intermediates\cxx\RelWithDebInfo\145jq2f6\obj\arm64-v8a
