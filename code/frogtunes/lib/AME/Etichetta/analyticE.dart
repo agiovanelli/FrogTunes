@@ -80,7 +80,7 @@ class AnalyticEViewState extends State<AnalyticEView> {
       return {
         'artistId': doc.id,
         'nome': data['nome'] ?? '',
-        'cover': data['cover'] ?? 'https://via.placeholder.com/150',
+        'profileImageUrl': data['profileImageUrl'] ?? 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f',
       };
     }).toList();
     setState(() { _analyticResults = results; });
@@ -137,7 +137,7 @@ class AnalyticEViewState extends State<AnalyticEView> {
           'titolo': data['titolo'] ?? '',
           'artistId': artistId,
           'audioUrl': data['audioUrl'] ?? '',
-          'cover': data['cover'] ?? 'https://via.placeholder.com/150',
+          'cover': data['cover'] ?? 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/covers%2Fdefault.jpg?alt=media&token=8c008540-b5b4-4290-8512-b7085474321d',
         };
       }).where((song) {
         final songArtistIds = song['artistId'] as List<String>;
@@ -198,7 +198,7 @@ class AnalyticEViewState extends State<AnalyticEView> {
       return {
         'managerId': doc.id,
         'nome': data['nome'] ?? '',
-        'cover': data['cover'] ?? 'https://via.placeholder.com/150',
+        'profileImageUrl': data['profileImageUrl'] ?? 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f',
       };
     }).toList();
     setState(() { _analyticResults = results; });
@@ -279,7 +279,7 @@ class AnalyticEViewState extends State<AnalyticEView> {
           final item = _analyticResults[index];
           if (_searchType == 'Artisti') {
             final nome = item['nome'] ?? 'Artista sconosciuto';
-            final cover = item['cover'] ?? 'https://via.placeholder.com/150';
+            final profileImageUrl = item['profileImageUrl'] ?? 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f';
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -290,7 +290,7 @@ class AnalyticEViewState extends State<AnalyticEView> {
                 leading: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
-                    cover,
+                    profileImageUrl,
                     width: 60,
                     height: 60,
                     fit: BoxFit.cover,
@@ -320,7 +320,7 @@ class AnalyticEViewState extends State<AnalyticEView> {
             final songId = item['songId'] ?? '';
             final titolo = item['titolo'] ?? 'Titolo sconosciuto';
             final artista = item['artista'] ?? 'Artista sconosciuto';
-            final cover = item['cover'] ?? 'https://via.placeholder.com/150';
+            final cover = item['cover'] ?? 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/covers%2Fdefault.jpg?alt=media&token=8c008540-b5b4-4290-8512-b7085474321d';
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -362,7 +362,7 @@ class AnalyticEViewState extends State<AnalyticEView> {
             );
           }else{
             final nome = item['nome'] ?? 'Manager sconosciuto';
-            final cover = item['cover'] ?? 'https://via.placeholder.com/150';
+            final profileImageUrl = item['profileImageUrl'] ?? 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f';
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -373,7 +373,7 @@ class AnalyticEViewState extends State<AnalyticEView> {
                 leading: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
-                    cover,
+                    profileImageUrl,
                     width: 60,
                     height: 60,
                     fit: BoxFit.cover,

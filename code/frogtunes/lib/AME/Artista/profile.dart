@@ -36,8 +36,7 @@ class ProfileViewState extends State<ProfileView> {
     final data = doc.data();
 
       if (data != null && mounted) {
-      // fallback su più campi per sicurezza: 'cover', 'profileImageUrl', 'profileImage'
-      final rawCover = data['cover'] ?? data['profileImageUrl'] ?? data['profileImage'];
+      final rawCover = data['profileImageUrl'];
       final defaultUrl = 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f';
 
       setState(() {
@@ -265,7 +264,7 @@ class ProfileViewState extends State<ProfileView> {
         await FirebaseFirestore.instance
             .collection('artisti')
             .doc(user.uid)
-            .update({'cover': url});
+            .update({'profileImageUrl': url});
         setState(() {
           profileImage = url;
         });

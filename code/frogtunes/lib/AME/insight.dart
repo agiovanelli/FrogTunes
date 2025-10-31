@@ -73,7 +73,7 @@ class _SongInsightPageState extends State<SongInsightPage> {
     final songData = songDoc.data()!;
     final totalPlays = songData['ascoltiTotali'] ?? 0;
     final artistId = (songData['artistId'] as List<dynamic>? ?? []).map((e) => e.toString()).toList();
-    final cover = songData['cover'] ?? 'https://via.placeholder.com/150';
+    final cover = songData['cover'] ?? 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/covers%2Fdefault.jpg?alt=media&token=8c008540-b5b4-4290-8512-b7085474321d';
     final audioUrl = songData['audioUrl'] ?? '';
 
     // Calcolo ascolti ultime 24 ore

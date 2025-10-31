@@ -41,8 +41,8 @@ class ProfileEViewState extends State<ProfileEView> {
             ? data['nome']
             : 'Etichetta';
 
-        profileImage = data['cover']?.toString().trim().isNotEmpty == true
-            ? data['cover']
+        profileImage = data['profileImageUrl']?.toString().trim().isNotEmpty == true
+            ? data['profileImageUrl']
             : 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f';
       });
     }
@@ -156,7 +156,7 @@ class ProfileEViewState extends State<ProfileEView> {
         await FirebaseFirestore.instance
             .collection('etichette')
             .doc(user.uid)
-            .update({'cover': url});
+            .update({'profileImageUrl': url});
         if (!mounted) return;
         setState(() {
           profileImage = url;

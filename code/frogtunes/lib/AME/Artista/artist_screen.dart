@@ -31,7 +31,7 @@ class _ArtistScreenState extends State<ArtistScreen> {
     final data = doc.data();
     return {
       'bio': data?['bio'] ?? '',
-      'cover': data?['cover'] ?? '',
+      'profileImageUrl': data?['profileImageUrl'] ?? '',
     };
   }
   bool isFollowing = false;
@@ -72,7 +72,7 @@ class _ArtistScreenState extends State<ArtistScreen> {
       await artistRef.set({
         'uid': widget.artistId,
         'nome': widget.nomeArtista,
-        'cover': await fetchArtistInfo(widget.artistId).then((data) => data?['cover'] ?? ''),
+        'profileImageUrl': await fetchArtistInfo(widget.artistId).then((data) => data?['profileImageUrl'] ?? ''),
         'addedAt': FieldValue.serverTimestamp(),
       });
     }
@@ -106,7 +106,7 @@ class _ArtistScreenState extends State<ArtistScreen> {
       await artistRef.set({
         'uid': widget.artistId,
         'nome': widget.nomeArtista,
-        'cover': await fetchArtistInfo(widget.artistId).then((data) => data?['cover'] ?? ''),
+        'profileImageUrl': await fetchArtistInfo(widget.artistId).then((data) => data?['profileImageUrl'] ?? ''),
         'addedAt': FieldValue.serverTimestamp(),
       });
     }
@@ -140,7 +140,7 @@ Future<List<String>> fetchArtistName(List<String> artistId) async {
         future: fetchArtistInfo(widget.artistId),
         builder: (context, snapshot) {
           final artistInfo = snapshot.data;
-          final coverUrl = artistInfo?['cover'] ?? 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f';
+          final profileImageUrl = artistInfo?['profileImageUrl'] ?? 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f';
           final bio = artistInfo?['bio'] ?? '';
           return CustomScrollView(
             slivers: [
@@ -154,7 +154,7 @@ Future<List<String>> fetchArtistName(List<String> artistId) async {
                     fit: StackFit.expand,
                     children: [
                       Image.network(
-                        coverUrl,
+                        profileImageUrl,
                         fit: BoxFit.cover,
                       ),
                       const DecoratedBox(

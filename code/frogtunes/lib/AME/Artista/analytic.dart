@@ -46,7 +46,7 @@ class AnalyticViewState extends State<AnalyticView> {
           'titolo': data['titolo'] ?? '',
           'artistId': artistId,
           'audioUrl': data['audioUrl'] ?? '',
-          'cover': data['cover'] ?? 'https://via.placeholder.com/150',
+          'cover': data['cover'] ?? 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/covers%2Fdefault.jpg?alt=media&token=8c008540-b5b4-4290-8512-b7085474321d',
         };
       }).toList();
 
@@ -127,7 +127,7 @@ class AnalyticViewState extends State<AnalyticView> {
               final songId = item['songId'] ?? '';
               final titolo = item['titolo'] ?? 'Titolo sconosciuto';
               final artista = item['artista'] ?? 'Artista sconosciuto';
-              final cover = item['cover'] ?? 'https://via.placeholder.com/150';
+              final cover = item['cover'] ?? 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/covers%2Fdefault.jpg?alt=media&token=8c008540-b5b4-4290-8512-b7085474321d';
 
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),

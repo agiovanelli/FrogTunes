@@ -41,8 +41,8 @@ class ProfileMViewState extends State<ProfileMView> {
             ? data['nome']
             : 'Manager';
 
-        profileImage = data['cover']?.toString().trim().isNotEmpty == true
-            ? data['cover']
+        profileImage = data['profileImageUrl']?.toString().trim().isNotEmpty == true
+            ? data['profileImageUrl']
             : 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f';
       });
     }
@@ -232,7 +232,7 @@ class ProfileMViewState extends State<ProfileMView> {
         await FirebaseFirestore.instance
             .collection('manager')
             .doc(user.uid)
-            .update({'cover': url});
+            .update({'profileImageUrl': url});
         setState(() {
           profileImage = url;
         });

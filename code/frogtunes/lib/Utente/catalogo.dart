@@ -448,12 +448,12 @@ class FollowedArtistsScreen extends StatelessWidget {
               itemCount: artists.length,
               itemBuilder: (context, index) {
                 final artist = artists[index];
-                final cover = artist['cover'] ?? 'https://firebasestorage.googleapis.com/v0/b/frogtunes-5f9e4.appspot.com/o/cover%2Fdefault_cover.png?alt=media&token=3c6e0b8a-1f7b-4f1d-9e3a-1c4b6e6e6e6e';
+                final profileImageUrl = artist['profileImageUrl'] ?? 'https://firebasestorage.googleapis.com/v0/b/frogtunes-5f9e4.appspot.com/o/cover%2Fdefault_cover.png?alt=media&token=3c6e0b8a-1f7b-4f1d-9e3a-1c4b6e6e6e6e';
                 final nome = artist['nome'] ?? 'Artista sconosciuto';
 
                 return ListTile(
                   leading: CircleAvatar(
-                    backgroundImage: NetworkImage(cover),
+                    backgroundImage: NetworkImage(profileImageUrl),
                   ),
                   title: Text(nome, style: const TextStyle(color: Colors.white)),
                   // Bottone per accedere alla schermata dell'artista

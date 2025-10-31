@@ -33,7 +33,7 @@ class Song {
     final songData = songDoc.data()!;
     final totalPlays = songData['ascoltiTotali'] ?? 0;
     final artistId = (songData['artistId'] as List<dynamic>? ?? []).map((e) => e.toString()).toList();
-    final cover = songData['cover'] ?? 'https://via.placeholder.com/150';
+    final cover = songData['cover'] ?? 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/covers%2Fdefault.jpg?alt=media&token=8c008540-b5b4-4290-8512-b7085474321d';
 
     // Calcolo ascolti ultime 24 ore
     final last24h = DateTime.now().subtract(const Duration(hours: 24));
@@ -107,7 +107,7 @@ class Manager {
     if (!managerDoc.exists) throw Exception('Manager non trovato');
     final managerData = managerDoc.data()!;
     final nome = managerData['nome'] ?? 'Manager sconosciuto';
-    final cover = managerData['cover'] ?? 'https://via.placeholder.com/150';
+    final profileImageUrl = managerData['profileImageUrl'] ?? 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/covers%2Fdefault.jpg?alt=media&token=8c008540-b5b4-4290-8512-b7085474321d';
     // Prendi tutti gli artisti gestiti
     final managedSnap = await FirebaseFirestore.instance
       .collection('manager')
@@ -141,13 +141,13 @@ class Manager {
       return {
         'artistId': artistId,
         'nome': artistData['nome'] ?? 'Artista sconosciuto',
-        'cover': artistData['cover'] ?? 'https://via.placeholder.com/150',
+        'profileImageUrl': artistData['profileImageUrl'] ?? 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/covers%2Fdefault.jpg?alt=media&token=8c008540-b5b4-4290-8512-b7085474321d',
       };
     });
     final artists = (await Future.wait(artistFutures)).whereType<Map<String, dynamic>>().toList();
     return {
       'nome': nome,
-      'cover': cover,
+      'profileImageUrl': profileImageUrl,
       'totalEarnings': totalEarnings,
       'artists': artists,
     };
@@ -381,7 +381,7 @@ class ManagerListView extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       CircleAvatar(
-                        backgroundImage: NetworkImage(data['cover']),
+                        backgroundImage: NetworkImage(data['profileImageUrl']),
                         radius: 48,
                       ),
                       const SizedBox(height: 16),
@@ -400,7 +400,7 @@ class ManagerListView extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                  leading: Image.network(artist['cover'], width: 50, height: 50),
+                  leading: Image.network(artist['profileImageUrl'], width: 50, height: 50),
                   title: Text(artist['nome'], style: const TextStyle(color: Colors.white)),
                   trailing: FutureBuilder<List<Song>>(
                     future: Artist(artistId: artist['artistId'], artistName: artist['nome']).fetchArtistSongs(),
