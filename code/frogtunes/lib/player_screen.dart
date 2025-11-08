@@ -633,6 +633,13 @@ class _PlayerScreenState extends State<PlayerScreen> {
             children: List.generate(nomiArtisti.length, (index) {
               final nome = nomiArtisti[index];
               final artistId = audio.currentArtist.value.isEmpty ? widget.artistId[index] : audio.currentArtistId.value[index];
+
+              final isUltimo = index == nomiArtisti.length - 1;
+              final haPiuArtisti = nomiArtisti.length > 1;
+
+              // Se c'è più di un artista e non è l'ultimo, aggiunge la virgola
+              final nomeConVirgola = haPiuArtisti && !isUltimo ? '$nome,' : nome;
+
               return GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -651,8 +658,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 4), 
                   // Riporta la virgola tra i nomi degli artisti se sono più di uno
                   child: Text(
-                    audio.currentArtist.value.isEmpty ? (index < widget.artistId.length - 1 ? "$nome," : nome) 
-                    : (index < audio.currentArtist.value.length - 1 ? "$nome," : nome),
+                    nomeConVirgola,
                     style: const TextStyle(color: Colors.white70, fontSize: 18),
                   ),
                 ),
