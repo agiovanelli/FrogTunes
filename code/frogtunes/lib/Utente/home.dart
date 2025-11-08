@@ -89,7 +89,10 @@ class HomeViewState extends State<HomeView> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Completa il tuo profilo'),
+              title: const Text('Completa il tuo profilo',
+                style: TextStyle(color: Colors.white)
+              ),
+              backgroundColor: Colors.green[900],
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -127,7 +130,15 @@ class HomeViewState extends State<HomeView> {
                     const SizedBox(height: 20),
                     TextField(
                       controller: nameController,
-                      decoration: const InputDecoration(labelText: 'Username'),
+                      decoration: const InputDecoration(
+                      labelText: 'Username',
+                      labelStyle: TextStyle(color: Colors.white),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF00FF00)),
+                      ),
+                    ),
+                      cursorColor: Color(0xFF00FF00),
+                      style: TextStyle(color: Colors.white)
                     ),
                   ],
                 ),
@@ -180,7 +191,7 @@ class HomeViewState extends State<HomeView> {
                     // Dopo la chiusura del dialog aggiorna la UI
                     await _checkAndShowProfileDialog();
                   },
-                  child: const Text('Salva'),
+                  child: const Text('Salva', style: TextStyle(color: Colors.white)),
                 ),
               ],
             );
