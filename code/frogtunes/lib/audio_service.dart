@@ -271,7 +271,7 @@ class AudioService {
         .collection('recentlyPlayed')
         .doc(songId); // Mettendo songId come ID univoco del documento evito le ripetizioni
 
-    if(docRef.id != userId) return;
+    if(docRef.id != songId) return;
 
     // Aggiorna il doc se esiste già, altrimenti crea se non esiste
     await docRef.set({
