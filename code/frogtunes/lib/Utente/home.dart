@@ -66,8 +66,9 @@ class HomeViewState extends State<HomeView> {
           'tipologia': data['tipologiaAccount'] ?? 0,
         };
 
-        if (hasName == 'Utente' || hasPhoto == 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f') {
-          // Attendi un frame per mostrare il dialog (evita errori di context)
+        // Mostra il dialog SOLO se mancano sia username che foto personalizzata
+        if (hasName == 'Utente' &&
+            hasPhoto == 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f') {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _showProfileDialog(context, user.uid);
           });
@@ -151,43 +152,70 @@ class HomeViewState extends State<HomeView> {
                     final doc = await docRef.get();
                     if (!context.mounted) return;
                     final currentData = doc.data();
-                    final currentPhoto = currentData?['profileImageUrl'];
+                    
                     const String defaultPhotoURL = 'https://firebasestorage.googleapis.com/v0/b/frogtunes25-giovanelli.firebasestorage.app/o/default_images%2Fdefault.jpg?alt=media&token=15312b28-eaca-448f-955b-a2e484499d0f';
-                    final String finalPhotoURL = uploadedPhotoUrl != ''
+                    final String finalPhotoURL = uploadedPhotoUrl.isNotEmpty
                       ? uploadedPhotoUrl
-                      : (currentPhoto != null && currentPhoto.isNotEmpty ? currentPhoto : defaultPhotoURL);
+                      : (currentData?['profileImageUrl'] ?? defaultPhotoURL);
+                    
                     // Se nessun aggiornamento ma l'utente ha già dati validi, chiudi comunque il dialog
-                    if (name.isEmpty && (finalPhotoURL.isEmpty)) {
-                      if(mounted) Navigator.of(context).pop();
-                      return;
-                    }
-                    // Costruisci mappa degli aggiornamenti
-                    final Map<String, dynamic> updates = {};
-                    if (name.isNotEmpty) {
-                      updates['username'] = name;
-                      await FirebaseAuth.instance.currentUser?.updateDisplayName(name);
-                      if (!context.mounted) return;
-                    }
-                    if (finalPhotoURL.isNotEmpty) {
-                      updates['profileImageUrl'] = finalPhotoURL;
-                      await FirebaseAuth.instance.currentUser?.updatePhotoURL(finalPhotoURL);
-                      if (!context.mounted) return;
-                    }
-                    // Salva su Firestore
-                    if (updates.isNotEmpty) {
-                      await docRef.update(updates);
-                    }
+                    if (name.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Inserisci un nome utente.'),
+                      ),
+                    );
+                    return;
+                  }
+
+                  // Aggiornamento Firebase Auth + Firestore
+                  await FirebaseAuth.instance.currentUser?.updateDisplayName(name);
+                  await FirebaseAuth.instance.currentUser
+                      ?.updatePhotoURL(finalPhotoURL);
+
+                  await docRef.set({
+                    'username': name,
+                    'profileImageUrl': finalPhotoURL,
+                  }, SetOptions(merge: true));
+
+                  if (context.mounted) {
+                    setState(() {
+                      userData = {
+                        'username': name,
+                        'profileImageUrl': finalPhotoURL,
+                      };
+                    });
+
+                    Navigator.of(context).pop();
+                  }
+
+                    // // Costruisci mappa degli aggiornamenti
+                    // final Map<String, dynamic> updates = {};
+                    // if (name.isNotEmpty) {
+                    //   updates['username'] = name;
+                    //   await FirebaseAuth.instance.currentUser?.updateDisplayName(name);
+                    //   if (!context.mounted) return;
+                    // }
+                    // if (finalPhotoURL.isNotEmpty) {
+                    //   updates['profileImageUrl'] = finalPhotoURL;
+                    //   await FirebaseAuth.instance.currentUser?.updatePhotoURL(finalPhotoURL);
+                    //   if (!context.mounted) return;
+                    // }
+                    // // Salva su Firestore
+                    // if (updates.isNotEmpty) {
+                    //   await docRef.update(updates);
+                    // }
  
-                    if(context.mounted) {
-                      // Aggiorna userData subito dopo il salvataggio
-                      setState(() {
-                        userData = {
-                          'username': name.isNotEmpty ? name : currentData?['username'] ?? 'Utente',
-                          'profileImageUrl': finalPhotoURL.isNotEmpty ? finalPhotoURL : currentData?['profileImageUrl'] ?? defaultPhotoURL,
-                        };
-                      });
-                      Navigator.of(context).pop();
-                    }
+                    // if(context.mounted) {
+                    //   // Aggiorna userData subito dopo il salvataggio
+                    //   setState(() {
+                    //     userData = {
+                    //       'username': name.isNotEmpty ? name : currentData?['username'] ?? 'Utente',
+                    //       'profileImageUrl': finalPhotoURL.isNotEmpty ? finalPhotoURL : currentData?['profileImageUrl'] ?? defaultPhotoURL,
+                    //     };
+                    //   });
+                    //   Navigator.of(context).pop();
+                    // }
                     // Dopo la chiusura del dialog aggiorna la UI
                     await _checkAndShowProfileDialog();
                   },
