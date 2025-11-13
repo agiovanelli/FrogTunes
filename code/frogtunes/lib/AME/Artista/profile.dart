@@ -177,7 +177,7 @@ class ProfileViewState extends State<ProfileView> {
                   }
                 },
                 icon: const Icon(Icons.add),
-                label: const Text('Aggiungi un nuovo brano'),
+                label: const Text('Aggiungi una nuova release'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green[700],
                   foregroundColor: Colors.white,
