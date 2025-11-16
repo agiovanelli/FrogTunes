@@ -22,8 +22,5 @@ Il rispetto di tale obbiettivi sarà verificato tramite la pubblicazione di comm
 La potenziale grandezza e complessità del progetto pone dei rischi sull'effettivo sviluppo dell'applicazione e sulla gestione complessiva del progetto. Parte di questi rischi sono affrontati nella specifica dei requisiti, ciò non toglie la possibilità che alcuni requisiti non vengano soddisfatti nei tempi prestabiliti.
 Potenziali rischi di supporto hardware dell'applicazione sono da considerare presso che inesistenti.
 
-# WorkPackage 
-si rimanda alla sezione _Organizzazione del progetto_
-
 # Cambiamenti
-Per l'attività di testing si segue lo standard IEEE 982 sviluppando un piano di testo contenente: test design specificazion, specifica del scenario di testo e test procedure specification.
+Per l'attività di testing si segue lo standard IEEE 982 sviluppando un piano di testo contenente: test design specificazion, specifica dello scenario di testo e test procedure specification.
