@@ -9,7 +9,7 @@
 .history
 .svn/
 migrate_working_dir/
-**/configure_fingerprint.bin
+configure_fingerprint.bin
 
 # IntelliJ related
 *.iml
